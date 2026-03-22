@@ -1,1 +1,41 @@
-[]
+[
+  {
+    "ticker": "ENDAVA",
+    "name": "Endava plc",
+    "sector": "Information Technology",
+    "sectorKey": "tech",
+    "globalScore": 63,
+    "globalVerdict": "WATCHLIST",
+    "profileScores": {
+      "value": 66,
+      "quality": 63,
+      "garp": 63,
+      "growth": 62,
+      "smallcap": 63,
+      "income": 64,
+      "dgi": 62,
+      "deepvalue": 72,
+      "defensive": 66,
+      "incgrowth": 62
+    },
+    "modules": {
+      "m1": 0.42105263157894735,
+      "m2": 0.5238095238095238,
+      "m3": 0.7368421052631579,
+      "m4": 0.6086956521739131,
+      "m5": 1,
+      "m6": 0.8333333333333334,
+      "m7": 0.8571428571428571,
+      "m8": 0.5,
+      "m9": 0.18181818181818182
+    },
+    "fv": "$7,50",
+    "fvUpside": 63.7,
+    "fvConf": "LOW",
+    "price": "4.58$",
+    "reasoning": "Score global: 63% → WATCHLIST. Sector: tech. Liquidez: 100% · Val.Intrínseca: 86% · Valoración: 83%. Sin vetos.",
+    "m0Passes": true,
+    "vetos": [],
+    "savedAt": "2026-03-22T23:41:22.800Z"
+  }
+]
