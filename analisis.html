@@ -1,0 +1,3030 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Análisis de Acciones · MAIKO'S DASHBOARD</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── RESET & VARS ── */
+:root{
+  --bg:#0a0c0f;--s1:#111419;--s2:#181c23;--s3:#1e2430;--s4:#252b36;
+  --text:#e8ecf4;--text2:#6b7a8d;--text3:#4a5568;--text4:#2d3748;
+  --border:#1e2430;--border2:rgba(255,255,255,.1);
+  --buy:#00e5a0;--buy-pale:rgba(0,229,160,.08);--buy-glow:rgba(0,229,160,.2);
+  --hold:#f5c518;--hold-pale:rgba(245,197,24,.08);
+  --risk:#ff4757;--risk-pale:rgba(255,71,87,.08);--risk-glow:rgba(255,71,87,.2);
+  --accent:#4a9eff;--accent2:#00e5a0;
+  --gold:#f5c518;--purple:#a78bfa;--teal:#00e5a0;--orange:#fb8f44;
+  --f-d:'DM Mono',monospace;--f-s:'DM Mono',monospace;--f-m:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:var(--f-d);background:var(--bg);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,229,160,.012) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,160,.012) 1px,transparent 1px);
+  background-size:44px 44px;pointer-events:none;z-index:0}
+
+/* ── TOPBAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;z-index:300;height:52px;
+  background:rgba(10,12,15,.95);backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(0,229,160,.1);
+  display:flex;align-items:center;padding:0 24px;gap:14px;
+}
+.tb-logo{font-weight:800;font-size:.95rem;display:flex;align-items:center;gap:8px}
+.tb-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.tb-sep{width:1px;height:20px;background:var(--border2)}
+.tb-links{display:flex;gap:4px;flex:1}
+.tb-link{padding:5px 11px;border-radius:5px;font-size:.73rem;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;transition:all .15s}
+.tb-link:hover{color:var(--text);background:var(--s3)}
+.tb-link.ext{border:1px solid var(--border2);background:var(--s3);color:var(--text2)}
+.tb-link.ext:hover{border-color:var(--accent);color:var(--accent)}
+.tb-company{font-family:var(--f-m);font-size:.75rem;background:var(--s3);border:1px solid var(--border2);border-radius:5px;padding:3px 11px;color:var(--accent);display:none}
+.tb-company.show{display:block}
+
+/* ── HERO ── */
+.hero{
+  padding:80px 48px 52px;background:var(--s1);border-bottom:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.hero::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 5% 50%,rgba(106,143,255,.07) 0,transparent 50%),
+    radial-gradient(ellipse at 95% 20%,rgba(34,212,90,.04) 0,transparent 50%);}
+.hero-grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(106,143,255,.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(106,143,255,.022) 1px,transparent 1px);
+  background-size:40px 40px;}
+.hero-inner{position:relative;max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr 460px;gap:52px;align-items:start}
+@media(max-width:1000px){.hero-inner{grid-template-columns:1fr}}
+.hero-kicker{font-family:var(--f-m);font-size:.65rem;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.hero-kicker::before{content:'';width:18px;height:1px;background:var(--accent)}
+.hero h1{font-family:var(--f-s);font-size:clamp(1.9rem,3vw,2.8rem);font-weight:700;line-height:1.08;margin-bottom:12px}
+.hero h1 em{color:var(--accent);font-style:normal}
+.hero-sub{font-size:.9rem;color:var(--text2);max-width:560px;line-height:1.7;margin-bottom:24px;font-family:var(--f-s)}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap}
+.hp{padding:4px 12px;border-radius:20px;font-family:var(--f-m);font-size:.68rem;font-weight:600;border:1px solid}
+.hp-v{background:rgba(232,197,90,.08);border-color:rgba(232,197,90,.3);color:var(--gold)}
+.hp-g{background:var(--buy-pale);border-color:rgba(34,212,90,.3);color:var(--buy)}
+.hp-i{background:var(--hold-pale);border-color:rgba(240,180,41,.3);color:var(--hold)}
+.hp-b{background:rgba(106,143,255,.08);border-color:rgba(106,143,255,.3);color:var(--accent)}
+
+/* ── UPLOAD PANEL ── */
+.upload-panel{background:var(--s3);border:1px solid var(--border2);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:14px}
+.up-title{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
+.drop-zone{
+  border:2px dashed var(--border2);border-radius:9px;padding:22px 16px;
+  text-align:center;cursor:pointer;transition:all .2s;position:relative;
+  background:rgba(255,255,255,.02);
+}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:rgba(106,143,255,.05)}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+.dz-icon{font-size:1.6rem;margin-bottom:7px}
+.dz-label{font-size:.78rem;color:var(--text2);line-height:1.45}
+.dz-label strong{color:var(--text);display:block;margin-bottom:2px}
+.dz-sub{font-size:.66rem;color:var(--text3);margin-top:5px;font-family:var(--f-m)}
+.file-ok{display:none;align-items:center;gap:8px;padding:8px 12px;background:var(--buy-pale);border:1px solid rgba(34,212,90,.25);border-radius:7px;font-size:.75rem;color:var(--buy);font-family:var(--f-m)}
+.file-ok.show{display:flex}
+
+.up-optional{font-size:.65rem;letter-spacing:1px;text-transform:uppercase;color:var(--text4);padding:4px 0;border-top:1px solid var(--border)}
+.up-row{display:flex;gap:8px}
+.ticker-inp{flex:1;background:var(--s4);border:1px solid var(--border2);border-radius:7px;padding:9px 12px;color:var(--text);font-family:var(--f-m);font-size:.82rem;outline:none;transition:border-color .2s;text-transform:uppercase}
+.ticker-inp:focus{border-color:var(--accent)}
+.ticker-inp::placeholder{color:var(--text3);text-transform:none}
+.analyze-btn{
+  padding:9px 20px;background:var(--accent);color:#07080d;border:none;
+  border-radius:7px;font-family:var(--f-d);font-size:.8rem;font-weight:800;
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.analyze-btn:hover:not(:disabled){background:var(--accent2);transform:translateY(-1px)}
+.analyze-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.progress-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(106,143,255,.08);border:1px solid rgba(106,143,255,.2);border-radius:7px;font-size:.77rem;color:var(--accent)}
+.progress-bar.show{display:flex}
+.pb-spinner{width:14px;height:14px;border:2px solid rgba(106,143,255,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── MAIN RESULTS ── */
+#resultsSection{display:none;padding-top:52px}
+#resultsSection.show{display:block}
+
+/* ── COMPANY HEADER ── */
+.co-header{background:var(--s1);border-bottom:1px solid var(--border);padding:32px 48px}
+.co-inner{max-width:1280px;margin:0 auto}
+.co-top{display:flex;align-items:flex-start;gap:32px;flex-wrap:wrap;margin-bottom:24px}
+.co-meta{flex:1;min-width:280px}
+.co-ticker{font-family:var(--f-m);font-size:.7rem;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px}
+.co-name{font-family:var(--f-s);font-size:1.8rem;font-weight:700;margin-bottom:4px}
+.co-sector{font-size:.82rem;color:var(--text2);display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.co-sector-badge{font-family:var(--f-m);font-size:.65rem;padding:2px 8px;border-radius:4px;background:var(--s3);border:1px solid var(--border2);color:var(--accent)}
+.co-price-row{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.co-price{font-family:var(--f-m);font-size:2.2rem;font-weight:500}
+.co-fv{font-size:.85rem;color:var(--buy);font-family:var(--f-m)}
+.co-upside{font-family:var(--f-m);font-size:.75rem;font-weight:600;padding:3px 10px;border-radius:5px;background:var(--buy-pale);color:var(--buy);border:1px solid rgba(34,212,90,.25)}
+.co-veto-alert{background:var(--risk-pale);border:1px solid rgba(240,72,58,.35);border-radius:8px;padding:12px 16px;font-size:.8rem;color:var(--risk);display:none;align-items:center;gap:10px}
+.co-veto-alert.show{display:flex}
+.co-m0-ok{background:var(--buy-pale);border:1px solid rgba(34,212,90,.25);border-radius:8px;padding:10px 16px;font-size:.78rem;color:var(--buy);display:flex;align-items:center;gap:8px}
+
+/* ── PROFILES GRID (main output) ── */
+.profiles-section{max-width:1280px;margin:0 auto;padding:32px 48px}
+.ps-title{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.ps-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.profile-card{
+  background:var(--s3);border:1px solid var(--border);border-radius:10px;
+  padding:16px;cursor:pointer;transition:all .18s;border-top:2px solid;
+}
+.profile-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.profile-card.active{border-color:var(--accent)!important;box-shadow:0 0 0 1px var(--accent)}
+.pc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.pc-icon{font-size:1.2rem}
+.pc-verdict{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid}
+.pv-buy{background:var(--buy-pale);border-color:rgba(34,212,90,.3);color:var(--buy)}
+.pv-hold{background:var(--hold-pale);border-color:rgba(240,180,41,.3);color:var(--hold)}
+.pv-no{background:var(--risk-pale);border-color:rgba(240,72,58,.3);color:var(--risk)}
+.pc-name{font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.pc-phil{font-size:.68rem;color:var(--text3);margin-bottom:12px;font-style:italic;font-family:var(--f-s)}
+.pc-score-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pc-score-num{font-family:var(--f-m);font-size:1.8rem;font-weight:500}
+.pc-score-lbl{font-size:.62rem;color:var(--text3);letter-spacing:.8px;text-transform:uppercase}
+.pc-bar{height:4px;background:var(--s4);border-radius:2px;overflow:hidden;margin-bottom:8px}
+.pc-bar-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.pc-quant-qual{display:flex;gap:8px}
+.pc-qq{flex:1;text-align:center;padding:5px;background:var(--s4);border-radius:5px}
+.pc-qq-val{font-family:var(--f-m);font-size:.85rem;font-weight:500}
+.pc-qq-lbl{font-size:.6rem;color:var(--text4);margin-top:1px}
+
+/* ── DETAIL PANEL ── */
+.detail-panel{max-width:1280px;margin:0 auto;padding:0 48px 32px}
+.detail-tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:12px}
+.dtab{padding:7px 16px;border-radius:6px;font-size:.76rem;font-weight:600;color:var(--text3);cursor:pointer;border:none;background:none;transition:all .15s}
+.dtab:hover{color:var(--text);background:var(--s3)}
+.dtab.active{background:var(--s3);color:var(--text);border:1px solid var(--border2)}
+
+/* ── MODULE CARDS ── */
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.mod-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.mod-head{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mh-left{display:flex;align-items:center;gap:8px}
+.mh-icon{font-size:1rem}
+.mh-title{font-size:.8rem;font-weight:700;color:var(--text)}
+.mh-score{font-family:var(--f-m);font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid}
+.mod-body{padding:14px 16px}
+.check-row{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.78rem}
+.check-row:last-child{border-bottom:none}
+.cr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.cd-buy{background:var(--buy)}.cd-no{background:var(--risk)}.cd-hold{background:var(--hold)}.cd-na{background:var(--text4)}
+.cr-label{flex:1;color:var(--text2);line-height:1.35}
+.cr-val{font-family:var(--f-m);font-size:.75rem;color:var(--text);white-space:nowrap;font-weight:500}
+.cr-thr{font-size:.65rem;color:var(--text3);text-align:right;font-family:var(--f-m);flex-shrink:0;max-width:80px}
+.mod-note{margin:10px 16px 12px;padding:9px 12px;background:var(--s4);border-radius:6px;font-size:.74rem;color:var(--text2);line-height:1.5;border-left:2px solid}
+
+/* ── SCORE BARS ── */
+.score-bars-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:20px 22px}
+.sb-title{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.score-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.sbr-label{font-size:.73rem;color:var(--text2);width:180px;flex-shrink:0}
+.sbr-bar-wrap{flex:1;height:6px;background:var(--s4);border-radius:3px;overflow:hidden}
+.sbr-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.sbr-val{font-family:var(--f-m);font-size:.7rem;color:var(--text);width:44px;text-align:right;flex-shrink:0}
+.sbr-weight{font-family:var(--f-m);font-size:.63rem;color:var(--text4);width:32px;text-align:right;flex-shrink:0}
+
+/* ── PEER COMPARISON ── */
+.peers-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.peers-table th{padding:8px 12px;text-align:left;font-size:.63rem;letter-spacing:1px;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);background:var(--s4)}
+.peers-table td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.peers-table tr:last-child td{border-bottom:none}
+.peers-table tr:hover td{background:rgba(255,255,255,.02)}
+.pt-company{font-weight:600;color:var(--text)}
+.pt-highlight{color:var(--accent);font-family:var(--f-m);font-weight:700}
+.pt-better{color:var(--buy)}.pt-worse{color:var(--risk)}.pt-neutral{color:var(--text3)}
+.pt-tag{font-family:var(--f-m);font-size:.65rem;padding:2px 7px;border-radius:4px}
+.tag-best{background:var(--buy-pale);color:var(--buy);border:1px solid rgba(34,212,90,.25)}
+.tag-worst{background:var(--risk-pale);color:var(--risk);border:1px solid rgba(240,72,58,.25)}
+
+/* ── REASONING BOX ── */
+.reasoning-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.rb-head{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.rb-body{padding:20px 22px;display:flex;flex-direction:column;gap:16px}
+.reason-block{border-left:2px solid;padding-left:14px}
+.rb-buy{border-color:var(--buy)}.rb-hold{border-color:var(--hold)}.rb-risk{border-color:var(--risk)}.rb-info{border-color:var(--accent)}.rb-warn{border-color:var(--gold)}
+.reason-title{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.reason-text{font-size:.82rem;color:var(--text2);line-height:1.65;font-family:var(--f-s)}
+.reason-text strong{color:var(--text)}
+
+/* ── INCOME CHART ── */
+.chart-img-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cib-head{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.cib-img{width:100%;max-height:320px;object-fit:contain;background:#0d0f1a;display:block}
+.cib-empty{padding:32px;text-align:center;color:var(--text3);font-size:.82rem}
+
+/* ── CHECKLIST ── */
+#checklistSection{display:none;padding-bottom:60px}
+#checklistSection.show{display:block}
+.checklist-header{max-width:1280px;margin:0 auto;padding:28px 48px 0}
+.cl-intro{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:24px;display:flex;align-items:center;gap:16px}
+.cli-icon{font-size:2rem;flex-shrink:0}
+.cli-title{font-family:var(--f-s);font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.cli-sub{font-size:.82rem;color:var(--text2);line-height:1.6;font-family:var(--f-s)}
+.checklist-inner{max-width:1280px;margin:0 auto;padding:0 48px}
+.cl-sections{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:16px}
+.cl-section{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.cls-head{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;gap:10px}
+.cls-icon{font-size:1.1rem}
+.cls-title{font-size:.82rem;font-weight:700;color:var(--text)}
+.cls-progress{font-family:var(--f-m);font-size:.68rem;color:var(--text3);margin-left:auto}
+.cls-body{padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.cl-question{border:1px solid var(--border);border-radius:7px;padding:12px 14px;background:rgba(255,255,255,.01)}
+.clq-text{font-size:.79rem;color:var(--text2);line-height:1.5;margin-bottom:10px;font-family:var(--f-s)}
+.clq-critical{color:var(--gold)!important;font-weight:600}
+.clq-answers{display:flex;gap:7px}
+.clq-btn{
+  flex:1;padding:7px 6px;border-radius:6px;border:1px solid var(--border2);
+  background:var(--s4);color:var(--text3);font-family:var(--f-d);font-size:.73rem;
+  font-weight:600;cursor:pointer;transition:all .15s;text-align:center;
+}
+.clq-btn:hover{border-color:var(--border2);color:var(--text);background:var(--s3)}
+.clq-btn.selected-yes{background:var(--buy-pale);border-color:rgba(34,212,90,.4);color:var(--buy)}
+.clq-btn.selected-no{background:var(--risk-pale);border-color:rgba(240,72,58,.4);color:var(--risk)}
+.clq-btn.selected-dk{background:rgba(240,180,41,.08);border-color:rgba(240,180,41,.3);color:var(--hold)}
+.clq-veto-warn{font-size:.67rem;color:var(--risk);margin-top:5px;font-family:var(--f-m);display:none}
+.clq-veto-warn.show{display:block}
+.cl-submit-area{max-width:1280px;margin:24px auto;padding:0 48px}
+.cl-submit-btn{
+  width:100%;padding:16px;border-radius:10px;background:var(--accent);color:var(--bg);
+  border:none;font-family:var(--f-d);font-size:.95rem;font-weight:800;cursor:pointer;
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.cl-submit-btn:hover{background:var(--accent2);transform:translateY(-1px)}
+.cl-submit-btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.cl-progress-bar{height:4px;background:var(--s4);border-radius:2px;margin-bottom:20px;overflow:hidden}
+.cl-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--buy));border-radius:2px;transition:width .4s ease}
+
+/* ── FINAL RESULTS ── */
+#finalSection{display:none;padding-bottom:60px}
+#finalSection.show{display:block}
+.final-header{background:var(--s1);border-bottom:1px solid var(--border);padding:32px 48px;margin-bottom:0}
+.fh-inner{max-width:1280px;margin:0 auto}
+.fh-title{font-family:var(--f-s);font-size:1.6rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.fh-sub{font-size:.85rem;color:var(--text2);margin-bottom:24px;font-family:var(--f-s)}
+.final-verdicts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.fv-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:16px;border-top:3px solid}
+.fvc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.fvc-icon{font-size:1.1rem}
+.fvc-verdict-badge{font-family:var(--f-m);font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid}
+.fvc-name{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:2px}
+.fvc-phil{font-size:.66rem;color:var(--text3);margin-bottom:10px;font-style:italic;font-family:var(--f-s)}
+.fvc-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px}
+.fvcs{background:var(--s4);border-radius:5px;padding:6px;text-align:center}
+.fvcs-val{font-family:var(--f-m);font-size:.95rem;font-weight:500}
+.fvcs-lbl{font-size:.58rem;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.final-reasoning{max-width:1280px;margin:0 auto;padding:28px 48px}
+.expert-verdict-box{
+  background:var(--s3);border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;margin-bottom:20px;
+}
+.evb-head{padding:16px 22px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;gap:12px}
+.evb-icon{font-size:1.5rem}
+.evb-title{font-family:var(--f-s);font-size:1.05rem;font-weight:700;color:var(--text)}
+.evb-sub{font-size:.75rem;color:var(--text3);margin-top:2px}
+.evb-body{padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* ── SAVE BUTTON ── */
+.save-report-btn{
+  display:flex;align-items:center;gap:10px;padding:10px 16px;
+  border-radius:8px;background:var(--s3);border:1px solid var(--border2);
+  cursor:pointer;transition:all .2s;font-family:var(--f-d);width:100%;
+}
+.save-report-btn:hover{border-color:var(--buy);background:var(--buy-pale);transform:translateY(-1px)}
+.srb-icon{font-size:1.1rem;flex-shrink:0}
+.srb-text{display:flex;flex-direction:column;text-align:left}
+.srb-main{font-size:.78rem;font-weight:700;color:var(--text)}
+.srb-sub{font-size:.63rem;color:var(--text3);margin-top:1px;font-family:var(--f-m)}
+.save-report-btn:hover .srb-main{color:var(--buy)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--s3);border:1px solid var(--buy);border-radius:9px;padding:12px 20px;display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--buy);font-weight:700;opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+@media(max-width:900px){
+  .hero,.co-header,.profiles-section,.detail-panel,.checklist-header,.checklist-inner,.cl-submit-area,.final-header,.final-reasoning{padding-left:20px;padding-right:20px}
+  .hero-inner,.co-inner,.fh-inner{grid-template-columns:1fr}
+}
+
+/* ── GLOBAL SCORE RING (old dashboard style) ── */
+.global-score-section{
+  background:var(--s1);border-bottom:1px solid rgba(0,229,160,.08);
+  padding:28px 48px;
+}
+.gss-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:32px;align-items:start}
+@media(max-width:900px){.gss-inner{grid-template-columns:1fr}}
+.gss-left{display:flex;flex-direction:column;gap:16px}
+.gss-title{font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3)}
+
+/* Verdict box */
+.verdict-box{
+  padding:18px 24px;border-radius:12px;border:2px solid;
+  display:flex;align-items:center;gap:18px;max-width:560px;
+}
+.vb-buy{background:var(--buy-pale);border-color:var(--buy);box-shadow:0 0 30px var(--buy-glow)}
+.vb-hold{background:var(--hold-pale);border-color:var(--hold)}
+.vb-no{background:var(--risk-pale);border-color:var(--risk);box-shadow:0 0 30px var(--risk-glow)}
+.vb-icon{font-size:2.2rem;flex-shrink:0}
+.vb-label{font-size:.62rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;font-family:var(--f-m);margin-bottom:3px}
+.vb-decision{font-family:var(--f-s);font-size:1.35rem;font-weight:700;margin-bottom:3px}
+.vb-sub{font-size:.76rem;color:var(--text2);line-height:1.45}
+.vb-buy .vb-label,.vb-buy .vb-decision{color:var(--buy)}
+.vb-hold .vb-label,.vb-hold .vb-decision{color:var(--hold)}
+.vb-no .vb-label,.vb-no .vb-decision{color:var(--risk)}
+
+/* Score ring */
+.gss-right{display:flex;flex-direction:column;gap:12px;align-items:center}
+.score-ring-wrap{text-align:center}
+.score-ring-svg{display:block}
+.vs-ok{background:var(--buy-pale);border:1px solid rgba(34,212,90,.3);color:var(--buy)}
+.vs-ko{background:var(--risk-pale);border:1px solid rgba(240,72,58,.3);color:var(--risk)}
+.veto-status-badge{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:6px;font-family:var(--f-m);font-size:.7rem;font-weight:600;border:1px solid;
+}
+
+/* KPI cards */
+.kpis-section{padding:0 48px}
+@media(max-width:900px){.kpis-section{padding:0 20px}}
+.kpis-inner{max-width:1280px;margin:0 auto}
+.kpis-title{font-size:.68rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.kpis-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.kpis-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px}
+.kpi-card{
+  background:var(--s3);border:1px solid var(--border);
+  border-radius:8px;padding:13px;text-align:center;border-top:2px solid;
+  transition:transform .15s;
+}
+.kpi-card:hover{transform:translateY(-2px)}
+.kpi-val{font-family:var(--f-m);font-size:1.1rem;font-weight:500;margin-bottom:4px}
+.kpi-lbl{font-size:.65rem;color:var(--text3);letter-spacing:.5px;text-transform:uppercase}
+.kpi-signal{font-size:.62rem;color:var(--text4);margin-top:3px;font-family:var(--f-m)}
+
+/* Module note (explanation) */
+.mod-explanation{
+  margin:0 16px 14px;padding:10px 13px;
+  background:rgba(255,255,255,.025);border-radius:7px;
+  font-size:.76rem;color:var(--text2);line-height:1.55;
+  border-left:2px solid;font-family:var(--f-s);
+}
+.me-buy{border-color:var(--buy)}.me-hold{border-color:var(--hold)}
+.me-no{border-color:var(--risk)}.me-info{border-color:var(--accent)}
+
+/* sector badge in results */
+.sector-info-bar{
+  max-width:1280px;margin:0 auto;padding:10px 48px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  font-size:.74rem;color:var(--text3);
+}
+.sib-badge{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 10px;
+  border-radius:4px;font-family:var(--f-m);font-size:.66rem;font-weight:600;
+  background:var(--s3);border:1px solid var(--border2);color:var(--accent);
+}
+</style>
+</head>
+<body>
+<!-- TOPBAR -->
+<nav class="topbar">
+  <div class="tb-logo">
+    <a href="/" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:8px">
+      <div class="tb-logo-icon" style="background:var(--buy)">◄</div>
+      <span style="font-size:.72rem;color:var(--text2)">MAIKOS</span>
+    </a>
+    <div class="tb-sep"></div>
+    <div style="font-size:.78rem;font-weight:700;letter-spacing:1px;color:var(--buy)">ANÁLISIS ACCIONES</div>
+  </div>
+  <div class="tb-sep"></div>
+  <div class="tb-links">
+    <button class="tb-link ext" onclick="openTool('diagrama')">🗺 Diagrama ↗</button>
+    <button class="tb-link ext" onclick="openTool('manual')">📖 Manual ↗</button>
+    <button class="tb-link ext" onclick="openTool('metricas')">📋 Métricas ↗</button>
+  </div>
+  <div class="tb-company" id="tbCompany">—</div>
+</nav>
+
+<!-- HERO / UPLOAD -->
+<section class="hero" id="heroSection">
+  <div class="hero-grid"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-kicker">Motor de análisis · 10 perfiles · 1264 métricas</div>
+      <h1>Análisis Fundamental<br><em>Multi-Perfil</em> con IA</h1>
+      <p class="hero-sub">El primer sistema que evalúa una empresa simultáneamente desde los 10 perfiles de inversor más importantes — Value, Quality, Growth, Dividendos, GARP y más. Con checklist cualitativo de 53 preguntas y razonamiento de experto para cada perfil.</p>
+      <div class="hero-pills">
+        <span class="hp hp-v">📚 Value / Deep Value</span>
+        <span class="hp hp-g">🏆 Quality / GARP / Growth</span>
+        <span class="hp hp-i">💵 Income / DGI</span>
+        <span class="hp hp-b">10 perfiles · Umbrales sectoriales</span>
+      </div>
+    </div>
+    <div class="upload-panel">
+      <div class="up-title">📂 Archivos de análisis</div>
+      
+      <!-- CSV métricas (obligatorio) -->
+      <div>
+        <div class="dz-sub" style="margin-bottom:5px;color:var(--text2);font-size:.72rem">① CSV de métricas — <strong>obligatorio</strong></div>
+        <div class="drop-zone" id="dz1">
+          <input type="file" accept=".csv" onchange="handleCSV(this.files[0])">
+          <div class="dz-icon">📄</div>
+          <div class="dz-label"><strong>CSV con métricas de la empresa</strong>formato slug;valor;descripción</div>
+          <div class="dz-sub">Arrastra o haz clic</div>
+        </div>
+        <div class="file-ok" id="fo1">✓ <span id="fo1name">—</span></div>
+      </div>
+
+      <div class="up-optional">② Archivos opcionales</div>
+
+      <!-- Excel sector -->
+      <div>
+        <div class="dz-sub" style="margin-bottom:5px;color:var(--text3);font-size:.7rem">Excel comparativa sectorial — mejora M6 y benchmarking de peers</div>
+        <div class="drop-zone" id="dz2" style="padding:14px">
+          <input type="file" accept=".xlsx,.xls" onchange="handleExcel(this.files[0])">
+          <div class="dz-label" style="font-size:.75rem"><strong>📊 Excel sector</strong></div>
+          <div class="dz-sub">Market View / Risk / Efficiency / Projections</div>
+        </div>
+        <div class="file-ok" id="fo2">✓ <span id="fo2name">—</span></div>
+      </div>
+
+      <!-- Imagen ingresos -->
+      <div>
+        <div class="dz-sub" style="margin-bottom:5px;color:var(--text3);font-size:.7rem">Gráfico de ingresos — se incluye en el informe</div>
+        <div class="drop-zone" id="dz3" style="padding:14px">
+          <input type="file" accept="image/*" onchange="handleImage(this.files[0])">
+          <div class="dz-label" style="font-size:.75rem"><strong>📈 Imagen gráfico</strong></div>
+          <div class="dz-sub">JPG, PNG — evolución de ingresos/márgenes</div>
+        </div>
+        <div class="file-ok" id="fo3">✓ <span id="fo3name">—</span></div>
+      </div>
+
+      <div class="up-row">
+        <input type="text" class="ticker-inp" id="tickerInp" placeholder="Ticker (ej: SAN.PA, AAPL)" maxlength="12" oninput="checkReady()">
+        <button class="analyze-btn" id="analyzeBtn" disabled onclick="runAnalysis()">Analizar →</button>
+      </div>
+      <div class="progress-bar" id="progressBar">
+        <div class="pb-spinner"></div>
+        <span id="progressText">Iniciando análisis...</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS SECTION -->
+<div id="resultsSection">
+
+  <!-- COMPANY HEADER -->
+  <div class="co-header">
+    <div class="co-inner">
+      <div class="co-top">
+        <div class="co-meta">
+          <div class="co-ticker" id="coTicker">TICKER</div>
+          <div class="co-name" id="coName">Empresa</div>
+          <div class="co-sector"><span id="coSector">Sector</span><span class="co-sector-badge" id="coSectorBadge">general</span></div>
+          <div class="co-price-row">
+            <span class="co-price" id="coPrice">—</span>
+            <span class="co-fv" id="coFV"></span>
+            <span class="co-upside" id="coUpside" style="display:none"></span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end">
+          <div class="co-m0-ok" id="coM0Status">🔍 <span>Verificando integridad...</span></div>
+          <button class="save-report-btn" id="saveBtn" onclick="saveReport()" style="display:none">
+            <span class="srb-icon">⬇</span>
+            <div class="srb-text"><span class="srb-main">Guardar Informe Completo</span><span class="srb-sub">HTML autónomo · todos los perfiles</span></div>
+          </button>
+          <button class="save-report-btn" id="saveHistBtn" onclick="saveToMAIKOS()" style="display:none;background:rgba(0,229,160,.08);border-color:rgba(0,229,160,.3)">
+            <span class="srb-icon">📊</span>
+            <div class="srb-text"><span class="srb-main" style="color:var(--buy)">Guardar en MAIKOS</span><span class="srb-sub">Añadir al histórico de análisis</span></div>
+          </button>
+          <button class="tb-link ext" onclick="resetAnalysis()" style="margin-top:4px">+ Nuevo Análisis</button>
+        </div>
+      </div>
+      <div class="co-veto-alert" id="coVetoAlert">
+        🚨 <span id="coVetoText">Veto activado</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOBAL SCORE (neutral, no profile) -->
+  <div class="global-score-section" id="globalScoreSection">
+    <div class="gss-inner">
+      <div class="gss-left">
+        <div class="gss-title">⭐ Score Global — Análisis Fundamental Puro (sin perfil de inversor)</div>
+        <div class="verdict-box" id="globalVerdictBox">
+          <div class="vb-icon" id="gvIcon">🟡</div>
+          <div>
+            <div class="vb-label" id="gvLabel">ANÁLISIS FUNDAMENTAL</div>
+            <div class="vb-decision" id="gvDecision">—</div>
+            <div class="vb-sub" id="gvSub">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="gss-right">
+        <div class="score-ring-wrap">
+          <svg class="score-ring-svg" width="130" height="130" viewBox="0 0 130 130">
+            <circle cx="65" cy="65" r="54" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+            <circle id="globalRingFill" cx="65" cy="65" r="54" fill="none" stroke="#6a8fff"
+              stroke-width="10" stroke-linecap="round"
+              stroke-dasharray="339.3" stroke-dashoffset="339.3"
+              transform="rotate(-90 65 65)" style="transition:stroke-dashoffset 1.2s ease"/>
+            <text x="65" y="60" text-anchor="middle" font-family="'DM Mono',monospace" font-size="22" font-weight="500" fill="#e8eaf2" id="globalRingNum">0%</text>
+            <text x="65" y="76" text-anchor="middle" font-family="'DM Mono',monospace" font-size="9" fill="#4a5175" letter-spacing="1">SCORE GLOBAL</text>
+          </svg>
+        </div>
+        <div class="veto-status-badge" id="globalVetoStatus">
+          <span>⬤</span><span>Verificando vetos...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTOR INFO BAR -->
+  <div style="background:var(--s1);border-bottom:1px solid var(--border);padding-bottom:14px">
+    <div class="sector-info-bar" id="sectorInfoBar">
+      <span>Umbrales de análisis ajustados para:</span>
+    </div>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div style="max-width:1280px;margin:0 auto;padding:24px 48px 0">
+    <div class="kpis-title">📌 Métricas Clave Detectadas</div>
+    <div class="kpis-row" id="kpisRow"></div>
+  </div>
+
+  <!-- PROFILES GRID -->
+  <div class="profiles-section">
+    <div class="ps-title">📊 Veredicto por Perfil de Inversor — Análisis Cuantitativo (80%)</div>
+    <div class="profiles-grid" id="profilesGrid"></div>
+  </div>
+
+  <!-- DETAIL TABS -->
+  <div class="detail-panel">
+    <div class="detail-tabs" id="detailTabs">
+      <button class="dtab active" data-tab="modules" onclick="switchTab(this)">🔬 Módulos</button>
+      <button class="dtab" data-tab="scores" onclick="switchTab(this)">⚖️ Puntuaciones</button>
+      <button class="dtab" data-tab="peers" onclick="switchTab(this)">🏆 Comparativa Sector</button>
+      <button class="dtab" data-tab="chart" onclick="switchTab(this)">📈 Gráfico Ingresos</button>
+      <button class="dtab" data-tab="reasoning" onclick="switchTab(this)">🧠 Razonamiento</button>
+    </div>
+
+    <!-- TAB: Modules -->
+    <div class="tab-content" id="tab-modules">
+      <div class="modules-grid" id="modulesGrid"></div>
+    </div>
+
+    <!-- TAB: Scores -->
+    <div class="tab-content" id="tab-scores" style="display:none">
+      <div class="score-bars-box" id="scoreBarsBox"></div>
+    </div>
+
+    <!-- TAB: Peers -->
+    <div class="tab-content" id="tab-peers" style="display:none">
+      <div style="background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <div style="padding:12px 18px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.78rem;font-weight:700">🏆 Comparativa con Competidores del Sector</div>
+        <div id="peersContent" style="padding:16px"></div>
+      </div>
+    </div>
+
+    <!-- TAB: Chart -->
+    <div class="tab-content" id="tab-chart" style="display:none">
+      <div class="chart-img-box">
+        <div class="cib-head">📈 Evolución de Ingresos y Márgenes</div>
+        <div id="chartImgArea"><div class="cib-empty">No se ha subido ningún gráfico de ingresos.<br>Sube una imagen en la zona de upload para verla aquí.</div></div>
+      </div>
+    </div>
+
+    <!-- TAB: Reasoning -->
+    <div class="tab-content" id="tab-reasoning" style="display:none">
+      <div class="reasoning-box">
+        <div class="rb-head">🧠 Razonamiento Detallado del Análisis Cuantitativo</div>
+        <div class="rb-body" id="reasoningBody"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHECKLIST CTA -->
+  <div style="max-width:1280px;margin:0 auto;padding:0 48px 40px">
+    <div style="background:linear-gradient(135deg,var(--s3),var(--s4));border:1px solid var(--accent);border-radius:12px;padding:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+      <div style="flex:1;min-width:250px">
+        <div style="font-family:var(--f-s);font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:6px">✅ Completa el Checklist Cualitativo (20%)</div>
+        <div style="font-size:.82rem;color:var(--text2);line-height:1.6;font-family:var(--f-s)">8 secciones · 53 preguntas · Responde SÍ / NO / No sé para obtener el veredicto final con razonamiento de experto.</div>
+      </div>
+      <button onclick="showChecklist()" style="padding:12px 24px;background:var(--accent);color:var(--bg);border:none;border-radius:8px;font-family:var(--f-d);font-size:.85rem;font-weight:800;cursor:pointer;white-space:nowrap;transition:all .2s">
+        Iniciar Checklist Cualitativo →
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST SECTION -->
+<div id="checklistSection">
+  <div class="checklist-header">
+    <div style="font-family:var(--f-s);font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:6px">📋 Checklist Cualitativo</div>
+    <div style="font-size:.85rem;color:var(--text2);margin-bottom:20px">Responde con honestidad. <strong style="color:var(--gold)">Las preguntas en naranja son críticas</strong> — responder NO baja automáticamente el veredicto una categoría.</div>
+    <div class="cl-progress-bar"><div class="cl-progress-fill" id="clProgressFill" style="width:0%"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:var(--f-m);font-size:.72rem;color:var(--text3)"><span id="clAnswered">0</span> / <span id="clTotal">53</span> respondidas</div>
+      <button onclick="resetChecklist()" style="padding:5px 12px;border-radius:5px;font-size:.72rem;font-weight:600;border:1px solid var(--border2);background:var(--s3);color:var(--text3);cursor:pointer">Limpiar respuestas</button>
+    </div>
+  </div>
+  <div class="checklist-inner">
+    <div class="cl-sections" id="clSections"></div>
+  </div>
+  <div class="cl-submit-area">
+    <button class="cl-submit-btn" id="clSubmitBtn" onclick="computeFinalResults()">
+      🎯 Calcular Veredicto Final Combinado →
+    </button>
+    <div style="text-align:center;margin-top:8px;font-size:.7rem;color:var(--text3)">Las preguntas sin responder cuentan como "No sé" (0 puntos)</div>
+  </div>
+</div>
+
+<!-- FINAL SECTION -->
+<div id="finalSection">
+  <div class="final-header">
+    <div class="fh-inner">
+      <div class="fh-title">🎯 Veredicto Final — Análisis Completo</div>
+      <div class="fh-sub">Combinación del análisis cuantitativo (80%) + checklist cualitativo (20%)</div>
+      <div class="final-verdicts-grid" id="finalVerdictsGrid"></div>
+    </div>
+  </div>
+  <div class="final-reasoning" id="finalReasoningArea"></div>
+</div>
+
+<div class="toast" id="toast">✓ <span id="toastMsg">—</span></div>
+
+<script>
+/* ══════════════════════════════════════════
+   ENGINE (embedded)
+══════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════
+// MOTOR DE ANÁLISIS FUNDAMENTAL — CONFIGURACIÓN COMPLETA
+// Versión 2.0 — Arquitectura multi-perfil
+// ═══════════════════════════════════════════════════════════════
+
+// ── 10 PERFILES DE INVERSOR ──────────────────────────────────
+const PROFILES = {
+  value:      { name: 'Value Clásico',        icon: '📚', color: '#e8c55a', philosopher: 'Graham / Dodd' },
+  quality:    { name: 'Quality/Compounding',  icon: '🏆', color: '#22d45a', philosopher: 'Buffett / Munger' },
+  garp:       { name: 'GARP',                 icon: '⚖️', color: '#4a80f0', philosopher: 'Lynch / Neff' },
+  growth:     { name: 'Growth Acelerado',     icon: '🚀', color: '#f0483a', philosopher: 'Fisher / Wood' },
+  smallcap:   { name: 'Small/Mid Cap Growth', icon: '🌱', color: '#fb8f44', philosopher: 'Lynch / Schloss' },
+  income:     { name: 'Dividendo Estable',    icon: '💵', color: '#a371f7', philosopher: 'Lowell Miller' },
+  dgi:        { name: 'Dividend Growth',      icon: '📈', color: '#39d353', philosopher: 'Chowder / Connolly' },
+  deepvalue:  { name: 'Deep Value / Contrarian', icon: '🔍', color: '#79c0ff', philosopher: 'Graham / Schloss' },
+  defensive:  { name: 'Defensivo',            icon: '🛡️', color: '#8b949e', philosopher: 'Klarman / Neff' },
+  incgrowth:  { name: 'Income + Growth',      icon: '💎', color: '#d2a8ff', philosopher: 'O\'Neil / Dreman' },
+};
+
+// ── PESOS DE MÓDULOS CUANTITATIVOS POR PERFIL (suma = 100) ───
+// M0=filtro, M1=rentabilidad, M2=crecimiento, M3=calidad_financiera
+// M4=riesgo_deuda, M5=liquidez, M6=val_relativa, M7=val_intrinseca
+// M8=dividendos, M9=momentum
+const MODULE_WEIGHTS = {
+//             M1    M2    M3    M4    M5    M6    M7    M8    M9
+  value:     [ 25,    8,   20,   18,    8,   12,   12,    2,    0],
+  quality:   [ 28,   12,   22,   14,    5,   10,    8,    1,    0],
+  garp:      [ 18,   25,   12,   12,    5,   15,    8,    2,    3],
+  growth:    [ 15,   30,   10,   10,    5,   15,    8,    2,    5],
+  smallcap:  [ 15,   28,   12,   12,    8,   12,    7,    1,    5],
+  income:    [ 10,    5,   15,   20,   10,    5,   10,   20,    5],
+  dgi:       [ 18,   12,   15,   15,    5,    8,    8,   18,    1],
+  deepvalue: [ 15,    5,   18,   20,   12,   15,   15,    0,    0],
+  defensive: [ 20,    5,   15,   20,   10,   10,   10,    8,    2],
+  incgrowth: [ 18,   18,   12,   14,    6,   10,    8,   12,    2],
+};
+
+// ── PESOS SECCIONES CHECKLIST CUALITATIVO POR PERFIL (suma = 100) ──
+// S1=directivos, S2=moat, S3=sector, S4=ingresos, S5=regulatorio
+// S6=deuda_detalle, S7=ciclo, S8=comprension
+const CHECKLIST_WEIGHTS = {
+//             S1    S2    S3    S4    S5    S6    S7    S8
+  value:     [ 15,   15,   12,   10,   10,   15,   10,   13],
+  quality:   [ 20,   25,   15,   12,    8,    8,    5,    7],
+  garp:      [ 15,   20,   15,   12,    8,   10,    8,   12],
+  growth:    [ 15,   18,   18,   18,    8,    5,    8,   10],
+  smallcap:  [ 20,   15,   18,   15,    8,   10,    7,    7],
+  income:    [ 15,   10,    8,   12,   12,   18,    8,   17],
+  dgi:       [ 20,   15,   10,   12,   10,   12,    8,   13],
+  deepvalue: [  8,    8,    8,    5,    8,   20,   20,   23],
+  defensive: [ 15,   12,   10,   15,   15,   15,   10,    8],
+  incgrowth: [ 17,   17,   13,   12,    9,   10,    8,   14],
+};
+
+// ── RATIO CUANTITATIVO / CUALITATIVO ──────────────────────────
+const QUANT_WEIGHT = 0.80;
+const QUAL_WEIGHT  = 0.20;
+
+// ── SECTOR CONFIG — umbrales por tipo de empresa ─────────────
+// [good, ok] para cada métrica. 999 = no aplica (pasa siempre)
+const SECTOR_CFG = {
+  tech:     { roic:[15,10], roe:[15,10], gpM:[60,40], ebitdaM:[25,15], niM:[12,7],  fcfM:[20,12], revCagr:[15,8],  epsCagr:[15,8],  netDebt:[1.5,3.0], ic:[8,4],  cr:[1.5,1.0], ccc:[15,-99],  assetTO:[0.5,0.3], capexPct:[3,8]   },
+  health:   { roic:[12,8],  roe:[12,8],  gpM:[60,45], ebitdaM:[30,18], niM:[10,5],  fcfM:[18,10], revCagr:[8,4],   epsCagr:[8,4],   netDebt:[2.0,3.5], ic:[7,4],  cr:[1.5,1.0], ccc:[90,150],  assetTO:[0.3,0.2], capexPct:[5,12]  },
+  util:     { roic:[6,4],   roe:[10,7],  gpM:[25,15], ebitdaM:[35,22], niM:[8,4],   fcfM:[8,4],   revCagr:[3,1],   epsCagr:[3,1],   netDebt:[5.0,6.5], ic:[3,2],  cr:[1.0,0.8], ccc:[60,120],  assetTO:[0.2,0.1], capexPct:[999,0] },
+  finance:  { roic:[999,0], roe:[12,9],  gpM:[999,0], ebitdaM:[999,0], niM:[999,0], fcfM:[999,0], revCagr:[6,3],   epsCagr:[6,3],   netDebt:[999,0],   ic:[999,0],cr:[999,0],   ccc:[999,0],   assetTO:[999,0],   capexPct:[3,8]   },
+  consumer: { roic:[12,8],  roe:[15,10], gpM:[40,25], ebitdaM:[18,10], niM:[8,4],   fcfM:[12,7],  revCagr:[8,4],   epsCagr:[8,4],   netDebt:[2.5,4.0], ic:[6,3],  cr:[1.5,1.0], ccc:[30,60],   assetTO:[0.8,0.5], capexPct:[6,12]  },
+  industry: { roic:[10,7],  roe:[12,8],  gpM:[35,22], ebitdaM:[18,10], niM:[6,3],   fcfM:[10,5],  revCagr:[6,3],   epsCagr:[6,3],   netDebt:[2.5,4.0], ic:[6,3],  cr:[1.5,1.0], ccc:[60,90],   assetTO:[0.5,0.3], capexPct:[10,20] },
+  reit:     { roic:[999,0], roe:[8,5],   gpM:[50,35], ebitdaM:[50,35], niM:[999,0], fcfM:[999,0], revCagr:[5,2],   epsCagr:[5,2],   netDebt:[6.0,8.0], ic:[2,1.5],cr:[1.0,0.8], ccc:[999,0],   assetTO:[0.1,0.05],capexPct:[999,0] },
+  general:  { roic:[12,8],  roe:[15,10], gpM:[40,25], ebitdaM:[20,12], niM:[8,4],   fcfM:[12,6],  revCagr:[8,4],   epsCagr:[8,4],   netDebt:[2.5,4.0], ic:[5,3],  cr:[1.5,1.0], ccc:[60,90],   assetTO:[0.5,0.3], capexPct:[8,15]  },
+};
+
+// ── VETOS CUANTITATIVOS ABSOLUTOS ────────────────────────────
+// Si se activa → todos los perfiles → NO COMPRAR
+const QUANT_VETOS = [
+  { id:'beneish',   slug:'beneish_mscore',      op:'>',  threshold:-1.78, label:'Beneish M-Score > -1.78 (posible fraude contable)' },
+  { id:'altman',    slug:'altman_z_score',       op:'<',  threshold:1.81,  label:'Altman Z-Score < 1.81 (riesgo de quiebra)' },
+  { id:'ic_veto',   slug:'interest_coverage',    op:'<',  threshold:1.0,   label:'Interest Coverage < 1.0x (no cubre intereses)' },
+  { id:'cr_veto',   slug:'current_ratio',        op:'<',  threshold:0.8,   label:'Current Ratio < 0.8x (insolvencia técnica)' },
+  { id:'netdebt',   slug:'net_debt_to_ebitda',   op:'>',  threshold:7.0,   label:'Net Debt/EBITDA > 7x (apalancamiento extremo)' },
+];
+
+// ── VETOS CUALITATIVOS (bajan categoría si = NO) ──────────────
+const QUAL_VETOS = [
+  { id:'understand', section:8, q:46, label:'No entiende el modelo de negocio' },
+  { id:'debt_mat',   section:6, q:34, label:'Vencimientos de deuda problemáticos' },
+  { id:'resilience', section:7, q:42, label:'No demostró resiliencia en recesiones' },
+  { id:'organic',    section:4, q:26, label:'Crecimiento no es orgánico' },
+  { id:'scandal',    section:1, q:7,  label:'Escándalos de gobierno corporativo' },
+];
+
+// ── CHECKLIST — 53 PREGUNTAS EN 8 SECCIONES ──────────────────
+const CHECKLIST = {
+  s1: {
+    title: 'Equipo Directivo y Gobierno Corporativo',
+    icon: '👔',
+    questions: [
+      { id:'s1q1', text:'¿El CEO lleva más de 3 años y tiene historial demostrable de creación de valor?', critical: false },
+      { id:'s1q2', text:'¿Los directivos tienen una participación significativa en el capital (>1%)?', critical: false },
+      { id:'s1q3', text:'¿Ha habido insider buying reciente — directivos comprando con su propio dinero?', critical: false },
+      { id:'s1q4', text:'¿La compensación está ligada a métricas de largo plazo (ROIC, FCF) y no solo al precio?', critical: false },
+      { id:'s1q5', text:'¿El historial de asignación de capital (M&A, recompras, dividendos) ha creado valor?', critical: false },
+      { id:'s1q6', text:'¿El consejo de administración es mayoritariamente independiente y experto en el sector?', critical: false },
+      { id:'s1q7', text:'¿La empresa ha evitado escándalos, litigios graves o fraudes en los últimos 5 años?', critical: true },
+    ]
+  },
+  s2: {
+    title: 'Ventaja Competitiva (Moat)',
+    icon: '🏰',
+    questions: [
+      { id:'s2q1', text:'¿La empresa tiene pricing power — puede subir precios sin perder clientes significativos?', critical: false },
+      { id:'s2q2', text:'¿Existe un efecto red que hace el producto más valioso con más usuarios?', critical: false },
+      { id:'s2q3', text:'¿Los costes de cambio para los clientes son elevados (tiempo, dinero, riesgo operativo)?', critical: false },
+      { id:'s2q4', text:'¿Tiene activos intangibles protegidos — patentes, licencias, marcas o secretos industriales?', critical: false },
+      { id:'s2q5', text:'¿Tiene ventajas de coste estructurales que los competidores no pueden igualar a corto plazo?', critical: false },
+      { id:'s2q6', text:'¿El ROIC alto se explica por ventaja competitiva clara, no por condiciones cíclicas favorables?', critical: false },
+      { id:'s2q7', text:'¿Puedes describir en dos frases por qué un cliente elegiría esta empresa frente a cualquier alternativa?', critical: false },
+    ]
+  },
+  s3: {
+    title: 'Posición Competitiva y Sector',
+    icon: '🎯',
+    questions: [
+      { id:'s3q1', text:'¿La empresa está ganando cuota de mercado frente a sus competidores principales?', critical: false },
+      { id:'s3q2', text:'¿El sector está en fase de crecimiento o madurez estable — no en declive estructural?', critical: false },
+      { id:'s3q3', text:'¿No existe una disrupción tecnológica o regulatoria que amenace el modelo en los próximos 5 años?', critical: false },
+      { id:'s3q4', text:'¿Ningún cliente representa más del 20% de los ingresos (diversificación de clientes)?', critical: false },
+      { id:'s3q5', text:'¿La empresa tiene poder de negociación frente a sus proveedores principales?', critical: false },
+      { id:'s3q6', text:'¿El mercado total disponible (TAM) tiene espacio para que siga creciendo?', critical: false },
+      { id:'s3q7', text:'¿Los competidores principales tienen peores métricas fundamentales que esta empresa?', critical: false },
+    ]
+  },
+  s4: {
+    title: 'Calidad y Recurrencia de Ingresos',
+    icon: '🔄',
+    questions: [
+      { id:'s4q1', text:'¿La mayor parte de los ingresos son recurrentes — suscripciones, contratos plurianuales o compras repetidas?', critical: false },
+      { id:'s4q2', text:'¿La empresa tiene Net Revenue Retention > 100% — los clientes existentes gastan más cada año?', critical: false },
+      { id:'s4q3', text:'¿La tasa de cancelación de clientes (churn) es baja y estable o decreciente?', critical: false },
+      { id:'s4q4', text:'¿Los ingresos están diversificados geográficamente — no más del 60% en un solo país?', critical: false },
+      { id:'s4q5', text:'¿El crecimiento es principalmente orgánico y no depende de adquisiciones para mantenerse?', critical: true },
+      { id:'s4q6', text:'¿La empresa tiene visibilidad sobre los ingresos de los próximos 12 meses (backlog, contratos)?', critical: false },
+    ]
+  },
+  s5: {
+    title: 'Riesgos Regulatorios y Geopolíticos',
+    icon: '⚖️',
+    questions: [
+      { id:'s5q1', text:'¿Opera principalmente en países con estabilidad política y estado de derecho sólido?', critical: false },
+      { id:'s5q2', text:'¿No está bajo investigación antimonopolio activa ni riesgo de fragmentación regulatoria?', critical: false },
+      { id:'s5q3', text:'¿No depende de subsidios gubernamentales o legislación favorable que podría revertirse?', critical: false },
+      { id:'s5q4', text:'¿La exposición a divisas extranjeras está cubierta o es manejable sin impacto material?', critical: false },
+      { id:'s5q5', text:'¿El sector no está bajo presión regulatoria creciente que pueda comprimir márgenes en 3 años?', critical: false },
+      { id:'s5q6', text:'¿No tiene dependencia crítica de una cadena de suministro concentrada en un país o proveedor?', critical: false },
+    ]
+  },
+  s6: {
+    title: 'Estructura de Deuda Detallada',
+    icon: '🏦',
+    questions: [
+      { id:'s6q1', text:'¿Los vencimientos de deuda están bien distribuidos — no hay un muro de vencimientos en 2 años?', critical: true },
+      { id:'s6q2', text:'¿La deuda está principalmente a tipo fijo — protegida frente a subidas de tipos de interés?', critical: false },
+      { id:'s6q3', text:'¿La deuda está denominada en la misma moneda que genera sus ingresos principales?', critical: false },
+      { id:'s6q4', text:'¿Tiene líneas de crédito disponibles o caja suficiente para cubrir 12 meses sin financiación externa?', critical: false },
+      { id:'s6q5', text:'¿En el peor escenario razonable (caída 30% ingresos) la empresa seguiría siendo solvente?', critical: false },
+      { id:'s6q6', text:'¿Las obligaciones fuera de balance — leases, pensiones, contingencias — son manejables?', critical: false },
+    ]
+  },
+  s7: {
+    title: 'Ciclo Económico y Timing',
+    icon: '📅',
+    questions: [
+      { id:'s7q1', text:'¿Para empresas cíclicas: estamos en fase baja o media del ciclo — no en el pico de beneficios?', critical: false },
+      { id:'s7q2', text:'¿El sector no está en sobreexpansión de capacidad que llevará a guerra de precios en 2-3 años?', critical: false },
+      { id:'s7q3', text:'¿La empresa ha demostrado resiliencia en recesiones anteriores (2008, 2020) con rentabilidad positiva?', critical: true },
+      { id:'s7q4', text:'¿El entorno macroeconómico actual (tipos, inflación, crédito) es favorable para este negocio?', critical: false },
+      { id:'s7q5', text:'¿No hay catalizador negativo próximo conocido (pérdida patente, litigio, contrato que vence)?', critical: false },
+      { id:'s7q6', text:'¿Existe un catalizador positivo identificable en 12-24 meses que el mercado no está valorando?', critical: false },
+    ]
+  },
+  s8: {
+    title: 'Comprensión Personal del Negocio',
+    icon: '🧠',
+    questions: [
+      { id:'s8q1', text:'¿Puedes explicar el modelo de negocio en menos de 3 minutos a alguien sin conocimientos financieros?', critical: true },
+      { id:'s8q2', text:'¿Entiendes exactamente de dónde vienen los ingresos y por qué los márgenes son como son?', critical: false },
+      { id:'s8q3', text:'¿Has leído el último informe anual completo incluyendo notas a los estados financieros?', critical: false },
+      { id:'s8q4', text:'¿Has escuchado la última earnings call y entiendes el mensaje del equipo directivo?', critical: false },
+      { id:'s8q5', text:'¿Conoces los 3 principales riesgos que la propia empresa menciona en su informe anual?', critical: false },
+      { id:'s8q6', text:'¿Tienes una tesis de inversión clara — sabes qué tiene que ocurrir para que funcione?', critical: false },
+      { id:'s8q7', text:'¿Sabes cuál sería tu precio objetivo y en qué condiciones exactas venderías la posición?', critical: false },
+      { id:'s8q8', text:'¿Estarías cómodo manteniendo esta inversión 3-5 años aunque cayera un 30% a corto plazo?', critical: false },
+    ]
+  }
+};
+
+// Export for use in dashboard
+
+
+
+// ═══════════════════════════════════════════════════════════════
+// MOTOR DE ANÁLISIS — FUNCIONES DE CÁLCULO
+// ═══════════════════════════════════════════════════════════════
+
+// ── PARSING ──────────────────────────────────────────────────
+function parseCSVMetrics(text) {
+  const metrics = {};
+  const lines = text.trim().split('\n');
+  lines.forEach(line => {
+    line = line.replace(/\r/g, '');
+    const parts = line.split(';');
+    if (parts.length < 2) return;
+    const slug  = parts[0].trim();
+    const value = parts[1].trim();
+    const desc  = parts.slice(2).join(';').trim().replace(/^"|"$/g, '');
+    if (!slug || slug.length <= 2 || slug.includes(';;')) return;
+    if (slug.toLowerCase() === 'campo' && value.toLowerCase() === 'valor') return;
+    if (/^[-–•]/.test(slug)) return;
+    metrics[slug] = { value, desc };
+  });
+  return metrics;
+}
+
+function parseExcelSector(rows) {
+  // rows = array of objects from xlsx parsing
+  // Returns structured sector comparison data
+  const sections = { market:{}, risk:{}, returns:{}, efficiency:{}, projections:{}, health:{} };
+  let currentSection = null;
+  let headers = null;
+  const companies = [];
+
+  rows.forEach(row => {
+    const vals = Object.values(row).map(v => v == null ? '' : String(v));
+    const firstVal = vals.find(v => v && v !== 'nan') || '';
+
+    if (firstVal.toLowerCase().includes('market view')) { currentSection = 'market'; headers = null; return; }
+    if (firstVal.toLowerCase().includes('risk - '))     { currentSection = 'risk';   headers = null; return; }
+    if (firstVal.toLowerCase().includes('returns - '))  { currentSection = 'returns'; headers = null; return; }
+    if (firstVal.toLowerCase().includes('efficiency -'))  { currentSection = 'efficiency'; headers = null; return; }
+    if (firstVal.toLowerCase().includes('projection'))  { currentSection = 'projections'; headers = null; return; }
+    if (firstVal.toLowerCase().includes('health - '))   { currentSection = 'health'; headers = null; return; }
+
+    const nonEmpty = vals.filter(v => v && v !== 'nan' && v !== 'NaN');
+    if (!currentSection || nonEmpty.length < 3) return;
+
+    // Detect header row
+    if (firstVal === 'Nombre' || nonEmpty[0] === 'Nombre') {
+      headers = nonEmpty;
+      return;
+    }
+
+    // Data row
+    if (headers && nonEmpty.length >= 3 && !firstVal.toLowerCase().includes('summary') && !firstVal.toLowerCase().includes('premium')) {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = nonEmpty[i] || ''; });
+      if (!sections[currentSection]) sections[currentSection] = {};
+      const companyName = obj['Nombre'] || nonEmpty[0];
+      if (companyName && companyName !== 'Nombre') {
+        if (!sections[currentSection][companyName]) sections[currentSection][companyName] = {};
+        Object.assign(sections[currentSection][companyName], obj);
+        if (!companies.includes(companyName)) companies.push(companyName);
+      }
+    }
+  });
+
+  return { sections, companies };
+}
+
+// ── VALUE RETRIEVAL ──────────────────────────────────────────
+const SLUG_ALIASES = {
+  'altman_z_score':      ['Altman Z-Score', 'Fórmula Altman Z-Score'],
+  'beneish_mscore':      ['Beneish M-Score'],
+  'beta':                ['Beta (5 años)', 'Beta (5 Year)'],
+  'beta_1y':             ['Beta (1 año)', 'Beta (1 Year)'],
+  'total_rev_cagr_5y':   ['CAGR ingresos totales (5 años)'],
+  'total_rev_cagr_3y':   ['CAGR ingresos totales (3 años)'],
+  'total_rev_cagr_10y':  ['CAGR ingresos totales (10 años)'],
+  'total_rev_growth':    ['Crecimiento ingresos totales'],
+  'ebitda_cagr_5y':      ['EBITDA CAGR (5 años)', 'CAGR EBITDA (5'],
+  'ebitda_cagr_3y':      ['EBITDA CAGR (3 años)'],
+  'eps_diluted_cagr_5y': ['CAGR EPS diluido (5 años)'],
+  'eps_diluted_cagr_3y': ['CAGR EPS diluido (3 años)'],
+  'eps_diluted_cagr_10y':['CAGR EPS diluido (10 años)'],
+  'eps_diluted_growth':  ['Crecimiento EPS diluido'],
+  'fcf_levered_cagr_5y': ['CAGR FCF apalancado (5 años)'],
+  'fcf_levered_cagr_3y': ['CAGR FCF apalancado (3 años)'],
+  'fcf_levered_growth':  ['Crecimiento FCF apalancado'],
+  'oper_inc_cagr_5y':    ['CAGR beneficio operativo (5 años)'],
+  'revenue_proj_cagr_5y':['CAGR ingresos proyectados (5 años)'],
+  'revenue_proj_cagr_3y':['CAGR ingresos proyectados (3 años)'],
+  'revenue_proj_growth': ['Crecimiento ingresos proyectado'],
+  'eps_proj_cagr_5y':    ['CAGR EPS proyectado (5 años)'],
+  'nopat_proj_growth':   ['Crecimiento NOPAT proyectado'],
+  'div_share_cagr_5y':   ['CAGR dividendo 5 años', 'CAGR dividendo (5 años)'],
+  'fair_value_upside':   ['Upside valor razonable (fair_value_upside)'],
+  'fair_value':          ['Valor razonable (fair_value)'],
+  'dcf_fair_value_upside':['Upside DCF (dcf_fair_value_upside)'],
+  'ddm_fair_value_upside':['Upside DDM (ddm_fair_value_upside)'],
+  'epv_fair_value_upside':['Upside EPV (epv_fair_value_upside)'],
+  'shareholder_yield':   ['Rendimiento para el accionista (shareholder_yield)'],
+  'shares_out_cagr_5y':  ['CAGR acciones en 5 años (shares_out_cagr_5y)'],
+};
+
+function getVal(metrics, slug) {
+  if (!metrics) return null;
+  // Exact match
+  if (metrics[slug]) return metrics[slug].value;
+  const sl = slug.toLowerCase();
+  // Known aliases
+  const aliases = SLUG_ALIASES[slug] || [];
+  for (const alias of aliases) {
+    for (const [key, data] of Object.entries(metrics)) {
+      if (key.toLowerCase().includes(alias.toLowerCase())) return data.value;
+    }
+  }
+  // End-match on (slug) pattern
+  for (const [key, data] of Object.entries(metrics)) {
+    if (key.toLowerCase().endsWith('(' + sl + ')')) return data.value;
+  }
+  // Word-boundary end match
+  for (const [key, data] of Object.entries(metrics)) {
+    const parts = key.toLowerCase().split(/[_\-]/);
+    if (parts[parts.length-1] === sl) return data.value;
+  }
+  return null;
+}
+
+function numVal(metrics, slug) {
+  const v = getVal(metrics, slug);
+  if (!v || ['—','N/A','N/D','–','','-','NM','N.M.','NaN','#N/A','#RESTRICTED!'].includes(v)) return null;
+  let s = v.replace(/\u00a0/g,'').replace(/\s+/g,'');
+  const hasEuroThousands = /\d\.\d{3},\d/.test(s);
+  const hasDecimalComma  = !hasEuroThousands && /,\d{1,4}[^0-9,.]*$/.test(s) && !s.includes('.');
+  const hasThousandsComma = !hasEuroThousands && /,\d{3}/.test(s) && s.includes('.');
+  s = s.replace(/[%€$£¥£]/g,'').replace(/[A-Za-z]/g,'').trim();
+  if (hasEuroThousands)    s = s.replace(/\./g,'').replace(',','.');
+  else if (hasDecimalComma)  s = s.replace(',','.');
+  else if (hasThousandsComma)s = s.replace(/,/g,'');
+  else                       s = s.replace(',','.');
+  s = s.replace(/[^0-9.\-]/g,'').trim();
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+// ── SECTOR DETECTION ─────────────────────────────────────────
+function detectSector(metrics) {
+  const sector   = (getVal(metrics,'sector')   || getVal(metrics,'Sector')   || '').toLowerCase();
+  const industry = (getVal(metrics,'industry') || getVal(metrics,'Industry') || '').toLowerCase();
+  const entity   = (getVal(metrics,'entity_type') || '').toLowerCase();
+  const manual   = (getVal(metrics,'sector_manual') || '').toLowerCase();
+  const allText  = manual || (sector + ' ' + industry + ' ' +
+    Object.values(metrics).map(m => (m.desc||'').toLowerCase()).join(' '));
+
+  if (manual) {
+    if (/tech|software|saas|it services/.test(manual)) return 'tech';
+    if (/health|pharma|biotech|medic/.test(manual))    return 'health';
+    if (/util|energy|pipeline|grid/.test(manual))      return 'util';
+    if (/financ|bank|insur|credit/.test(manual))       return 'finance';
+    if (/consumer|retail|food|beverage/.test(manual))  return 'consumer';
+    if (/industri|manufactur|material|chemical/.test(manual)) return 'industry';
+    if (/reit|real estate/.test(manual))               return 'reit';
+  }
+
+  if (/tech|software|information technology|saas|it services/.test(allText)) return 'tech';
+  if (/health|pharma|biotech|medic|drug/.test(allText)) return 'health';
+  if (/utilit|energy(?! drink)|pipeline|regulated/.test(allText)) return 'util';
+  if (/financ|bank|insur|credit|lending/.test(allText)) return 'finance';
+  if (entity === 'reit' || /reit|real estate investment/.test(allText)) return 'reit';
+  if (/consumer|retail|food|beverage|staple/.test(allText)) return 'consumer';
+  if (/industri|manufactur|material|chemical|steel/.test(allText)) return 'industry';
+  return 'general';
+}
+
+// ── MODULE SCORING ────────────────────────────────────────────
+function scoreM0(metrics) {
+  // Returns { passes: bool, vetos: [], warnings: [], details: {} }
+  const beneish = numVal(metrics, 'beneish_mscore');
+  const montier = numVal(metrics, 'montier_cscore');
+  const sloan   = numVal(metrics, 'sloan_ratio');
+  const altman  = numVal(metrics, 'altman_z_score');
+  const ic      = numVal(metrics, 'interest_coverage');
+  const cr      = numVal(metrics, 'current_ratio');
+  const netDebt = numVal(metrics, 'net_debt_to_ebitda');
+  const restate = getVal(metrics, 'restatement_type') || '';
+  const healthG = getVal(metrics, 'fin_health_overall_grade') || '';
+
+  const vetos = [];
+  const warnings = [];
+
+  if (beneish !== null && beneish > -1.78) vetos.push({ id:'beneish', val:beneish, label:`Beneish M-Score ${beneish.toFixed(2)} > -1.78` });
+  if (altman  !== null && altman  < 1.81)  vetos.push({ id:'altman',  val:altman,  label:`Altman Z-Score ${altman.toFixed(1)} < 1.81` });
+  if (ic      !== null && ic      < 1.0)   vetos.push({ id:'ic',      val:ic,      label:`Interest Coverage ${ic.toFixed(1)}x < 1.0x` });
+  if (netDebt !== null && netDebt > 7.0)   vetos.push({ id:'netdebt', val:netDebt, label:`Net Debt/EBITDA ${netDebt.toFixed(1)}x > 7x` });
+
+  const ccc = numVal(metrics, 'cash_conversion_cycle');
+  const hasNegCCC = ccc !== null && ccc < 5;
+  if (cr !== null && cr < 0.8 && !hasNegCCC) vetos.push({ id:'cr', val:cr, label:`Current Ratio ${cr.toFixed(2)}x < 0.8x` });
+
+  if (montier !== null && montier >= 4) warnings.push(`Montier C-Score ${montier}/6 — posible manipulación`);
+  if (sloan   !== null && Math.abs(sloan) > 0.15) warnings.push(`Sloan Ratio ${sloan.toFixed(2)} — accruals elevados`);
+  if (/restat|revision|amendment/i.test(restate) && restate.toLowerCase() !== 'original')
+    warnings.push(`Restatement detectado: ${restate}`);
+  if (/^[DF]/i.test(healthG)) warnings.push(`Financial Health Grade: ${healthG}`);
+
+  return {
+    passes: vetos.length === 0,
+    vetos, warnings,
+    details: { beneish, montier, sloan, altman, ic, cr, netDebt, restate, healthG }
+  };
+}
+
+function scoreM1(metrics, SC) {
+  // Rentabilidad — returns { score 0-1, checks[], detail{} }
+  const roic    = numVal(metrics, 'roic');
+  const roicAvg5= numVal(metrics, 'roic_avg_5y');
+  const roicAvg10=numVal(metrics,'roic_avg_10y');
+  const wacc    = numVal(metrics, 'wacc');
+  const roe     = numVal(metrics, 'roe');
+  const roeAvg5 = numVal(metrics, 'roe_avg_5y');
+  const roa     = numVal(metrics, 'roa');
+  const roaAvg5 = numVal(metrics, 'roa_avg_5y');
+  const gpM     = numVal(metrics, 'gp_margin');
+  const gpMAvg5 = numVal(metrics, 'gp_margin_avg_5y');
+  const ebitdaM = numVal(metrics, 'ebitda_margin');
+  const ebitdaMAvg5 = numVal(metrics,'ebitda_margin_avg_5y');
+  const ebitdaMCagr5 = numVal(metrics,'ebitda_margin_cagr_5y');
+  const niM     = numVal(metrics, 'ni_margin');
+  const niMAvg5 = numVal(metrics, 'ni_margin_avg_5y');
+  const fcfM    = numVal(metrics, 'fcf_levered_margin');
+  const fcfMAvg5= numVal(metrics, 'fcf_levered_margin_avg_5y');
+  const piotroski = numVal(metrics,'piotroski_score');
+  const croic   = numVal(metrics, 'croic');
+  const ownerE  = numVal(metrics, 'owner_earnings');
+  const ownerEY = numVal(metrics, 'owner_earnings_yield');
+
+  const checks = [];
+  // ROIC vs WACC
+  const isFinance = SC === SECTOR_CFG.finance;
+  if (!isFinance) {
+    const roicEff = roicAvg5 || roic;
+    if (roicEff !== null) {
+      const roicPass = wacc !== null ? roicEff > wacc : roicEff > SC.roic[1];
+      checks.push({ id:'roic', label:'ROIC > WACC', val:`${roicEff.toFixed(1)}% vs ${wacc||'?'}%`, pass:roicPass, weight:3 });
+    }
+  }
+  // ROE
+  const roeEff = roeAvg5 || roe;
+  if (roeEff !== null) checks.push({ id:'roe', label:'ROE', val:`${roeEff.toFixed(1)}%`, pass:roeEff > SC.roe[1], weight:2 });
+  // ROA
+  const roaEff = roaAvg5 || roa;
+  if (roaEff !== null && !isFinance) checks.push({ id:'roa', label:'ROA', val:`${roaEff.toFixed(1)}%`, pass:roaEff > 3, weight:1 });
+  // Gross Margin
+  const gpEff = gpMAvg5 || gpM;
+  if (gpEff !== null) checks.push({ id:'gpm', label:'Margen Bruto', val:`${gpEff.toFixed(1)}%`, pass:gpEff > SC.gpM[1], weight:2 });
+  // EBITDA Margin
+  const ebitdaEff = ebitdaMAvg5 || ebitdaM;
+  if (ebitdaEff !== null) checks.push({ id:'ebitdam', label:'Margen EBITDA', val:`${ebitdaEff.toFixed(1)}%`, pass:ebitdaEff > SC.ebitdaM[1], weight:2 });
+  // EBITDA margin trend
+  if (ebitdaMCagr5 !== null) checks.push({ id:'ebitdatrend', label:'Tendencia Margen EBITDA', val:`${ebitdaMCagr5.toFixed(1)}%/y`, pass:ebitdaMCagr5 > 0, weight:2 });
+  // NI Margin
+  const niEff = niMAvg5 || niM;
+  if (niEff !== null) checks.push({ id:'nim', label:'Margen Neto', val:`${niEff.toFixed(1)}%`, pass:niEff > SC.niM[1], weight:1 });
+  // FCF Margin
+  const fcfEff = fcfMAvg5 || fcfM;
+  if (fcfEff !== null) checks.push({ id:'fcfm', label:'Margen FCF', val:`${fcfEff ? fcfEff.toFixed(1) : '?'}%`, pass:fcfEff > SC.fcfM[1], weight:2 });
+  // Piotroski
+  if (piotroski !== null) checks.push({ id:'piotroski', label:'Piotroski F-Score', val:`${piotroski}/9`, pass:piotroski >= 7, weight:2 });
+  // CROIC
+  if (croic !== null && !isFinance) checks.push({ id:'croic', label:'CROIC', val:`${croic.toFixed(1)}%`, pass:wacc ? croic > wacc : croic > SC.roic[1], weight:2 });
+  // Owner Earnings Yield
+  if (ownerEY !== null) checks.push({ id:'ownerEY', label:'Owner Earnings Yield', val:`${ownerEY.toFixed(1)}%`, pass:ownerEY > 5, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { roic, roicAvg5, roicAvg10, wacc, roe, roa, gpM, ebitdaM, niM, fcfM, piotroski, croic } };
+}
+
+function scoreM2(metrics, SC) {
+  // Crecimiento
+  const revG    = numVal(metrics,'total_rev_growth');
+  const revC3   = numVal(metrics,'total_rev_cagr_3y');
+  const revC5   = numVal(metrics,'total_rev_cagr_5y');
+  const revC7   = numVal(metrics,'total_rev_cagr_7y');
+  const revC10  = numVal(metrics,'total_rev_cagr_10y');
+  const revTrend= numVal(metrics,'total_rev_trend_score');
+  const epsG    = numVal(metrics,'eps_diluted_growth');
+  const epsC5   = numVal(metrics,'eps_diluted_cagr_5y');
+  const epsC10  = numVal(metrics,'eps_diluted_cagr_10y');
+  const ebitdaC5= numVal(metrics,'ebitda_cagr_5y');
+  const ebitdaG = numVal(metrics,'ebitda_growth');
+  const fcfC5   = numVal(metrics,'fcf_levered_cagr_5y');
+  const fcfG    = numVal(metrics,'fcf_levered_growth');
+  const fcfTrend= numVal(metrics,'fcf_levered_trend_score');
+  const bvC5    = numVal(metrics,'bv_share_cagr_5y');
+  const operC5  = numVal(metrics,'oper_inc_cagr_5y');
+  const revProjC5=numVal(metrics,'revenue_proj_cagr_5y');
+  const epsProjC5=numVal(metrics,'eps_proj_cagr_5y');
+  const earningsLT=numVal(metrics,'earnings_growth_lt');
+  const posRev90= numVal(metrics,'analyst_pos_eps_revisions_ratio_90d');
+  const gpC5    = numVal(metrics,'gp_cagr_5y');
+
+  const thr = SC.revCagr[1]; // sector-adjusted threshold
+  const checks = [];
+  const revEff = revC5 || revC3;
+  if (revEff !== null) checks.push({ id:'revc5', label:`Revenue CAGR 5y`, val:`${revEff.toFixed(1)}%`, pass:revEff > thr, weight:3 });
+  if (revC10 !== null) checks.push({ id:'revc10', label:'Revenue CAGR 10y', val:`${revC10.toFixed(1)}%`, pass:revC10 > thr*0.7, weight:1 });
+  // Acceleration: is recent growth > long term?
+  if (revC3 !== null && revC10 !== null) checks.push({ id:'revaccel', label:'Aceleración ingresos', val:`${revC3.toFixed(1)}% vs ${revC10.toFixed(1)}%`, pass:revC3 >= revC10 * 0.9, weight:2 });
+  if (epsC5 !== null && epsC5 > -50) checks.push({ id:'epsc5', label:'EPS CAGR 5y', val:`${epsC5.toFixed(1)}%`, pass:epsC5 > thr * 0.8, weight:2 });
+  // EPS grows faster than revenue (margin expansion)
+  if (epsC5 !== null && revEff !== null && epsC5 > -50) checks.push({ id:'epsvsrev', label:'EPS crece ≥ Revenue', val:`EPS ${epsC5.toFixed(1)}% vs Rev ${revEff.toFixed(1)}%`, pass:epsC5 >= revEff * 0.9, weight:2 });
+  if (ebitdaC5 !== null) checks.push({ id:'ebitdac5', label:'EBITDA CAGR 5y', val:`${ebitdaC5.toFixed(1)}%`, pass:ebitdaC5 > thr*0.8, weight:2 });
+  if (fcfC5 !== null) checks.push({ id:'fcfc5', label:'FCF CAGR 5y', val:`${fcfC5.toFixed(1)}%`, pass:fcfC5 > thr*0.6, weight:2 });
+  if (fcfG !== null) checks.push({ id:'fcfg', label:'FCF Growth LTM', val:`${fcfG.toFixed(1)}%`, pass:fcfG > 0, weight:1 });
+  if (bvC5 !== null) checks.push({ id:'bvc5', label:'Book Value CAGR 5y', val:`${bvC5.toFixed(1)}%`, pass:bvC5 > 3, weight:1 });
+  if (revProjC5 !== null) checks.push({ id:'revproj', label:'Revenue Proj CAGR 5y', val:`${revProjC5.toFixed(1)}%`, pass:revProjC5 > thr*0.7, weight:2 });
+  if (epsProjC5 !== null) checks.push({ id:'epsproj', label:'EPS Proj CAGR 5y', val:`${epsProjC5.toFixed(1)}%`, pass:epsProjC5 > thr*0.7, weight:2 });
+  if (posRev90 !== null) checks.push({ id:'revisions', label:'Revisiones + analistas 90d', val:`${posRev90.toFixed(0)}%`, pass:posRev90 >= 50, weight:2 });
+  if (revTrend !== null) checks.push({ id:'revtrend', label:'Revenue Trend Score', val:`${revTrend.toFixed(0)}%`, pass:revTrend >= 50, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { revG, revC3, revC5, revC10, epsC5, ebitdaC5, fcfC5, revProjC5, epsProjC5, posRev90 } };
+}
+
+function scoreM3(metrics) {
+  // Calidad financiera — Piotroski, Beneish, FCF quality, accruals, dilution
+  const beneish  = numVal(metrics,'beneish_mscore');
+  const montier  = numVal(metrics,'montier_cscore');
+  const sloan    = numVal(metrics,'sloan_ratio');
+  const fcfToNI  = numVal(metrics,'fcf_to_ni');
+  const fcfToOCF = numVal(metrics,'fcf_to_ocf');
+  const piotroski= numVal(metrics,'piotroski_score');
+  const sharesC5 = numVal(metrics,'shares_out_cagr_5y');
+  const sharesC10= numVal(metrics,'shares_out_cagr_10y');
+  const buybackY = numVal(metrics,'buyback_yield');
+  const netPayoutY= numVal(metrics,'net_payout_yield');
+  const roicC5   = numVal(metrics,'roic_cagr_5y');
+
+  const checks = [];
+  if (beneish !== null) checks.push({ id:'beneish', label:'Beneish M-Score', val:beneish.toFixed(2), pass:beneish < -2.22, weight:3 });
+  if (montier !== null) checks.push({ id:'montier', label:'Montier C-Score', val:`${montier}/6`, pass:montier < 3, weight:2 });
+  if (sloan !== null) checks.push({ id:'sloan', label:'Sloan Ratio (accruals)', val:`${sloan.toFixed(2)}%`, pass:Math.abs(sloan) < 0.10, weight:2 });
+  if (fcfToNI !== null) checks.push({ id:'fcftoni', label:'FCF / Net Income', val:`${fcfToNI.toFixed(0)}%`, pass:fcfToNI > 85, weight:3 });
+  if (fcfToOCF !== null) checks.push({ id:'fcftocf', label:'FCF / OCF', val:`${fcfToOCF.toFixed(0)}%`, pass:fcfToOCF > 70, weight:2 });
+  if (piotroski !== null) checks.push({ id:'piotroski', label:'Piotroski F-Score', val:`${piotroski}/9`, pass:piotroski >= 7, weight:3 });
+  const sharesEff = sharesC5 ?? sharesC10;
+  if (sharesEff !== null) checks.push({ id:'shares', label:'Dilución acciones 5y', val:`${sharesEff.toFixed(1)}%/y`, pass:sharesEff < 1, weight:2 });
+  if (buybackY !== null) checks.push({ id:'buyback', label:'Buyback Yield', val:`${buybackY.toFixed(1)}%`, pass:buybackY > 0, weight:1 });
+  if (roicC5 !== null) checks.push({ id:'roiccagr', label:'ROIC CAGR 5y (calidad)', val:`${roicC5.toFixed(1)}%/y`, pass:roicC5 > -2, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { beneish, montier, sloan, fcfToNI, piotroski, sharesC5 } };
+}
+
+function scoreM4(metrics, SC, sectorKey) {
+  // Riesgo y deuda
+  const altman   = numVal(metrics,'altman_z_score');
+  const netDebt  = numVal(metrics,'net_debt_to_ebitda');
+  const totDebt  = numVal(metrics,'total_debt_to_ebitda');
+  const de       = numVal(metrics,'debt_to_equity');
+  const deAdj    = numVal(metrics,'debt_to_equity_adj');
+  const daCap    = numVal(metrics,'debt_to_capital');
+  const daAssets = numVal(metrics,'debt_to_assets');
+  const eqAssets = numVal(metrics,'equity_to_assets');
+  const ic       = numVal(metrics,'interest_coverage');
+  const icEbitda = numVal(metrics,'interest_coverage_ebitda');
+  const icEbitdaCapex = numVal(metrics,'interest_coverage_ebitda_capex');
+  const ocfDebt  = numVal(metrics,'ocf_to_debt');
+  const debtFcf  = numVal(metrics,'debt_to_fcf');
+  const dol      = numVal(metrics,'degree_of_operating_leverage');
+  const dfl      = numVal(metrics,'degree_of_financial_leverage');
+  const dcl      = numVal(metrics,'degree_of_combined_leverage');
+  const beta5    = numVal(metrics,'beta');
+  const beta1    = numVal(metrics,'beta_1y');
+  const realvol1y= numVal(metrics,'realvol_1y');
+  const ltDeE    = numVal(metrics,'lt_debt_to_equity');
+  const netDeE   = numVal(metrics,'net_debt_to_equity');
+  const finLev   = numVal(metrics,'financial_leverage');
+
+  const isFinance = sectorKey === 'finance';
+  const isUtil    = sectorKey === 'util';
+  const debtLimitGood = SC.netDebt[0];
+  const debtVeto  = isUtil ? 7 : 6;
+  const icOk      = SC.ic[1];
+
+  const checks = [];
+  if (altman !== null) checks.push({ id:'altman', label:'Altman Z-Score', val:altman.toFixed(1), pass:altman > 2.5, weight:4 });
+  if (netDebt !== null && !isFinance) checks.push({ id:'netdebt', label:'Net Debt/EBITDA', val:`${netDebt.toFixed(1)}x`, pass:netDebt < debtLimitGood, weight:4 });
+  if (totDebt !== null && !isFinance) checks.push({ id:'totdebt', label:'Total Debt/EBITDA', val:`${totDebt.toFixed(1)}x`, pass:totDebt < debtLimitGood + 0.5, weight:2 });
+  const deEff = deAdj ?? de;
+  if (deEff !== null && !isFinance) checks.push({ id:'de', label:'Debt/Equity', val:`${deEff.toFixed(0)}%`, pass:deEff < 150, weight:2 });
+  if (ic !== null && !isFinance) checks.push({ id:'ic', label:'Interest Coverage (EBIT)', val:`${ic.toFixed(1)}x`, pass:ic > icOk, weight:3 });
+  if (icEbitda !== null && !isFinance) checks.push({ id:'icebitda', label:'IC (EBITDA)', val:`${icEbitda.toFixed(1)}x`, pass:icEbitda > icOk * 1.3, weight:2 });
+  if (ocfDebt !== null) checks.push({ id:'ocfdebt', label:'OCF/Deuda', val:`${ocfDebt.toFixed(0)}%`, pass:ocfDebt > 20, weight:2 });
+  if (dol !== null) checks.push({ id:'dol', label:'DOL', val:dol.toFixed(2), pass:dol < 5, weight:1 });
+  if (dcl !== null) checks.push({ id:'dcl', label:'DCL', val:dcl.toFixed(2), pass:dcl < 6, weight:1 });
+  const betaEff = beta5 ?? beta1;
+  if (betaEff !== null) checks.push({ id:'beta', label:'Beta', val:betaEff.toFixed(2), pass:betaEff < 1.6, weight:1 });
+  if (eqAssets !== null) checks.push({ id:'eqassets', label:'Equity/Assets', val:`${eqAssets.toFixed(1)}%`, pass:eqAssets > 30, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { altman, netDebt, totDebt, de, ic, icEbitda, beta5, dol, dcl } };
+}
+
+function scoreM5(metrics, SC, sectorKey) {
+  // Liquidez
+  const cr  = numVal(metrics,'current_ratio');
+  const qr  = numVal(metrics,'quick_ratio');
+  const cashR=numVal(metrics,'cash_ratio');
+  const nwc = numVal(metrics,'nwc');
+  const nwcMargin=numVal(metrics,'nwc_margin');
+  const ocfLiabCur=numVal(metrics,'ocf_to_liabilities_cur');
+  const ocfLiab=numVal(metrics,'ocf_to_liabilities');
+  const cashAssets=numVal(metrics,'cash_to_assets');
+  const ccc = numVal(metrics,'cash_conversion_cycle');
+  const ncav= numVal(metrics,'price_to_ncav');
+
+  const isFinance = sectorKey === 'finance';
+  const hasNegCCC = ccc !== null && ccc < 5;
+  const crMin = SC.cr[1];
+
+  const checks = [];
+  if (!isFinance) {
+    if (cr !== null) checks.push({ id:'cr', label:'Current Ratio', val:`${cr.toFixed(2)}x`, pass:hasNegCCC ? cr > 0.8 : cr > crMin, weight:3 });
+    if (qr !== null) checks.push({ id:'qr', label:'Quick Ratio', val:`${qr.toFixed(2)}x`, pass:qr > 0.6, weight:2 });
+    if (cashR !== null) checks.push({ id:'cashr', label:'Cash Ratio', val:`${cashR.toFixed(2)}x`, pass:cashR > 0.15, weight:1 });
+  }
+  if (ocfLiabCur !== null) checks.push({ id:'ocfliabc', label:'OCF/Pasivos Ctes', val:`${ocfLiabCur.toFixed(1)}%`, pass:ocfLiabCur > 20, weight:2 });
+  if (ocfLiab !== null) checks.push({ id:'ocfliab', label:'OCF/Pasivos Totales', val:`${ocfLiab.toFixed(1)}%`, pass:ocfLiab > 10, weight:1 });
+  if (nwcMargin !== null) checks.push({ id:'nwcm', label:'NWC Margin', val:`${nwcMargin.toFixed(1)}%`, pass:nwcMargin > 5, weight:1 });
+  if (ncav !== null) checks.push({ id:'ncav', label:'Price/NCAV', val:`${ncav.toFixed(0)}%`, pass:ncav < 150, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { cr, qr, cashR, nwcMargin, ocfLiabCur, ccc } };
+}
+
+function scoreM6(metrics, SC, sectorKey, sectorData) {
+  // Valoración relativa — sector-aware + peer benchmarking
+  const peFwd    = numVal(metrics,'pe_fwd');
+  const peLtm    = numVal(metrics,'pe_ltm');
+  const peNtm    = numVal(metrics,'pe_ntm');
+  const peAvg5   = numVal(metrics,'pe_ltm_avg_5y');
+  const peAvg10  = numVal(metrics,'pe_ltm_avg_10y');
+  const pePct3y  = numVal(metrics,'pe_to_pe_avg_3y');
+  const pegFwd   = numVal(metrics,'peg_fwd');
+  const pegFwd5y = numVal(metrics,'peg_fwd_5y');
+  const pegLtm   = numVal(metrics,'peg_ltm');
+  const pegyFwd  = numVal(metrics,'pegy_fwd');
+  const evEbitdaLtm=numVal(metrics,'ev_to_ebitda_ltm');
+  const evEbitdaFwd=numVal(metrics,'ev_to_ebitda_fwd');
+  const evEbitLtm=numVal(metrics,'ev_to_ebit_ltm');
+  const evEbitFwd=numVal(metrics,'ev_to_ebit_fwd');
+  const evRevLtm =numVal(metrics,'ev_to_revenue_ltm');
+  const evRevFwd =numVal(metrics,'ev_to_revenue_fwd');
+  const evFcfLtm =numVal(metrics,'ev_to_fcf_ltm');
+  const evIcLtm  =numVal(metrics,'ev_to_ic_ltm');
+  const evEbitdaCapexLtm=numVal(metrics,'ev_to_ebitda_capex_ltm');
+  const pb       = numVal(metrics,'price_to_book');
+  const pbAvg5   = numVal(metrics,'price_to_book_avg_5y');
+  const pbPct3y  = numVal(metrics,'pb_to_pb_avg_3y');
+  const ptbv     = numVal(metrics,'ptbv');
+  const pfcf     = numVal(metrics,'price_to_fcf_ltm');
+  const pfcfAvg5 = numVal(metrics,'price_to_fcf_ltm_avg_5y');
+  const pocf     = numVal(metrics,'price_to_ocf_ltm');
+  const psLtm    = numVal(metrics,'price_to_sales_ltm');
+  const psFwd    = numVal(metrics,'price_to_sales_fwd');
+  const psAvg5   = numVal(metrics,'price_to_sales_ltm_avg_5y');
+  const psPct3y  = numVal(metrics,'ps_to_ps_avg_3y');
+  const fcfYield = numVal(metrics,'fcf_yield_ltm');
+  const fcfYieldAvg5=numVal(metrics,'fcf_yield_avg_5y');
+  const earYLtm  = numVal(metrics,'earnings_yield_ltm');
+  const earYFwd  = numVal(metrics,'earnings_yield_fwd');
+  const ebitYFwd = numVal(metrics,'ebit_yield_fwd');
+  const ownerEY  = numVal(metrics,'owner_earnings_yield');
+  const fcfUnlevY= numVal(metrics,'fcf_unlev_yield_ltm');
+  const sharYield= numVal(metrics,'shareholder_yield');
+  const buybackY = numVal(metrics,'buyback_yield');
+  const netPayoutY=numVal(metrics,'net_payout_yield');
+  const sharesC5 = numVal(metrics,'shares_out_cagr_5y');
+  const analUpside=numVal(metrics,'analyst_target_upside');
+  const analBuy  = numVal(metrics,'analyst_buy_rec_count');
+  const analHold = numVal(metrics,'analyst_hold_rec_count');
+  const analSell = numVal(metrics,'analyst_sell_rec_count');
+  const grahamNum= numVal(metrics,'ben_graham_number');
+  const grahamUpside=numVal(metrics,'ben_graham_number_upside');
+  const bookMkt  = numVal(metrics,'book_to_market');
+
+  // Sector-adjusted PE threshold
+  const isTech = sectorKey === 'tech';
+  const isHealth = sectorKey === 'health';
+  const isUtil = sectorKey === 'util';
+  const peThreshold = isTech ? (peAvg5 ? peAvg5*1.05 : 35) : isHealth ? (peAvg5 ? peAvg5*1.05 : 28) : isUtil ? (peAvg5 ? peAvg5*1.05 : 22) : (peAvg5 ? peAvg5*1.05 : 22);
+  const evThreshold = isTech ? 25 : isHealth ? 20 : isUtil ? 12 : 15;
+  const psThreshold = isTech ? 8 : isHealth ? 5 : 2;
+
+  const checks = [];
+  // PE
+  const peFwdEff = peFwd ?? peLtm;
+  if (peFwdEff !== null && peFwdEff > 0) checks.push({ id:'pe', label:'PER Forward', val:`${peFwdEff.toFixed(1)}x`, pass:peFwdEff < peThreshold, threshold:`${peThreshold.toFixed(0)}x`, weight:3 });
+  if (pePct3y !== null) checks.push({ id:'pepct', label:'PER vs hist. 3y', val:`${pePct3y.toFixed(0)}%`, pass:pePct3y < 105, weight:2 });
+  // PEG
+  const pegEff = pegFwd ?? pegLtm;
+  if (pegEff !== null && pegEff > 0) checks.push({ id:'peg', label:'PEG', val:`${pegEff.toFixed(2)}`, pass:pegEff < 2.0, weight:3 });
+  // EV/EBITDA
+  const evEff = evEbitdaFwd ?? evEbitdaLtm;
+  if (evEff !== null) checks.push({ id:'evebitda', label:'EV/EBITDA', val:`${evEff.toFixed(1)}x`, pass:evEff < evThreshold, threshold:`${evThreshold}x`, weight:3 });
+  if (evEbitLtm !== null) checks.push({ id:'evebit', label:'EV/EBIT', val:`${evEbitLtm.toFixed(1)}x`, pass:evEbitLtm < evThreshold*1.3, weight:2 });
+  if (evRevFwd !== null || evRevLtm !== null) {
+    const evRevEff = evRevFwd ?? evRevLtm;
+    checks.push({ id:'evrev', label:'EV/Revenue', val:`${evRevEff.toFixed(2)}x`, pass:evRevEff < psThreshold, weight:2 });
+  }
+  if (evFcfLtm !== null) checks.push({ id:'evfcf', label:'EV/FCF', val:`${evFcfLtm.toFixed(1)}x`, pass:evFcfLtm < 20, weight:2 });
+  // P/Book
+  const pbEff = pb;
+  if (pbEff !== null) checks.push({ id:'pb', label:'P/Book', val:`${pbEff.toFixed(2)}x`, pass:pbAvg5 ? pbEff < pbAvg5*1.05 : pbEff < 4, weight:2 });
+  if (pbPct3y !== null) checks.push({ id:'pbpct', label:'P/Book vs hist. 3y', val:`${pbPct3y.toFixed(0)}%`, pass:pbPct3y < 105, weight:1 });
+  // P/FCF
+  if (pfcf !== null) checks.push({ id:'pfcf', label:'P/FCF', val:`${pfcf.toFixed(1)}x`, pass:pfcf < 20, weight:3 });
+  if (psPct3y !== null) checks.push({ id:'pspct', label:'P/Sales vs hist. 3y', val:`${psPct3y.toFixed(0)}%`, pass:psPct3y < 105, weight:1 });
+  // Yields
+  if (fcfYield !== null) checks.push({ id:'fcfyield', label:'FCF Yield', val:`${fcfYield.toFixed(1)}%`, pass:fcfYield > 4, weight:3 });
+  if (earYFwd !== null) checks.push({ id:'earYfwd', label:'Earnings Yield Fwd', val:`${earYFwd.toFixed(1)}%`, pass:earYFwd > 5, weight:2 });
+  if (ownerEY !== null) checks.push({ id:'ownerEY', label:'Owner Earnings Yield', val:`${ownerEY.toFixed(1)}%`, pass:ownerEY > 4, weight:2 });
+  if (sharYield !== null) checks.push({ id:'sharYield', label:'Shareholder Yield', val:`${sharYield.toFixed(1)}%`, pass:sharYield > 3, weight:2 });
+  // Dilution
+  if (sharesC5 !== null) checks.push({ id:'dilution', label:'Dilución acciones 5y', val:`${sharesC5.toFixed(1)}%/y`, pass:sharesC5 < 2, weight:2 });
+  // Analyst consensus
+  const totalRecs = (analBuy||0) + (analHold||0) + (analSell||0);
+  const pctBuy = totalRecs > 0 ? (analBuy||0)/totalRecs : null;
+  if (pctBuy !== null) checks.push({ id:'analcons', label:'Consenso analistas', val:`${(pctBuy*100).toFixed(0)}% Buy`, pass:pctBuy >= 0.4, weight:2 });
+  if (analUpside !== null) checks.push({ id:'analupside', label:'Analyst Target Upside', val:`${analUpside.toFixed(1)}%`, pass:analUpside > 10, weight:2 });
+  // Graham Number
+  if (grahamUpside !== null) checks.push({ id:'graham', label:'Graham Number Upside', val:`${grahamUpside.toFixed(1)}%`, pass:grahamUpside > 0, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { peFwd, pegFwd, evEbitdaLtm, evEbitdaFwd, pb, pfcf, fcfYield, earYFwd, sharYield, analBuy, analHold, analSell, peThreshold, evThreshold } };
+}
+
+function scoreM7(metrics) {
+  // Valoración intrínseca — DCF, DDM, EPV, Fair Value
+  const fvUpside  = numVal(metrics,'fair_value_upside') || numVal(metrics,'Upside valor razonable (fair_value_upside)');
+  const dcfUpside = numVal(metrics,'dcf_fair_value_upside') || numVal(metrics,'Upside DCF (dcf_fair_value_upside)');
+  const ddmUpside = numVal(metrics,'ddm_fair_value_upside') || numVal(metrics,'Upside DDM (ddm_fair_value_upside)');
+  const epvUpside = numVal(metrics,'epv_fair_value_upside') || numVal(metrics,'Upside EPV (epv_fair_value_upside)');
+  const compsUpside=numVal(metrics,'comps_fair_value_upside');
+  const fvConf   = getVal(metrics,'fair_value_confidence');
+  const fv       = getVal(metrics,'fair_value') || getVal(metrics,'Valor razonable (fair_value)');
+  const wacc     = numVal(metrics,'wacc');
+  const costEq   = numVal(metrics,'cost_equity');
+  const analUpside= numVal(metrics,'analyst_target_upside');
+
+  const confMult = fvConf === 'HIGH' ? 1.0 : fvConf === 'MEDIUM' ? 0.85 : 0.7;
+
+  const checks = [];
+  if (fvUpside !== null) checks.push({ id:'fv', label:'Fair Value Upside', val:`+${fvUpside.toFixed(1)}%`, pass:fvUpside * confMult > 10, weight:4 });
+  if (dcfUpside !== null) checks.push({ id:'dcf', label:'DCF Upside', val:`+${dcfUpside.toFixed(1)}%`, pass:dcfUpside > 15, weight:3 });
+  if (ddmUpside !== null) checks.push({ id:'ddm', label:'DDM Upside', val:`+${ddmUpside.toFixed(1)}%`, pass:ddmUpside > 15, weight:2 });
+  if (epvUpside !== null) checks.push({ id:'epv', label:'EPV Upside', val:`+${epvUpside.toFixed(1)}%`, pass:epvUpside > 10, weight:2 });
+  if (compsUpside !== null) checks.push({ id:'comps', label:'Comps Upside', val:`+${compsUpside.toFixed(1)}%`, pass:compsUpside > 10, weight:2 });
+  // # of models agreeing upside > 10%
+  const upsides = [fvUpside, dcfUpside, ddmUpside, epvUpside].filter(u => u !== null);
+  const posCount = upsides.filter(u => u > 10).length;
+  if (upsides.length > 1) checks.push({ id:'modelagree', label:'Modelos con upside >10%', val:`${posCount}/${upsides.length}`, pass:posCount >= Math.ceil(upsides.length/2), weight:2 });
+  if (analUpside !== null) checks.push({ id:'analupside', label:'Analyst Target Upside', val:`${analUpside.toFixed(1)}%`, pass:analUpside > 10, weight:2 });
+  if (wacc !== null) checks.push({ id:'wacc', label:'WACC razonable', val:`${wacc.toFixed(1)}%`, pass:wacc < 12, weight:1 });
+
+  return { score: calcScore(checks), checks, detail: { fvUpside, dcfUpside, ddmUpside, epvUpside, fvConf, fv, wacc } };
+}
+
+function scoreM8(metrics) {
+  // Dividendos
+  const divYield  = numVal(metrics,'div_yield') || numVal(metrics,'Rendimiento dividendo (div_yield)');
+  const divYieldAvg5= numVal(metrics,'div_yield_avg_5y');
+  const divYieldMed10=numVal(metrics,'div_yield_median_10y');
+  const fcfPayout = numVal(metrics,'fcf_payout_ratio');
+  const payoutRatio=numVal(metrics,'payout_ratio');
+  const divCov    = numVal(metrics,'dividend_coverage');
+  const chowder   = numVal(metrics,'chowder_rule') || numVal(metrics,'Chowder Rule (chowder_rule)');
+  const chowderFwd= numVal(metrics,'chowder_rule_fwd');
+  const divC5     = numVal(metrics,'div_share_cagr_5y') || numVal(metrics,'CAGR dividendo 5 años (div_share_cagr_5y)');
+  const divC10    = numVal(metrics,'div_share_cagr_10y');
+  const divC3     = numVal(metrics,'div_share_cagr_3y');
+  const divGrowth = numVal(metrics,'div_share_growth');
+  const divStreak = numVal(metrics,'div_growth_streak') || numVal(metrics,'Racha crecimiento dividendo (div_growth_streak)');
+  const payStreak = numVal(metrics,'div_payment_streak');
+  const divShare  = numVal(metrics,'div_share');
+
+  const noDividend = !divYield || divYield < 0.1;
+
+  if (noDividend) return { score: 0.5, noDividend: true, checks: [], detail: {} };
+
+  const highYieldTrap = divYield > 8;
+  const checks = [];
+  if (divYield !== null) checks.push({ id:'yield', label:'Dividend Yield', val:`${divYield.toFixed(1)}%`, pass:divYield > 1.5 && divYield < 8, weight:3 });
+  if (fcfPayout !== null) checks.push({ id:'fcfpayout', label:'FCF Payout Ratio', val:`${fcfPayout.toFixed(0)}%`, pass:fcfPayout < 70, weight:4 });
+  if (divCov !== null) checks.push({ id:'divcov', label:'Dividend Coverage', val:`${divCov.toFixed(1)}x`, pass:divCov > 1.5, weight:3 });
+  const chowEff = chowder ?? chowderFwd;
+  if (chowEff !== null) {
+    const chowThresh = divYield > 3 ? 8 : 12;
+    checks.push({ id:'chowder', label:'Chowder Rule', val:`${chowEff.toFixed(1)}`, pass:chowEff > chowThresh, weight:3 });
+  }
+  const divCEff = divC5 ?? divC3;
+  if (divCEff !== null) checks.push({ id:'divcagr', label:'Div CAGR 5y', val:`${divCEff.toFixed(1)}%/y`, pass:divCEff > 4, weight:3 });
+  if (divC10 !== null) checks.push({ id:'divc10', label:'Div CAGR 10y', val:`${divC10.toFixed(1)}%/y`, pass:divC10 > 3, weight:1 });
+  // Yield vs history
+  if (divYield !== null && divYieldMed10 !== null) checks.push({ id:'yieldvshist', label:'Yield vs mediana 10y', val:`${divYield.toFixed(1)}% vs ${divYieldMed10.toFixed(1)}%`, pass:divYield >= divYieldMed10 * 0.9, weight:2 });
+  if (divStreak !== null) checks.push({ id:'streak', label:'Div Growth Streak', val:`${divStreak} años`, pass:divStreak >= 10, weight:3 });
+  if (highYieldTrap) checks.push({ id:'trap', label:'Yield trap (>8%)', val:`${divYield.toFixed(1)}%`, pass:false, weight:3 });
+
+  return { score: calcScore(checks), checks, detail: { divYield, fcfPayout, divCov, chowder, divC5, divStreak, noDividend: false }, noDividend: false };
+}
+
+function scoreM9(metrics) {
+  // Momentum y técnico
+  const posRev30  = numVal(metrics,'analyst_pos_eps_revisions_ratio_30d');
+  const posRev90  = numVal(metrics,'analyst_pos_eps_revisions_ratio_90d');
+  const negRev90  = numVal(metrics,'analyst_neg_eps_revisions_ratio_90d');
+  const pricePct200= numVal(metrics,'asset_price_pct_avg_200d');
+  const pricePct50 = numVal(metrics,'asset_price_pct_avg_50d');
+  const pricePctHigh52=numVal(metrics,'asset_price_pct_high_52w');
+  const pricePctLow52 =numVal(metrics,'asset_price_pct_low_52w');
+  const ret1y     = numVal(metrics,'asset_price_return_1y');
+  const ret3m     = numVal(metrics,'asset_price_return_3m');
+  const ret1m     = numVal(metrics,'asset_price_return_1m');
+  const rsi       = numVal(metrics,'rsi_14d');
+  const shortRatio= numVal(metrics,'short_ratio');
+  const healthGrade=getVal(metrics,'fin_health_overall_grade');
+  const momGrade  = getVal(metrics,'fin_health_price_momentum_grade');
+
+  const checks = [];
+  const revEff = posRev90 ?? posRev30;
+  if (revEff !== null) checks.push({ id:'revisions', label:'Revisiones + EPS 90d', val:`${revEff.toFixed(0)}%`, pass:revEff >= 50, weight:3 });
+  if (pricePct200 !== null) checks.push({ id:'ma200', label:'Precio vs MA200', val:`${pricePct200.toFixed(0)}%`, pass:pricePct200 > 95, weight:2 });
+  if (pricePct50 !== null)  checks.push({ id:'ma50', label:'Precio vs MA50', val:`${pricePct50.toFixed(0)}%`, pass:pricePct50 > 95, weight:1 });
+  if (rsi !== null) checks.push({ id:'rsi', label:'RSI 14d', val:rsi.toFixed(0), pass:rsi > 35 && rsi < 75, weight:2 });
+  if (ret3m !== null) checks.push({ id:'ret3m', label:'Retorno 3 meses', val:`${(ret3m*100).toFixed(1)}%`, pass:ret3m > -0.15, weight:1 });
+  if (shortRatio !== null) checks.push({ id:'short', label:'Short Ratio', val:`${shortRatio.toFixed(1)}d`, pass:shortRatio < 5, weight:1 });
+  if (momGrade) checks.push({ id:'momgrade', label:'Momentum Grade', val:momGrade, pass:/^[AB]/i.test(momGrade), weight:2 });
+
+  return { score: calcScore(checks), checks, detail: { posRev90, pricePct200, rsi, ret3m, ret1y, shortRatio } };
+}
+
+// ── PEER BENCHMARKING (from Excel) ───────────────────────────
+function scorePeerBenchmark(metrics, sectorData) {
+  if (!sectorData || !sectorData.companies || sectorData.companies.length < 2) return null;
+
+  const results = {};
+  const { sections, companies } = sectorData;
+  const companyName = getVal(metrics, 'name') || '';
+
+  // Helper: get median of peer values (excluding the analyzed company)
+  function peerMedian(section, field) {
+    const vals = companies
+      .filter(c => !companyName || !c.toLowerCase().includes(companyName.toLowerCase().split(' ')[0]))
+      .map(c => {
+        const v = sections[section]?.[c]?.[field];
+        if (!v || v === '-' || v === '' || v === 'NaN') return null;
+        const n = parseFloat(String(v).replace(/[%,]/g,''));
+        return isNaN(n) ? null : n;
+      })
+      .filter(v => v !== null);
+    if (!vals.length) return null;
+    vals.sort((a,b) => a-b);
+    return vals[Math.floor(vals.length/2)];
+  }
+
+  // ROIC vs peers
+  const myROIC = numVal(metrics, 'roic');
+  const peerROIC = peerMedian('efficiency', 'Rendimiento del capital invertido');
+  if (myROIC !== null && peerROIC !== null)
+    results.roic_vs_peers = { mine: myROIC, peerMedian: peerROIC*100, better: myROIC > peerROIC*100 };
+
+  // EBITDA margin vs peers
+  const myEbitdaM = numVal(metrics, 'ebitda_margin');
+  const peerEbitdaM = peerMedian('efficiency', 'Margen de ingresos operativos');
+  if (myEbitdaM !== null && peerEbitdaM !== null)
+    results.ebitdaM_vs_peers = { mine: myEbitdaM, peerMedian: peerEbitdaM*100, better: myEbitdaM > peerEbitdaM*100 };
+
+  // PE vs peers
+  const myPE = numVal(metrics, 'pe_fwd') || numVal(metrics, 'pe_ltm');
+  const peerPE = peerMedian('market', 'PER');
+  if (myPE !== null && peerPE !== null)
+    results.pe_vs_peers = { mine: myPE, peerMedian: peerPE, cheaper: myPE < peerPE };
+
+  // EV vs peers
+  const myEV = numVal(metrics, 'ev_to_ebitda_ltm');
+  // No direct EV/EBITDA in market view but can compare EV
+  results.companyCount = companies.length;
+  results.sectorName = sectorData.sectorName || 'Sector';
+
+  return results;
+}
+
+// ── MASTER ANALYSIS ──────────────────────────────────────────
+function runFullAnalysis(metrics, sectorData) {
+  const sectorKey = detectSector(metrics);
+  const SC = SECTOR_CFG[sectorKey] || SECTOR_CFG.general;
+
+  // M0 filter
+  const m0 = scoreM0(metrics);
+
+  // All modules
+  const m1 = scoreM1(metrics, SC);
+  const m2 = scoreM2(metrics, SC);
+  const m3 = scoreM3(metrics);
+  const m4 = scoreM4(metrics, SC, sectorKey);
+  const m5 = scoreM5(metrics, SC, sectorKey);
+  const m6 = scoreM6(metrics, SC, sectorKey, sectorData);
+  const m7 = scoreM7(metrics);
+  const m8 = scoreM8(metrics);
+  const m9 = scoreM9(metrics);
+  const peers = scorePeerBenchmark(metrics, sectorData);
+
+  const modules = { m1, m2, m3, m4, m5, m6, m7, m8, m9 };
+
+  // Per-profile weighted score
+  const profileScores = {};
+  for (const [profileId, weights] of Object.entries(MODULE_WEIGHTS)) {
+    const [w1,w2,w3,w4,w5,w6,w7,w8,w9] = weights;
+    const total = w1+w2+w3+w4+w5+w6+w7+w8+w9;
+    let weighted =
+      m1.score*w1 + m2.score*w2 + m3.score*w3 + m4.score*w4 + m5.score*w5 +
+      m6.score*w6 + m7.score*w7 + m8.score*w8 + m9.score*w9;
+    weighted = weighted / total;
+    // Veto penalty
+    if (!m0.passes) weighted = Math.min(weighted, 0.40);
+    profileScores[profileId] = {
+      quantScore: Math.round(weighted * 100),
+      qualScore: null,       // filled after checklist
+      finalScore: null,
+      verdict: weighted >= 0.70 ? 'COMPRAR' : weighted >= 0.50 ? 'WATCHLIST' : 'NO COMPRAR',
+      verdictColor: weighted >= 0.70 ? '#22d45a' : weighted >= 0.50 ? '#f0b429' : '#f0483a',
+    };
+  }
+
+  // Price & fair value
+  const fv = getVal(metrics, 'fair_value') || getVal(metrics, 'Valor razonable (fair_value)');
+  const fvUpside = numVal(metrics, 'fair_value_upside') || numVal(metrics, 'Upside valor razonable (fair_value_upside)');
+  let estimatedPrice = null;
+  if (fv && fvUpside !== null) {
+    const fvNum = parseFloat(String(fv).replace(/[^0-9,.]/g,'').replace('\u00a0','').replace(',','.'));
+    if (!isNaN(fvNum)) estimatedPrice = fvNum / (1 + fvUpside/100);
+  }
+
+  return {
+    sectorKey, SC, m0, modules, profileScores, peers,
+    meta: {
+      ticker: getVal(metrics, 'ticker') || getVal(metrics, 'Ticker') || '',
+      name: getVal(metrics, 'name') || '',
+      sector: getVal(metrics, 'sector') || '',
+      industry: getVal(metrics, 'industry') || '',
+      fv, fvUpside, estimatedPrice,
+      fvConf: getVal(metrics, 'fair_value_confidence'),
+    }
+  };
+}
+
+// ── CHECKLIST SCORING ─────────────────────────────────────────
+function scoreChecklist(answers) {
+  // answers = { s1q1: 'yes'|'no'|'dk', ... }
+  // Returns per-profile qual scores
+  const sectionScores = {};
+
+  for (const [sectionId, section] of Object.entries(CHECKLIST)) {
+    let totalWeight = 0;
+    let weightedSum = 0;
+    section.questions.forEach(q => {
+      const ans = answers[q.id] || 'dk';
+      const pts = ans === 'yes' ? 2 : ans === 'no' ? -2 : 0;
+      const w = 1;
+      weightedSum += pts * w;
+      totalWeight += 2 * w; // max possible
+    });
+    // Normalize 0-1 (from -1 to +1 range)
+    const normalized = totalWeight > 0 ? (weightedSum / totalWeight + 1) / 2 : 0.5;
+    sectionScores[sectionId] = Math.max(0, Math.min(1, normalized));
+  }
+
+  // Per-profile weighted qual score
+  const profileQualScores = {};
+  for (const [profileId, weights] of Object.entries(CHECKLIST_WEIGHTS)) {
+    const [w1,w2,w3,w4,w5,w6,w7,w8] = weights;
+    const total = w1+w2+w3+w4+w5+w6+w7+w8;
+    const weighted =
+      (sectionScores.s1||0.5)*w1 + (sectionScores.s2||0.5)*w2 +
+      (sectionScores.s3||0.5)*w3 + (sectionScores.s4||0.5)*w4 +
+      (sectionScores.s5||0.5)*w5 + (sectionScores.s6||0.5)*w6 +
+      (sectionScores.s7||0.5)*w7 + (sectionScores.s8||0.5)*w8;
+    profileQualScores[profileId] = weighted / total;
+  }
+
+  // Check qual vetos
+  const qualVetosFired = QUAL_VETOS.filter(veto => {
+    const sectionId = `s${veto.section}`;
+    const q = CHECKLIST[sectionId]?.questions.find(q2 => q2.id === `s${veto.section}q${veto.q - ((veto.section-1)*7)}`);
+    // Find by position
+    const allQs = Object.values(CHECKLIST).flatMap(s => s.questions);
+    const theQ = allQs.find(q2 => {
+      const qNum = parseInt(q2.id.replace(/[a-z]/gi,''));
+      return veto.q === qNum || q2.id === `s${veto.section}q${veto.q}`;
+    });
+    return theQ && answers[theQ.id] === 'no';
+  });
+
+  return { sectionScores, profileQualScores, qualVetosFired };
+}
+
+// ── FINAL VERDICT ─────────────────────────────────────────────
+function computeFinalVerdicts(analysis, checklistResult) {
+  const { profileScores, m0 } = analysis;
+  const { profileQualScores, qualVetosFired } = checklistResult;
+  const verdicts = {};
+
+  for (const [profileId] of Object.entries(PROFILES)) {
+    const quant = (profileScores[profileId]?.quantScore || 0) / 100;
+    const qual  = profileQualScores[profileId] || 0.5;
+    let combined = quant * QUANT_WEIGHT + qual * QUAL_WEIGHT;
+
+    // Qual veto: each veto drops category
+    const vetoCount = qualVetosFired.length;
+    if (vetoCount >= 3) combined = Math.min(combined, 0.45);
+    else if (vetoCount >= 1) combined = Math.min(combined, 0.65);
+
+    // M0 quant veto
+    if (!m0.passes) combined = Math.min(combined, 0.40);
+
+    const pct = Math.round(combined * 100);
+    const verdict = pct >= 70 ? 'COMPRAR' : pct >= 50 ? 'WATCHLIST' : 'NO COMPRAR';
+
+    verdicts[profileId] = {
+      quantScore: profileScores[profileId]?.quantScore || 0,
+      qualScore:  Math.round(qual * 100),
+      finalScore: pct,
+      verdict,
+      verdictColor: verdict === 'COMPRAR' ? '#22d45a' : verdict === 'WATCHLIST' ? '#f0b429' : '#f0483a',
+      verdictIcon:  verdict === 'COMPRAR' ? '✅' : verdict === 'WATCHLIST' ? '🟡' : '❌',
+    };
+  }
+  return verdicts;
+}
+
+// ── HELPER ────────────────────────────────────────────────────
+function calcScore(checks) {
+  if (!checks.length) return 0.5;
+  let totalWeight = 0, passedWeight = 0;
+  checks.forEach(c => {
+    const w = c.weight || 1;
+    totalWeight += w;
+    if (c.pass === true) passedWeight += w;
+    else if (c.pass === null) { totalWeight -= w; } // don't count N/A
+  });
+  return totalWeight > 0 ? passedWeight / totalWeight : 0.5;
+}
+
+
+
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let parsedMetrics = {};
+let sectorData = null;
+let chartImageURL = null;
+let analysisResult = null;
+let currentTicker = '';
+let checklistAnswers = {};
+let activeProfileId = 'value';
+let activeTab = 'modules';
+
+/* ══════════════════════════════════════════
+   FILE HANDLING
+══════════════════════════════════════════ */
+['dz1','dz2','dz3'].forEach(id => {
+  const dz = document.getElementById(id);
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag');
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    if (id === 'dz1') handleCSV(f);
+    if (id === 'dz2') handleExcel(f);
+    if (id === 'dz3') handleImage(f);
+  });
+});
+
+document.getElementById('tickerInp').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase();
+  checkReady();
+});
+
+function handleCSV(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    parsedMetrics = parseCSVMetrics(e.target.result);
+    document.getElementById('fo1name').textContent = `${file.name} (${Object.keys(parsedMetrics).length} métricas)`;
+    document.getElementById('fo1').classList.add('show');
+    checkReady();
+  };
+  reader.readAsText(file);
+}
+
+function handleExcel(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type:'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:null });
+      // Convert to array of objects for parseExcelSector
+      const objRows = rows.map(row => {
+        const obj = {};
+        row.forEach((v, i) => { obj[`col_${i}`] = v; });
+        return obj;
+      });
+      sectorData = parseExcelSector(objRows);
+      document.getElementById('fo2name').textContent = `${file.name} (${sectorData.companies.length} empresas)`;
+      document.getElementById('fo2').classList.add('show');
+    } catch(err) {
+      console.error('Excel parse error:', err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function handleImage(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    chartImageURL = e.target.result;
+    document.getElementById('fo3name').textContent = file.name;
+    document.getElementById('fo3').classList.add('show');
+  };
+  reader.readAsDataURL(file);
+}
+
+function checkReady() {
+  const hasMetrics = Object.keys(parsedMetrics).length > 0;
+  const hasTicker = document.getElementById('tickerInp').value.trim().length >= 1;
+  document.getElementById('analyzeBtn').disabled = !(hasMetrics && hasTicker);
+}
+
+/* ══════════════════════════════════════════
+   ANALYSIS
+══════════════════════════════════════════ */
+function runAnalysis() {
+  currentTicker = document.getElementById('tickerInp').value.trim().toUpperCase();
+  document.getElementById('progressBar').classList.add('show');
+  document.getElementById('analyzeBtn').disabled = true;
+
+  const steps = [
+    'M0: Verificando integridad contable...',
+    'M1/M2: Rentabilidad y crecimiento...',
+    'M3/M4: Calidad financiera y riesgo...',
+    'M5/M6: Liquidez y valoración relativa...',
+    'M7/M8: Valoración intrínseca y dividendos...',
+    'M9: Momentum y revisiones...',
+    'Calculando 10 perfiles simultáneos...',
+    'Generando razonamiento experto...',
+  ];
+  let i = 0;
+  const interval = setInterval(() => {
+    if (i < steps.length) {
+      document.getElementById('progressText').textContent = steps[i++];
+    } else {
+      clearInterval(interval);
+      try {
+        analysisResult = runFullAnalysis(parsedMetrics, sectorData);
+        renderResults();
+      } catch(err) {
+        console.error('Analysis error:', err);
+        alert('Error en el análisis: ' + err.message);
+      }
+      document.getElementById('progressBar').classList.remove('show');
+    }
+  }, 350);
+}
+
+
+/* ══════════════════════════════════════════
+   GLOBAL SCORE (neutral — no profile)
+   Equal weights across all 9 modules
+══════════════════════════════════════════ */
+function computeGlobalScore(R) {
+  // Equal weights 1/9 each module for neutral view
+  const m = R.modules;
+  const scores = [m.m1.score, m.m2.score, m.m3.score, m.m4.score, m.m5.score,
+                  m.m6.score, m.m7.score, m.m8.noDividend ? 0.5 : m.m8.score, m.m9.score];
+  const avg = scores.reduce((a,b) => a+b, 0) / scores.length;
+  let pct = Math.round(avg * 100);
+  // Apply veto penalty
+  if (!R.m0.passes) pct = Math.min(pct, 40);
+  return pct;
+}
+
+function renderGlobalScore(R) {
+  const pct = computeGlobalScore(R);
+  const color = pct >= 68 ? 'var(--buy)' : pct >= 50 ? 'var(--hold)' : 'var(--risk)';
+  const circumf = 339.3;
+  const offset = circumf * (1 - pct / 100);
+
+  // Ring
+  const ring = document.getElementById('globalRingFill');
+  const ringNum = document.getElementById('globalRingNum');
+  setTimeout(() => {
+    ring.style.strokeDashoffset = offset;
+    ring.style.stroke = color;
+    ringNum.textContent = pct + '%';
+    ringNum.style.fill = color;
+  }, 200);
+
+  // Verdict
+  const vb = document.getElementById('globalVerdictBox');
+  const verdict = pct >= 68 ? 'COMPRAR' : pct >= 50 ? 'WATCHLIST' : 'NO COMPRAR';
+  const vClass = pct >= 68 ? 'vb-buy' : pct >= 50 ? 'vb-hold' : 'vb-no';
+  const icon = pct >= 68 ? '✅' : pct >= 50 ? '🟡' : '❌';
+  const sub = pct >= 68
+    ? `Fundamentales sólidos · Precio atractivo · ${!R.m0.passes ? '⚠️ Veto activo' : 'Sin vetos'}`
+    : pct >= 50
+    ? `Fundamentales aceptables · Vigilar evolución · ${!R.m0.passes ? '⚠️ Veto activo' : 'Score medio'}`
+    : `Fundamentales débiles o precio excesivo${!R.m0.passes ? ' · ⚠️ VETO ACTIVO' : ''}`;
+
+  vb.className = 'verdict-box ' + vClass;
+  document.getElementById('gvIcon').textContent = icon;
+  document.getElementById('gvLabel').textContent = 'DECISIÓN FUNDAMENTAL GLOBAL';
+  document.getElementById('gvDecision').textContent = verdict;
+  document.getElementById('gvSub').textContent = sub + ` · Score medio: ${pct}%`;
+
+  // Veto badge
+  const vs = document.getElementById('globalVetoStatus');
+  vs.className = 'veto-status-badge ' + (!R.m0.passes ? 'vs-ko' : 'vs-ok');
+  vs.innerHTML = `<span>⬤</span><span>${!R.m0.passes ? '⚡ VETO: ' + R.m0.vetos[0]?.label : '✓ Sin vetos absolutos'}</span>`;
+
+  // Sector info bar
+  const sib = document.getElementById('sectorInfoBar');
+  const sectorLabels = {
+    tech:'⚙️ Tecnología / Software',health:'💊 Salud / Pharma',
+    util:'⚡ Utilities / Energía',finance:'🏦 Banca / Financiero',
+    consumer:'🛒 Consumo',industry:'🏭 Industrial / Materiales',
+    reit:'🏢 REIT / Inmobiliario',general:'🌐 General'
+  };
+  const SC = R.SC;
+  sib.innerHTML = `
+    <span>Umbrales ajustados para:</span>
+    <span class="sib-badge">${sectorLabels[R.sectorKey] || R.sectorKey}</span>
+    <span style="color:var(--text4)">·</span>
+    <span class="sib-badge" style="color:var(--text2)">ROIC mín: ${SC.roic[1]}%</span>
+    <span class="sib-badge" style="color:var(--text2)">Margen EBITDA: >${SC.ebitdaM[1]}%</span>
+    <span class="sib-badge" style="color:var(--text2)">Rev CAGR: >${SC.revCagr[1]}%</span>
+    <span class="sib-badge" style="color:var(--text2)">Net Debt/EBITDA: <${SC.netDebt[0]}x</span>
+    <span class="sib-badge" style="color:var(--text2)">FCF Margin: >${SC.fcfM[1]}%</span>`;
+}
+
+/* ══════════════════════════════════════════
+   KPI CARDS — Métricas clave detectadas
+══════════════════════════════════════════ */
+function renderKPIs(R) {
+  const m = R.modules;
+  const SC = R.SC;
+
+  // Build KPI list dynamically from what we have
+  const kpis = [];
+
+  // ROIC
+  if (m.m1.detail.roic != null) kpis.push({
+    label:'ROIC', val: m.m1.detail.roic.toFixed(1) + '%',
+    color: m.m1.detail.wacc ? (m.m1.detail.roic > m.m1.detail.wacc ? 'var(--buy)' : 'var(--risk)') : 'var(--text2)',
+    extra: m.m1.detail.wacc ? 'WACC: ' + m.m1.detail.wacc.toFixed(1) + '%' : ''
+  });
+
+  // WACC
+  if (m.m1.detail.wacc != null) kpis.push({
+    label:'WACC', val: m.m1.detail.wacc.toFixed(1) + '%',
+    color:'var(--text2)', extra: m.m1.detail.roic ? (m.m1.detail.roic > m.m1.detail.wacc ? '✓ ROIC > WACC' : '✗ ROIC < WACC') : ''
+  });
+
+  // Altman Z
+  if (m.m4.detail.altman != null) kpis.push({
+    label:'Altman Z', val: m.m4.detail.altman.toFixed(1),
+    color: m.m4.detail.altman > 2.5 ? 'var(--buy)' : m.m4.detail.altman > 1.81 ? 'var(--hold)' : 'var(--risk)',
+    extra: m.m4.detail.altman > 2.5 ? 'zona segura' : m.m4.detail.altman > 1.81 ? 'zona gris' : 'distress'
+  });
+
+  // Beneish M
+  if (m.m3.detail.beneish != null) kpis.push({
+    label:'Beneish M', val: m.m3.detail.beneish.toFixed(2),
+    color: m.m3.detail.beneish < -1.78 ? 'var(--buy)' : 'var(--risk)',
+    extra: m.m3.detail.beneish < -1.78 ? 'sin manipulación' : '⚠️ manipulación'
+  });
+
+  // Net Debt/EBITDA
+  if (m.m4.detail.netDebt != null) kpis.push({
+    label:'D/EBITDA', val: m.m4.detail.netDebt.toFixed(1) + 'x',
+    color: m.m4.detail.netDebt < SC.netDebt[0] ? 'var(--buy)' : m.m4.detail.netDebt < SC.netDebt[1] ? 'var(--hold)' : 'var(--risk)',
+    extra: 'umbral ' + SC.netDebt[0] + 'x'
+  });
+
+  // Interest Coverage
+  if (m.m4.detail.ic != null) kpis.push({
+    label:'Cobert. Int.', val: m.m4.detail.ic.toFixed(1) + 'x',
+    color: m.m4.detail.ic > SC.ic[0] ? 'var(--buy)' : m.m4.detail.ic > SC.ic[1] ? 'var(--hold)' : 'var(--risk)',
+    extra: 'umbral ' + SC.ic[1] + 'x'
+  });
+
+  // Current Ratio
+  if (m.m5.detail.cr != null) kpis.push({
+    label:'Curr. Ratio', val: m.m5.detail.cr.toFixed(2) + 'x',
+    color: m.m5.detail.cr > SC.cr[0] ? 'var(--buy)' : m.m5.detail.cr > SC.cr[1] ? 'var(--hold)' : 'var(--risk)',
+    extra: 'umbral ' + SC.cr[1] + 'x'
+  });
+
+  // EBITDA Margin
+  if (m.m1.detail.ebitdaM != null) kpis.push({
+    label:'Mg. EBITDA', val: m.m1.detail.ebitdaM.toFixed(1) + '%',
+    color: m.m1.detail.ebitdaM > SC.ebitdaM[0] ? 'var(--buy)' : m.m1.detail.ebitdaM > SC.ebitdaM[1] ? 'var(--hold)' : 'var(--risk)',
+    extra: 'sector >' + SC.ebitdaM[1] + '%'
+  });
+
+  // Gross Margin
+  if (m.m1.detail.gpM != null) kpis.push({
+    label:'Mg. Bruto', val: m.m1.detail.gpM.toFixed(1) + '%',
+    color: m.m1.detail.gpM > SC.gpM[0] ? 'var(--buy)' : m.m1.detail.gpM > SC.gpM[1] ? 'var(--hold)' : 'var(--risk)',
+    extra: 'sector >' + SC.gpM[1] + '%'
+  });
+
+  // Revenue CAGR 5y
+  if (m.m2.detail.revC5 != null) kpis.push({
+    label:'Rev. CAGR 5y', val: m.m2.detail.revC5.toFixed(1) + '%',
+    color: m.m2.detail.revC5 > SC.revCagr[0] ? 'var(--buy)' : m.m2.detail.revC5 > SC.revCagr[1] ? 'var(--hold)' : 'var(--risk)',
+    extra: 'sector >' + SC.revCagr[1] + '%'
+  });
+
+  // EPS CAGR 5y
+  if (m.m2.detail.epsC5 != null && m.m2.detail.epsC5 > -50) kpis.push({
+    label:'EPS CAGR 5y', val: m.m2.detail.epsC5.toFixed(1) + '%',
+    color: m.m2.detail.epsC5 > SC.revCagr[0] ? 'var(--buy)' : m.m2.detail.epsC5 > 0 ? 'var(--hold)' : 'var(--risk)',
+    extra: ''
+  });
+
+  // PER Forward
+  if (m.m6.detail.peFwd != null) kpis.push({
+    label:'PER Fwd', val: m.m6.detail.peFwd.toFixed(1) + 'x',
+    color: m.m6.detail.peFwd < m.m6.detail.peThreshold ? 'var(--buy)' : m.m6.detail.peFwd < m.m6.detail.peThreshold * 1.3 ? 'var(--hold)' : 'var(--risk)',
+    extra: 'umbral ' + (m.m6.detail.peThreshold?.toFixed(0) || '?') + 'x'
+  });
+
+  // EV/EBITDA
+  const evEff = m.m6.detail.evEbitdaFwd ?? m.m6.detail.evEbitdaLtm;
+  if (evEff != null) kpis.push({
+    label:'EV/EBITDA', val: evEff.toFixed(1) + 'x',
+    color: evEff < m.m6.detail.evThreshold ? 'var(--buy)' : evEff < m.m6.detail.evThreshold * 1.4 ? 'var(--hold)' : 'var(--risk)',
+    extra: 'umbral ' + m.m6.detail.evThreshold + 'x'
+  });
+
+  // FCF Yield
+  if (m.m6.detail.fcfYield != null) kpis.push({
+    label:'FCF Yield', val: m.m6.detail.fcfYield.toFixed(1) + '%',
+    color: m.m6.detail.fcfYield > 6 ? 'var(--buy)' : m.m6.detail.fcfYield > 3 ? 'var(--hold)' : 'var(--risk)',
+    extra: m.m6.detail.fcfYield > 6 ? 'excelente' : m.m6.detail.fcfYield > 3 ? 'razonable' : 'bajo'
+  });
+
+  // FCF/NI quality
+  if (m.m3.detail.fcfToNI != null) kpis.push({
+    label:'FCF/NI', val: m.m3.detail.fcfToNI.toFixed(0) + '%',
+    color: m.m3.detail.fcfToNI > 85 ? 'var(--buy)' : m.m3.detail.fcfToNI > 60 ? 'var(--hold)' : 'var(--risk)',
+    extra: m.m3.detail.fcfToNI > 85 ? 'alta calidad' : 'moderado'
+  });
+
+  // Fair Value Upside
+  if (R.meta.fvUpside != null) kpis.push({
+    label:'FV Upside', val: '+' + R.meta.fvUpside.toFixed(1) + '%',
+    color: R.meta.fvUpside > 20 ? 'var(--buy)' : R.meta.fvUpside > 5 ? 'var(--hold)' : 'var(--risk)',
+    extra: R.meta.fvConf ? 'conf: ' + R.meta.fvConf : ''
+  });
+
+  // Div Yield (if pays dividend)
+  if (!m.m8.noDividend && m.m8.detail.divYield != null) kpis.push({
+    label:'Div. Yield', val: m.m8.detail.divYield.toFixed(1) + '%',
+    color: m.m8.detail.divYield > 2.5 && m.m8.detail.divYield < 8 ? 'var(--buy)' : 'var(--hold)',
+    extra: m.m8.detail.divStreak ? m.m8.detail.divStreak + 'y streak' : ''
+  });
+
+  // Piotroski
+  if (m.m1.detail.piotroski != null) kpis.push({
+    label:'Piotroski', val: m.m1.detail.piotroski + '/9',
+    color: m.m1.detail.piotroski >= 7 ? 'var(--buy)' : m.m1.detail.piotroski >= 5 ? 'var(--hold)' : 'var(--risk)',
+    extra: m.m1.detail.piotroski >= 7 ? 'compra fuerte' : m.m1.detail.piotroski >= 5 ? 'neutral' : 'débil'
+  });
+
+  const row = document.getElementById('kpisRow');
+  row.innerHTML = kpis.map(k => `
+    <div class="kpi-card" style="border-top-color:${k.color}">
+      <div class="kpi-val" style="color:${k.color}">${k.val}</div>
+      <div class="kpi-lbl">${k.label}</div>
+      ${k.extra ? `<div class="kpi-signal">${k.extra}</div>` : ''}
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════
+   MODULE EXPLANATIONS
+   Returns per-module note text based on results
+══════════════════════════════════════════ */
+function getModuleExplanation(modId, R, SC) {
+  const m = R.modules;
+  switch(modId) {
+    case 'm0': {
+      const b = R.m0.details;
+      return R.m0.passes
+        ? `Filtro de integridad superado. Beneish M-Score ${b.beneish?.toFixed(2) || 'N/D'} (< -1.78 = sin indicios de manipulación). Altman Z-Score ${b.altman?.toFixed(1) || 'N/D'} (> 2.5 = zona segura). ${R.m0.warnings.length > 0 ? 'Advertencias menores: ' + R.m0.warnings.join('; ') : 'Sin advertencias adicionales.'}`
+        : `⚠️ VETO ACTIVADO: ${R.m0.vetos.map(v => v.label).join(' · ')}. Ningún perfil puede recomendar COMPRAR mientras este veto esté activo.`;
+    }
+    case 'm1': {
+      const roic = m.m1.detail.roic; const wacc = m.m1.detail.wacc;
+      const gp = m.m1.detail.gpM; const eb = m.m1.detail.ebitdaM;
+      const pio = m.m1.detail.piotroski;
+      let txt = '';
+      if (roic && wacc) txt += `ROIC ${roic.toFixed(1)}% vs WACC ${wacc.toFixed(1)}% → spread ${(roic-wacc).toFixed(1)}pts ${roic > wacc ? '(crea valor económico)' : '(destruye valor)'}.`;
+      if (gp) txt += ` Margen bruto ${gp.toFixed(1)}% ${gp > SC.gpM[0] ? '(excelente para el sector)' : gp > SC.gpM[1] ? '(bueno)' : '(por debajo del umbral sectorial de ' + SC.gpM[1] + '%)'}. `;
+      if (eb) txt += `Margen EBITDA ${eb.toFixed(1)}% (umbral sector: ${SC.ebitdaM[1]}%). `;
+      if (pio != null) txt += `Piotroski ${pio}/9 — ${pio >= 7 ? 'señal de calidad alta' : pio >= 5 ? 'neutro' : 'señales débiles'}.`;
+      return txt || 'Sin datos suficientes para evaluar rentabilidad.';
+    }
+    case 'm2': {
+      const r5 = m.m2.detail.revC5; const e5 = m.m2.detail.epsC5;
+      const rp = m.m2.detail.revProjC5; const pos = m.m2.detail.posRev90;
+      let txt = '';
+      if (r5) txt += `Revenue CAGR 5y: ${r5.toFixed(1)}% (umbral sector: ${SC.revCagr[1]}%) ${r5 > SC.revCagr[0] ? '— excelente' : r5 > SC.revCagr[1] ? '— adecuado' : '— por debajo del umbral'}. `;
+      if (e5 && e5 > -50) txt += `EPS CAGR 5y: ${e5.toFixed(1)}%${r5 ? (e5 >= r5 ? ' — márgenes en expansión ✓' : ' — márgenes bajo presión') : ''}. `;
+      if (rp) txt += `Crecimiento proyectado 5y: ${rp.toFixed(1)}%. `;
+      if (pos) txt += `Revisiones analistas 90d: ${pos.toFixed(0)}% positivas.`;
+      return txt || 'Sin datos de crecimiento disponibles.';
+    }
+    case 'm3': {
+      const fcf = m.m3.detail.fcfToNI; const ben = m.m3.detail.beneish;
+      const sh = m.m3.detail.sharesC5; const pio = m.m3.detail.piotroski;
+      let txt = '';
+      if (fcf) txt += `FCF/NI: ${fcf.toFixed(0)}% ${fcf > 100 ? '— beneficios respaldados por caja real (muy positivo)' : fcf > 80 ? '— buena calidad contable' : '— hay gap entre beneficio reportado y caja generada'}. `;
+      if (ben) txt += `Beneish M-Score: ${ben.toFixed(2)} ${ben < -2.22 ? '— sin indicios de manipulación' : ben < -1.78 ? '— zona gris, monitorizar' : '— señal de posible manipulación'}. `;
+      if (sh != null) txt += `Dilución acciones 5y: ${sh.toFixed(1)}%/año ${sh < 0 ? '(recompras netas ✓)' : sh < 1 ? '(dilución mínima)' : '(dilución significativa)'}. `;
+      return txt || 'Sin datos de calidad financiera disponibles.';
+    }
+    case 'm4': {
+      const alt = m.m4.detail.altman; const nd = m.m4.detail.netDebt;
+      const ic = m.m4.detail.ic; const beta = m.m4.detail.beta5;
+      let txt = '';
+      if (alt) txt += `Altman Z-Score: ${alt.toFixed(1)} ${alt > 3 ? '— zona segura (>3)' : alt > 1.81 ? '— zona gris (1.81-3), monitorizar' : '— zona de distress (<1.81)'}. `;
+      if (nd) txt += `Net Debt/EBITDA: ${nd.toFixed(1)}x (umbral sector: ${SC.netDebt[0]}x) ${nd < SC.netDebt[0] ? '— apalancamiento manejable' : '— deuda elevada para el sector'}. `;
+      if (ic) txt += `Interest Coverage: ${ic.toFixed(1)}x ${ic > 8 ? '— excelente cobertura' : ic > 4 ? '— cobertura sólida' : ic > 2 ? '— cobertura ajustada' : '— cobertura crítica'}. `;
+      if (beta) txt += `Beta 5y: ${beta.toFixed(2)} ${beta < 0.8 ? '— defensiva' : beta < 1.2 ? '— neutral' : '— volátil'}.`;
+      return txt || 'Sin datos de riesgo disponibles.';
+    }
+    case 'm5': {
+      const cr = m.m5.detail.cr; const qr = m.m5.detail.qr;
+      const ocf = m.m5.detail.ocfLiabCur; const ccc = m.m5.detail.ccc;
+      let txt = '';
+      if (cr) txt += `Current Ratio: ${cr.toFixed(2)}x (umbral sector: ${SC.cr[1]}x) ${cr > SC.cr[0] ? '— liquidez excelente' : cr > SC.cr[1] ? '— liquidez adecuada' : '— liquidez ajustada'}. `;
+      if (qr) txt += `Quick Ratio: ${qr.toFixed(2)}x. `;
+      if (ccc != null) txt += `CCC: ${ccc.toFixed(0)} días ${ccc < 0 ? '(negativo — cobra antes de pagar, muy positivo)' : ccc < SC.ccc[0] ? '— eficiente' : '— mejorable'}. `;
+      return txt || 'Sin datos de liquidez disponibles.';
+    }
+    case 'm6': {
+      const pe = m.m6.detail.peFwd; const pet = m.m6.detail.peThreshold;
+      const ev = m.m6.detail.evEbitdaFwd ?? m.m6.detail.evEbitdaLtm; const evt = m.m6.detail.evThreshold;
+      const fcfY = m.m6.detail.fcfYield; const sh = m.m6.detail.sharYield;
+      const buy = m.m6.detail.analBuy; const hold = m.m6.detail.analHold; const sell = m.m6.detail.analSell;
+      let txt = '';
+      if (pe) txt += `PER Forward: ${pe.toFixed(1)}x (umbral sectorial: ${pet?.toFixed(0) || '?'}x) ${pe < pet ? '— cotiza barato vs el sector' : '— cotiza con prima'}. `;
+      if (ev) txt += `EV/EBITDA: ${ev.toFixed(1)}x (umbral: ${evt}x) ${ev < evt ? '— atractivo' : '— elevado'}. `;
+      if (fcfY) txt += `FCF Yield: ${fcfY.toFixed(1)}% ${fcfY > 6 ? '— excelente rendimiento real' : fcfY > 3 ? '— razonable' : '— bajo'}. `;
+      if (sh) txt += `Shareholder Yield: ${sh.toFixed(1)}%. `;
+      if (buy != null) txt += `Consenso: ${buy}B / ${hold}H / ${sell}S.`;
+      return txt || 'Sin datos de valoración relativa disponibles.';
+    }
+    case 'm7': {
+      const fvu = R.meta.fvUpside; const dcf = m.m7.detail.dcfUpside;
+      const ddm = m.m7.detail.ddmUpside; const conf = R.meta.fvConf;
+      const wacc = m.m7.detail.wacc;
+      let txt = '';
+      if (fvu) txt += `Fair Value Upside: +${fvu.toFixed(1)}%${conf ? ' (confianza ' + conf + ')' : ''} ${fvu > 20 ? '— margen de seguridad amplio' : fvu > 5 ? '— margen de seguridad moderado' : '— sin margen de seguridad'}. `;
+      if (dcf) txt += `DCF Upside: +${dcf.toFixed(1)}%. `;
+      if (ddm) txt += `DDM Upside: +${ddm.toFixed(1)}%. `;
+      if (wacc) txt += `WACC: ${wacc.toFixed(1)}%.`;
+      return txt || 'Sin modelos de valoración intrínseca disponibles.';
+    }
+    case 'm8': {
+      if (m.m8.noDividend) return 'La empresa no paga dividendo. Para perfiles orientados a renta (Income, DGI) este factor penaliza. Para perfiles growth o value, la ausencia de dividendo puede indicar reinversión de capital a altas tasas.';
+      const dy = m.m8.detail.divYield; const fp = m.m8.detail.fcfPayout;
+      const str = m.m8.detail.divStreak; const c5 = m.m8.detail.divC5;
+      let txt = '';
+      if (dy) txt += `Yield: ${dy.toFixed(1)}% ${dy > 8 ? '— ⚠️ posible trampa (yield muy alto)' : dy > 3 ? '— atractivo' : '— moderado'}. `;
+      if (fp) txt += `FCF Payout: ${fp.toFixed(0)}% ${fp < 60 ? '— sostenible con holgura' : fp < 80 ? '— manejable' : '— elevado, riesgo de recorte'}. `;
+      if (str) txt += `Streak: ${str} años${str >= 25 ? ' — Dividend Aristocrat' : str >= 10 ? ' — Dividend Achiever' : ''}. `;
+      if (c5) txt += `CAGR dividendo 5y: ${c5.toFixed(1)}%.`;
+      return txt || 'Sin datos de dividendo disponibles.';
+    }
+    case 'm9': {
+      const rev = m.m9.detail.posRev90; const ma200 = m.m9.detail.pricePct200;
+      const rsi = m.m9.detail.rsi; const ret3m = m.m9.detail.ret3m;
+      let txt = '';
+      if (rev) txt += `Revisiones EPS 90d: ${rev.toFixed(0)}% positivas ${rev > 60 ? '— consenso al alza' : rev > 40 ? '— mixtas' : '— mayoría a la baja'}. `;
+      if (ma200) txt += `Precio vs MA200: ${ma200.toFixed(0)}% ${ma200 > 100 ? '— tendencia alcista' : '— por debajo de MA200'}. `;
+      if (rsi) txt += `RSI 14d: ${rsi.toFixed(0)} ${rsi < 30 ? '— sobreventa (oportunidad)' : rsi > 70 ? '— sobrecompra (precaución)' : '— zona neutral'}. `;
+      if (ret3m != null) txt += `Retorno 3m: ${(ret3m*100).toFixed(1)}%.`;
+      return txt || 'Sin datos de momentum disponibles.';
+    }
+    default: return '';
+  }
+}
+
+/* ══════════════════════════════════════════
+   RENDER RESULTS
+══════════════════════════════════════════ */
+function renderResults() {
+  const R = analysisResult;
+
+  // Show sections
+  document.getElementById('heroSection').style.display = 'none';
+  document.getElementById('resultsSection').classList.add('show');
+  document.getElementById('resultsSection').scrollIntoView({ behavior:'smooth', block:'start' });
+
+  // Global score + KPIs (new)
+  renderGlobalScore(R);
+  renderKPIs(R);
+
+  // Company header
+  document.getElementById('tbCompany').textContent = currentTicker;
+  document.getElementById('tbCompany').classList.add('show');
+  document.getElementById('coTicker').textContent = currentTicker + ' · Análisis Fundamental Pro';
+  document.getElementById('coName').textContent = R.meta.name || currentTicker;
+  document.getElementById('coSector').textContent = R.meta.sector || R.sectorKey;
+  document.getElementById('coSectorBadge').textContent = R.sectorKey;
+
+  if (R.meta.estimatedPrice) {
+    const curr = R.meta.fv ? String(R.meta.fv).replace(/[^0-9,.€$£]/g,'') : '';
+    document.getElementById('coPrice').textContent = R.meta.estimatedPrice.toFixed(2) + (R.meta.fv && R.meta.fv.includes('€') ? '€' : R.meta.fv && R.meta.fv.includes('$') ? '$' : '');
+    if (R.meta.fv) {
+      document.getElementById('coFV').textContent = `→ Fair Value: ${R.meta.fv}`;
+      document.getElementById('coUpside').textContent = `+${R.meta.fvUpside.toFixed(1)}%`;
+      document.getElementById('coUpside').style.display = 'inline-block';
+    }
+  }
+
+  // M0 status
+  const m0Status = document.getElementById('coM0Status');
+  if (R.m0.passes) {
+    m0Status.innerHTML = `✅ Filtro M0: Sin vetos contables · Beneish ${R.m0.details.beneish?.toFixed(2) || 'N/D'} · Altman Z ${R.m0.details.altman?.toFixed(1) || 'N/D'}`;
+    m0Status.style.background = 'var(--buy-pale)';
+    m0Status.style.borderColor = 'rgba(34,212,90,.25)';
+    m0Status.style.color = 'var(--buy)';
+  } else {
+    m0Status.innerHTML = `🚨 VETO ACTIVADO · ${R.m0.vetos.map(v => v.label).join(' · ')}`;
+    m0Status.style.background = 'var(--risk-pale)';
+    m0Status.style.borderColor = 'rgba(240,72,58,.35)';
+    m0Status.style.color = 'var(--risk)';
+    const va = document.getElementById('coVetoAlert');
+    document.getElementById('coVetoText').textContent = R.m0.vetos.map(v => v.label).join(' | ');
+    va.classList.add('show');
+  }
+
+  // Show save button
+  document.getElementById('saveBtn').style.display = 'flex';
+  document.getElementById('saveHistBtn').style.display = 'flex';
+
+  // Render profiles grid
+  renderProfilesGrid(R);
+
+  // Render modules for active profile
+  renderModuleCards(R, activeProfileId);
+  renderScoreBars(R, activeProfileId);
+  renderPeers(R);
+  renderChart();
+  renderReasoning(R, activeProfileId);
+  buildChecklist();
+}
+
+/* ── PROFILES GRID ── */
+function renderProfilesGrid(R) {
+  const grid = document.getElementById('profilesGrid');
+  grid.innerHTML = '';
+  Object.entries(PROFILES).forEach(([id, profile]) => {
+    const ps = R.profileScores[id];
+    const score = ps.quantScore;
+    const color = ps.verdictColor;
+    const vClass = score >= 70 ? 'pv-buy' : score >= 50 ? 'pv-hold' : 'pv-no';
+    const card = document.createElement('div');
+    card.className = 'profile-card' + (id === activeProfileId ? ' active' : '');
+    card.style.borderTopColor = profile.color;
+    card.onclick = () => selectProfile(id);
+    card.innerHTML = `
+      <div class="pc-header">
+        <span class="pc-icon">${profile.icon}</span>
+        <span class="pc-verdict ${vClass}">${ps.verdict}</span>
+      </div>
+      <div class="pc-name">${profile.name}</div>
+      <div class="pc-phil">${profile.philosopher}</div>
+      <div class="pc-score-row">
+        <div class="pc-score-num" style="color:${color}">${score}%</div>
+        <div class="pc-score-lbl">Score cuant.</div>
+      </div>
+      <div class="pc-bar"><div class="pc-bar-fill" style="width:${score}%;background:${color}"></div></div>
+      <div class="pc-quant-qual">
+        <div class="pc-qq"><div class="pc-qq-val" style="color:${color}">${score}%</div><div class="pc-qq-lbl">Cuant.</div></div>
+        <div class="pc-qq"><div class="pc-qq-val" style="color:var(--text3)">—</div><div class="pc-qq-lbl">Cual.</div></div>
+        <div class="pc-qq"><div class="pc-qq-val" style="color:var(--text3)">—</div><div class="pc-qq-lbl">Final</div></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function selectProfile(id) {
+  activeProfileId = id;
+  document.querySelectorAll('.profile-card').forEach((c,i) => {
+    c.classList.toggle('active', Object.keys(PROFILES)[i] === id);
+  });
+  renderModuleCards(analysisResult, id);
+  renderScoreBars(analysisResult, id);
+  renderReasoning(analysisResult, id);
+}
+
+/* ── TABS ── */
+function switchTab(btn) {
+  activeTab = btn.dataset.tab;
+  document.querySelectorAll('.dtab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+  document.getElementById('tab-' + activeTab).style.display = 'block';
+}
+
+/* ── MODULE CARDS ── */
+function renderModuleCards(R, profileId) {
+  const weights = MODULE_WEIGHTS[profileId] || MODULE_WEIGHTS.value;
+  const modDefs = [
+    { id:'m0', title:'M0 · Integridad Contable', icon:'🔍', mod: R.m0, special:'m0' },
+    { id:'m1', title:'M1 · Rentabilidad', icon:'📊', mod: R.modules.m1, weight: weights[0] },
+    { id:'m2', title:'M2 · Crecimiento', icon:'📈', mod: R.modules.m2, weight: weights[1] },
+    { id:'m3', title:'M3 · Calidad Financiera', icon:'✅', mod: R.modules.m3, weight: weights[2] },
+    { id:'m4', title:'M4 · Riesgo y Deuda', icon:'⚡', mod: R.modules.m4, weight: weights[3] },
+    { id:'m5', title:'M5 · Liquidez', icon:'💧', mod: R.modules.m5, weight: weights[4] },
+    { id:'m6', title:'M6 · Valoración Relativa', icon:'💰', mod: R.modules.m6, weight: weights[5] },
+    { id:'m7', title:'M7 · Valoración Intrínseca', icon:'🎯', mod: R.modules.m7, weight: weights[6] },
+    { id:'m8', title:'M8 · Dividendos', icon:'💵', mod: R.modules.m8, weight: weights[7] },
+    { id:'m9', title:'M9 · Momentum', icon:'📉', mod: R.modules.m9, weight: weights[8] },
+  ];
+
+  const grid = document.getElementById('modulesGrid');
+  grid.innerHTML = '';
+  modDefs.forEach(def => {
+    const card = document.createElement('div');
+    card.className = 'mod-card';
+    let scoreVal, scoreColor, badgeClass, checks;
+
+    if (def.special === 'm0') {
+      scoreVal = def.mod.passes ? '✓ PASA' : '✗ VETO';
+      scoreColor = def.mod.passes ? 'var(--buy)' : 'var(--risk)';
+      badgeClass = def.mod.passes ? 'pv-buy' : 'pv-no';
+      // Build fake checks from M0 details
+      checks = [
+        { label:'Beneish M-Score', val: def.mod.details.beneish?.toFixed(2) || 'N/D', pass: def.mod.details.beneish === null ? null : def.mod.details.beneish < -1.78 },
+        { label:'Altman Z-Score', val: def.mod.details.altman?.toFixed(1) || 'N/D', pass: def.mod.details.altman === null ? null : def.mod.details.altman > 2.5 },
+        { label:'Interest Coverage', val: def.mod.details.ic?.toFixed(1) + 'x' || 'N/D', pass: def.mod.details.ic === null ? null : def.mod.details.ic > 3 },
+        { label:'Current Ratio', val: def.mod.details.cr?.toFixed(2) + 'x' || 'N/D', pass: def.mod.details.cr === null ? null : def.mod.details.cr > 1.0 },
+        { label:'Net Debt/EBITDA', val: def.mod.details.netDebt?.toFixed(1) + 'x' || 'N/D', pass: def.mod.details.netDebt === null ? null : def.mod.details.netDebt < 5 },
+        { label:'Restatements', val: def.mod.details.restate || 'N/D', pass: !def.mod.details.restate || def.mod.details.restate.toLowerCase() === 'original' },
+      ];
+      if (def.mod.warnings.length > 0) def.mod.warnings.forEach(w => checks.push({ label:'⚠️ ' + w, val:'', pass:false }));
+    } else if (def.mod.noDividend && def.id === 'm8') {
+      checks = [{ label:'No paga dividendo', val:'—', pass:null }];
+      scoreVal = '—';
+      scoreColor = 'var(--text3)';
+      badgeClass = '';
+    } else {
+      const pct = Math.round((def.mod.score || 0) * 100);
+      scoreVal = pct + '%';
+      scoreColor = pct >= 70 ? 'var(--buy)' : pct >= 50 ? 'var(--hold)' : 'var(--risk)';
+      badgeClass = pct >= 70 ? 'pv-buy' : pct >= 50 ? 'pv-hold' : 'pv-no';
+      checks = def.mod.checks || [];
+    }
+
+    const checksHTML = checks.slice(0, 12).map(c => {
+      const dotClass = c.pass === true ? 'cd-buy' : c.pass === false ? 'cd-no' : 'cd-na';
+      return `<div class="check-row">
+        <div class="cr-dot ${dotClass}"></div>
+        <div class="cr-label">${c.label}</div>
+        <div class="cr-val">${c.val || ''}</div>
+        <div class="cr-thr">${c.threshold || ''}</div>
+      </div>`;
+    }).join('');
+
+    const weightLabel = def.weight ? `Peso: ${def.weight}%` : '';
+    const noteColor = def.mod?.passes === false ? 'var(--risk)' : scoreColor;
+    const explanation = getModuleExplanation(def.id, R, R.SC);
+    const explClass = scoreColor === 'var(--buy)' ? 'me-buy' : scoreColor === 'var(--hold)' ? 'me-hold' : scoreColor === 'var(--text3)' ? 'me-info' : 'me-no';
+
+    card.innerHTML = `
+      <div class="mod-head">
+        <div class="mh-left"><span class="mh-icon">${def.icon}</span><span class="mh-title">${def.title}</span></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${weightLabel ? `<span style="font-family:var(--f-m);font-size:.62rem;color:var(--text3)">${weightLabel}</span>` : ''}
+          <span class="mh-score ${badgeClass}" style="color:${scoreColor};border-color:${scoreColor}33;background:${scoreColor}11">${scoreVal}</span>
+        </div>
+      </div>
+      <div class="mod-body">${checksHTML}</div>
+      ${explanation ? `<div class="mod-explanation ${explClass}">${explanation}</div>` : ''}`;
+    grid.appendChild(card);
+  });
+}
+
+/* ── SCORE BARS ── */
+function renderScoreBars(R, profileId) {
+  const weights = MODULE_WEIGHTS[profileId];
+  const [w1,w2,w3,w4,w5,w6,w7,w8,w9] = weights;
+  const mods = [
+    { label:'M1 · Rentabilidad',          score:R.modules.m1.score, weight:w1 },
+    { label:'M2 · Crecimiento',           score:R.modules.m2.score, weight:w2 },
+    { label:'M3 · Calidad Financiera',    score:R.modules.m3.score, weight:w3 },
+    { label:'M4 · Riesgo y Deuda',        score:R.modules.m4.score, weight:w4 },
+    { label:'M5 · Liquidez',             score:R.modules.m5.score, weight:w5 },
+    { label:'M6 · Valoración Relativa',   score:R.modules.m6.score, weight:w6 },
+    { label:'M7 · Valoración Intrínseca', score:R.modules.m7.score, weight:w7 },
+    { label:'M8 · Dividendos',            score:R.modules.m8.score, weight:w8 },
+    { label:'M9 · Momentum',              score:R.modules.m9.score, weight:w9 },
+  ];
+  const profile = PROFILES[profileId];
+  const box = document.getElementById('scoreBarsBox');
+  box.innerHTML = `<div class="sb-title">⚖️ Puntuación por Módulo — ${profile.icon} ${profile.name}</div>` +
+    mods.map(m => {
+      const pct = Math.round(m.score * 100);
+      const color = pct >= 70 ? 'var(--buy)' : pct >= 50 ? 'var(--hold)' : 'var(--risk)';
+      return `<div class="score-bar-row">
+        <div class="sbr-label">${m.label}</div>
+        <div class="sbr-bar-wrap"><div class="sbr-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div class="sbr-val" style="color:${color}">${pct}%</div>
+        <div class="sbr-weight">${m.weight}%</div>
+      </div>`;
+    }).join('');
+}
+
+/* ── PEERS ── */
+function renderPeers(R) {
+  const area = document.getElementById('peersContent');
+  if (!R.peers || !sectorData || !sectorData.companies || sectorData.companies.length < 2) {
+    area.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:.82rem">Sube el Excel de comparativa sectorial para ver el benchmarking de peers.</div>';
+    return;
+  }
+
+  const { sections, companies } = sectorData;
+
+  // Build comparison table
+  let html = `<div style="overflow-x:auto"><table class="peers-table">
+    <thead><tr>
+      <th>Empresa</th><th>PER</th><th>P/Book</th><th>P/Ventas</th><th>ROE</th><th>ROIC</th><th>Margen Op.</th><th>Altman Z</th><th>Health</th>
+    </tr></thead><tbody>`;
+
+  companies.forEach(company => {
+    const mkt = sections.market?.[company] || {};
+    const risk = sections.risk?.[company] || {};
+    const eff = sections.efficiency?.[company] || {};
+    const health = sections.health?.[company] || {};
+    const isAnalyzed = company.toLowerCase().includes((R.meta.name || currentTicker).toLowerCase().split(' ')[0]) ||
+                       (R.meta.name && company.toLowerCase().startsWith(R.meta.name.toLowerCase().substring(0,4)));
+
+    const fmt = v => { if (!v || v === '-' || v === 'NaN') return '—'; const n = parseFloat(v); return isNaN(n) ? v : n.toFixed(1) + (String(v).includes('%') ? '%' : 'x'); };
+
+    html += `<tr ${isAnalyzed ? 'style="background:rgba(106,143,255,.06)"' : ''}>
+      <td class="pt-company">${company}${isAnalyzed ? ' <span class="pt-tag tag-best">★ Analizada</span>' : ''}</td>
+      <td class="${isAnalyzed ? 'pt-highlight' : ''}">${fmt(mkt['PER'])}</td>
+      <td>${fmt(mkt['Precio/Valor libro'])}</td>
+      <td>${fmt(mkt['Precio / Ventas últimos 12 meses'])}</td>
+      <td>${fmt(eff['Rendimiento sobre el capital común'])}</td>
+      <td>${fmt(eff['Rendimiento del capital invertido'])}</td>
+      <td>${fmt(eff['Margen de ingresos operativos'])}</td>
+      <td>${fmt(risk['Fórmula Altman Z-Score'])}</td>
+      <td>${health['Etiqueta global'] || '—'}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+
+/* ── CHART ── */
+function renderChart() {
+  const area = document.getElementById('chartImgArea');
+  if (chartImageURL) {
+    area.innerHTML = `<img class="cib-img" src="${chartImageURL}" alt="Gráfico de ingresos">`;
+  }
+}
+
+/* ── REASONING ── */
+function renderReasoning(R, profileId) {
+  const profile = PROFILES[profileId];
+  const ps = R.profileScores[profileId];
+  const weights = MODULE_WEIGHTS[profileId];
+  const m = R.modules;
+  const SC = R.SC;
+
+  const blocks = [];
+
+  // Executive summary for this profile
+  blocks.push({
+    type: ps.quantScore >= 70 ? 'rb-buy' : ps.quantScore >= 50 ? 'rb-hold' : 'rb-risk',
+    title: `${profile.icon} Resumen — Perfil ${profile.name} (${profile.philosopher})`,
+    text: `Puntuación cuantitativa: <strong>${ps.quantScore}%</strong> → <strong>${ps.verdict}</strong>. ${
+      ps.quantScore >= 70 ? `La empresa supera los criterios clave para un inversor ${profile.name.toLowerCase()}.` :
+      ps.quantScore >= 50 ? `La empresa es válida pero no alcanza los umbrales óptimos para este perfil.` :
+      `La empresa no cumple los criterios fundamentales para un inversor ${profile.name.toLowerCase()}.`
+    } Sector identificado: <strong>${R.sectorKey}</strong>. ${
+      !R.m0.passes ? `<strong style="color:var(--risk)">⚠️ VETO ACTIVO: ${R.m0.vetos.map(v=>v.label).join(', ')}.</strong>` : 'Filtro M0 superado sin vetos.'
+    }`
+  });
+
+  // M1 reasoning
+  const roicStr = m.m1.detail.roic ? `ROIC ${m.m1.detail.roic.toFixed(1)}%` : '';
+  const waccStr = m.m1.detail.wacc ? ` vs WACC ${m.m1.detail.wacc.toFixed(1)}%` : '';
+  const spreadStr = m.m1.detail.roic && m.m1.detail.wacc ? ` (spread ${(m.m1.detail.roic - m.m1.detail.wacc).toFixed(1)}pts)` : '';
+  blocks.push({
+    type: m.m1.score >= 0.65 ? 'rb-buy' : m.m1.score >= 0.45 ? 'rb-hold' : 'rb-risk',
+    title: `📊 M1 · Rentabilidad — ${Math.round(m.m1.score*100)}% (Peso: ${weights[0]}%)`,
+    text: `${roicStr}${waccStr}${spreadStr}${m.m1.detail.roic && m.m1.detail.wacc ? (m.m1.detail.roic > m.m1.detail.wacc ? ' — crea valor económico.' : ' — no supera el coste de capital.') : ''}` +
+    `${m.m1.detail.gpM ? ` Margen bruto ${m.m1.detail.gpM.toFixed(1)}% ${m.m1.detail.gpM > SC.gpM[0] ? '(excelente para el sector)' : m.m1.detail.gpM > SC.gpM[1] ? '(bueno)' : '(mejorable)'}. ` : ''}` +
+    `${m.m1.detail.ebitdaM ? `Margen EBITDA ${m.m1.detail.ebitdaM.toFixed(1)}% ${m.m1.detail.ebitdaM > SC.ebitdaM[0] ? '(top del sector)' : m.m1.detail.ebitdaM > SC.ebitdaM[1] ? '(sólido)' : '(por debajo del umbral sectorial)'}. ` : ''}` +
+    `${m.m1.detail.piotroski !== null ? `Piotroski F-Score: ${m.m1.detail.piotroski}/9 — ${m.m1.detail.piotroski >= 8 ? 'señal de compra fuerte' : m.m1.detail.piotroski >= 6 ? 'empresa sólida' : 'señales mixtas'}.` : ''}`
+  });
+
+  // M2 reasoning
+  blocks.push({
+    type: m.m2.score >= 0.65 ? 'rb-buy' : m.m2.score >= 0.45 ? 'rb-hold' : 'rb-risk',
+    title: `📈 M2 · Crecimiento — ${Math.round(m.m2.score*100)}% (Peso: ${weights[1]}%)`,
+    text: `${m.m2.detail.revC5 !== null ? `Revenue CAGR 5y: <strong>${m.m2.detail.revC5.toFixed(1)}%</strong> ${m.m2.detail.revC5 > SC.revCagr[0] ? '(excelente para el sector)' : m.m2.detail.revC5 > SC.revCagr[1] ? '(bueno)' : '(por debajo del umbral sectorial de ' + SC.revCagr[1] + '%)'}. ` : ''}` +
+    `${m.m2.detail.epsC5 !== null && m.m2.detail.epsC5 > -50 ? `EPS CAGR 5y: <strong>${m.m2.detail.epsC5.toFixed(1)}%</strong>${m.m2.detail.revC5 ? (m.m2.detail.epsC5 >= m.m2.detail.revC5 ? ' — los márgenes se expanden (muy positivo)' : ' — los márgenes se comprimen') : ''}. ` : ''}` +
+    `${m.m2.detail.revProjC5 !== null ? `Crecimiento proyectado 5y: <strong>${m.m2.detail.revProjC5.toFixed(1)}%</strong>. ` : ''}` +
+    `${m.m2.detail.posRev90 !== null ? `Revisiones analistas 90d: <strong>${m.m2.detail.posRev90.toFixed(0)}%</strong> positivas — ${m.m2.detail.posRev90 > 60 ? 'consenso al alza' : m.m2.detail.posRev90 > 40 ? 'neutral' : 'revisiones a la baja dominan'}.` : ''}`
+  });
+
+  // M3/M4
+  blocks.push({
+    type: (m.m3.score >= 0.65 && m.m4.score >= 0.65) ? 'rb-buy' : (m.m3.score >= 0.45 && m.m4.score >= 0.45) ? 'rb-hold' : 'rb-risk',
+    title: `✅⚡ M3/M4 · Calidad y Riesgo — M3:${Math.round(m.m3.score*100)}% M4:${Math.round(m.m4.score*100)}%`,
+    text: `${m.m3.detail.fcfToNI !== null ? `FCF/NI: <strong>${m.m3.detail.fcfToNI.toFixed(0)}%</strong> — ${m.m3.detail.fcfToNI > 100 ? 'calidad contable excepcional (genera más caja que beneficio reportado)' : m.m3.detail.fcfToNI > 80 ? 'buena conversión de beneficios en caja' : 'los beneficios no se materializan completamente en caja'}. ` : ''}` +
+    `${m.m3.detail.beneish !== null ? `Beneish M-Score: <strong>${m.m3.detail.beneish.toFixed(2)}</strong>${m.m3.detail.beneish < -2.22 ? ' — sin indicios de manipulación' : m.m3.detail.beneish < -1.78 ? ' — zona gris' : ' — posible manipulación contable'}. ` : ''}` +
+    `${m.m4.detail.altman !== null ? `Altman Z-Score: <strong>${m.m4.detail.altman.toFixed(1)}</strong>${m.m4.detail.altman > 3.0 ? ' — zona segura' : m.m4.detail.altman > 1.81 ? ' — zona gris, monitorizar' : ' — zona de distress'}. ` : ''}` +
+    `${m.m4.detail.netDebt !== null ? `Net Debt/EBITDA: <strong>${m.m4.detail.netDebt.toFixed(1)}x</strong>${m.m4.detail.netDebt < SC.netDebt[0] ? ' — apalancamiento manejable para el sector' : ' — apalancamiento elevado para el sector'}. ` : ''}` +
+    `${m.m4.detail.ic !== null ? `Interest Coverage: <strong>${m.m4.detail.ic.toFixed(1)}x</strong>${m.m4.detail.ic > 8 ? ' — cobertura excelente' : m.m4.detail.ic > 4 ? ' — cobertura sólida' : m.m4.detail.ic > 2 ? ' — cobertura ajustada' : ' — cobertura crítica'}.` : ''}`
+  });
+
+  // M6/M7 valuation
+  blocks.push({
+    type: (m.m6.score >= 0.65 && m.m7.score >= 0.65) ? 'rb-buy' : (m.m6.score >= 0.45 || m.m7.score >= 0.45) ? 'rb-hold' : 'rb-risk',
+    title: `💰🎯 M6/M7 · Valoración — M6:${Math.round(m.m6.score*100)}% M7:${Math.round(m.m7.score*100)}%`,
+    text: `${m.m6.detail.peFwd !== null ? `PER Forward: <strong>${m.m6.detail.peFwd.toFixed(1)}x</strong> (umbral sectorial: ${m.m6.detail.peThreshold?.toFixed(0) || '?'}x) ${m.m6.detail.peFwd < (m.m6.detail.peThreshold || 25) ? '— cotiza barato respecto al sector' : '— cotiza con prima'}. ` : ''}` +
+    `${m.m6.detail.evEbitdaFwd !== null ? `EV/EBITDA Fwd: <strong>${m.m6.detail.evEbitdaFwd.toFixed(1)}x</strong> (umbral: ${m.m6.detail.evThreshold}x). ` : m.m6.detail.evEbitdaLtm !== null ? `EV/EBITDA LTM: <strong>${m.m6.detail.evEbitdaLtm.toFixed(1)}x</strong> (umbral: ${m.m6.detail.evThreshold}x). ` : ''}` +
+    `${m.m6.detail.fcfYield !== null ? `FCF Yield: <strong>${m.m6.detail.fcfYield.toFixed(1)}%</strong>${m.m6.detail.fcfYield > 6 ? ' — excelente rendimiento real sobre el precio' : m.m6.detail.fcfYield > 3 ? ' — razonable' : ' — bajo'}. ` : ''}` +
+    `${R.meta.fvUpside !== null ? `Fair Value Upside: <strong>+${R.meta.fvUpside.toFixed(1)}%</strong>${R.meta.fvConf ? ` (confianza ${R.meta.fvConf})` : ''}. ` : ''}` +
+    `${m.m7.detail.dcfUpside !== null ? `DCF: <strong>+${m.m7.detail.dcfUpside.toFixed(1)}%</strong>. ` : ''}` +
+    `${m.m6.detail.analBuy !== null ? `Analistas: ${m.m6.detail.analBuy} Buy / ${m.m6.detail.analHold} Hold / ${m.m6.detail.analSell} Sell.` : ''}`
+  });
+
+  // M8 dividends (if relevant for profile)
+  if (weights[7] >= 10 || !m.m8.noDividend) {
+    blocks.push({
+      type: m.m8.noDividend ? 'rb-info' : m.m8.score >= 0.65 ? 'rb-buy' : m.m8.score >= 0.45 ? 'rb-hold' : 'rb-risk',
+      title: `💵 M8 · Dividendos — ${m.m8.noDividend ? 'No paga dividendo' : Math.round(m.m8.score*100) + '% (Peso: ' + weights[7] + '%)'}`,
+      text: m.m8.noDividend ?
+        `La empresa no distribuye dividendo actualmente. Para perfiles orientados a renta (${profileId === 'income' || profileId === 'dgi' ? 'este perfil lo requiere' : 'menos relevante para este perfil'}), esto es un factor limitante.` :
+        `${m.m8.detail.divYield !== null ? `Yield: <strong>${m.m8.detail.divYield.toFixed(1)}%</strong>${m.m8.detail.divYield > 8 ? ' — ⚠️ posible trampa de dividendo (yield muy alto)' : m.m8.detail.divYield > 3 ? ' — atractivo' : ' — moderado'}. ` : ''}` +
+        `${m.m8.detail.fcfPayout !== null ? `FCF Payout: <strong>${m.m8.detail.fcfPayout.toFixed(0)}%</strong>${m.m8.detail.fcfPayout < 60 ? ' — sostenible con amplio margen' : m.m8.detail.fcfPayout < 80 ? ' — manejable' : ' — elevado, riesgo de recorte'}. ` : ''}` +
+        `${m.m8.detail.divStreak !== null ? `Streak: <strong>${m.m8.detail.divStreak} años</strong> de crecimiento consecutivo${m.m8.detail.divStreak >= 25 ? ' — Dividend Aristocrat' : m.m8.detail.divStreak >= 10 ? ' — Dividend Achiever' : ''}. ` : ''}` +
+        `${m.m8.detail.divC5 !== null ? `CAGR dividendo 5y: <strong>${m.m8.detail.divC5.toFixed(1)}%/año</strong>.` : ''}`
+    });
+  }
+
+  // Profile-specific conclusion
+  const profileConclusions = {
+    value:     ps.quantScore >= 70 ? `El margen de seguridad y la solidez del balance hacen de esta empresa una candidata válida para una cartera value. El precio actual ofrece descuento respecto al valor intrínseco calculado por múltiples métodos.` : `Para un inversor value el precio actual no ofrece el margen de seguridad suficiente. Esperar corrección adicional antes de entrar.`,
+    quality:   ps.quantScore >= 70 ? `La consistencia del ROIC y la calidad de los márgenes indican un negocio de alta calidad. Apropiado para una estrategia buy-and-hold de largo plazo si el moat es confirmado en el checklist cualitativo.` : `La calidad del negocio no alcanza los estándares de compounding de largo plazo. El ROIC o la consistencia de márgenes necesita mejorar.`,
+    garp:      ps.quantScore >= 70 ? `El PEG y el EV/EBITDA Fwd confirman que el mercado no está pagando una prima excesiva por el crecimiento. Oportunidad GARP con buen balance entre precio y crecimiento.` : `La combinación precio/crecimiento no es suficientemente atractiva para GARP. El PEG o los múltiplos de EV están por encima del umbral.`,
+    growth:    ps.quantScore >= 70 ? `Las tasas de crecimiento y la aceleración de márgenes justifican la inversión. Los múltiplos elevados están compensados por el crecimiento proyectado.` : `El crecimiento no es suficientemente consistente o el precio ya descuenta el escenario optimista.`,
+    smallcap:  ps.quantScore >= 70 ? `Los fundamentales son sólidos para una pequeña/mediana empresa con potencial de revalorización. El riesgo adicional está compensado por las métricas de calidad.` : `Los riesgos específicos de small/mid cap no están suficientemente compensados por los fundamentales actuales.`,
+    income:    ps.quantScore >= 70 ? `El dividendo es sostenible y atractivo. La empresa cumple los criterios para una cartera de renta: yield decente, payout bajo y balance sólido.` : `El dividendo no cumple los criterios de sostenibilidad o el yield no es suficientemente atractivo para este perfil.`,
+    dgi:       ps.quantScore >= 70 ? `La empresa tiene el perfil ideal para DGI: dividendo creciente, payout sostenible y ROIC que soporta el crecimiento del dividendo a largo plazo.` : `El crecimiento del dividendo o su sostenibilidad no alcanzan los estándares para una estrategia DGI de largo plazo.`,
+    deepvalue: ps.quantScore >= 70 ? `La valoración por debajo del valor de liquidación o de los mínimos históricos ofrece un potencial de recuperación asimétrico. El balance soporta la tesis contrarian.` : `No ofrece la asimetría de riesgo/recompensa necesaria para justificar el riesgo contrarian. Precio no suficientemente bajo.`,
+    defensive: ps.quantScore >= 70 ? `La baja beta, los márgenes estables y el balance sólido hacen de esta empresa un componente defensivo válido para preservar capital en escenarios adversos.` : `La volatilidad o el perfil de deuda no cumplen los estándares de defensividad necesarios para este perfil.`,
+    incgrowth: ps.quantScore >= 70 ? `Combinación equilibrada de yield atractivo y crecimiento visible. Apropiada para inversores que buscan rendimiento total con menor volatilidad que el growth puro.` : `Ni el yield ni el crecimiento son suficientemente atractivos para justificar la inversión desde un enfoque income+growth.`,
+  };
+
+  blocks.push({
+    type: ps.quantScore >= 70 ? 'rb-buy' : ps.quantScore >= 50 ? 'rb-hold' : 'rb-risk',
+    title: `🎯 Conclusión para ${profile.icon} ${profile.name}`,
+    text: profileConclusions[profileId] + ` <strong>Score cuantitativo: ${ps.quantScore}%.</strong> Completa el checklist cualitativo para obtener el veredicto final combinado.`
+  });
+
+  const body = document.getElementById('reasoningBody');
+  body.innerHTML = blocks.map(b => `
+    <div class="reason-block ${b.type}">
+      <div class="reason-title">${b.title}</div>
+      <div class="reason-text">${b.text}</div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════
+   CHECKLIST
+══════════════════════════════════════════ */
+function buildChecklist() {
+  const container = document.getElementById('clSections');
+  container.innerHTML = '';
+
+  let totalQ = 0;
+  Object.entries(CHECKLIST).forEach(([sectionId, section]) => {
+    const div = document.createElement('div');
+    div.className = 'cl-section';
+    const qHTML = section.questions.map((q, qi) => {
+      totalQ++;
+      const isCritical = q.critical;
+      return `<div class="cl-question" id="qbox_${q.id}">
+        <div class="clq-text ${isCritical ? 'clq-critical' : ''}">${q.text}${isCritical ? ' ⚠️' : ''}</div>
+        <div class="clq-answers">
+          <button class="clq-btn" onclick="answerQ('${q.id}','yes',this)">✅ Sí</button>
+          <button class="clq-btn" onclick="answerQ('${q.id}','no',this)">❌ No</button>
+          <button class="clq-btn" onclick="answerQ('${q.id}','dk',this)">❓ No sé</button>
+        </div>
+        ${isCritical ? `<div class="clq-veto-warn" id="veto_${q.id}">⚡ Respuesta crítica — bajará el veredicto una categoría</div>` : ''}
+      </div>`;
+    }).join('');
+
+    div.innerHTML = `
+      <div class="cls-head">
+        <span class="cls-icon">${section.icon}</span>
+        <span class="cls-title">${section.title}</span>
+        <span class="cls-progress" id="clprog_${sectionId}">0/${section.questions.length}</span>
+      </div>
+      <div class="cls-body">${qHTML}</div>`;
+    container.appendChild(div);
+  });
+
+  document.getElementById('clTotal').textContent = totalQ;
+  updateChecklistProgress();
+}
+
+function answerQ(qId, answer, btn) {
+  checklistAnswers[qId] = answer;
+  // Update UI
+  const qbox = document.getElementById(`qbox_${qId}`);
+  if (qbox) {
+    qbox.querySelectorAll('.clq-btn').forEach(b => b.className = 'clq-btn');
+    btn.className = `clq-btn selected-${answer}`;
+    // Show veto warning
+    const vetoWarn = document.getElementById(`veto_${qId}`);
+    if (vetoWarn) vetoWarn.classList.toggle('show', answer === 'no');
+  }
+  updateChecklistProgress();
+}
+
+function updateChecklistProgress() {
+  const answered = Object.keys(checklistAnswers).length;
+  const total = Object.values(CHECKLIST).reduce((s, sec) => s + sec.questions.length, 0);
+  document.getElementById('clAnswered').textContent = answered;
+  document.getElementById('clProgressFill').style.width = `${(answered/total)*100}%`;
+
+  // Per-section progress
+  Object.entries(CHECKLIST).forEach(([sId, sec]) => {
+    const answeredInSection = sec.questions.filter(q => checklistAnswers[q.id]).length;
+    const el = document.getElementById(`clprog_${sId}`);
+    if (el) el.textContent = `${answeredInSection}/${sec.questions.length}`;
+  });
+}
+
+function resetChecklist() {
+  checklistAnswers = {};
+  document.querySelectorAll('.clq-btn').forEach(b => b.className = 'clq-btn');
+  document.querySelectorAll('.clq-veto-warn').forEach(w => w.classList.remove('show'));
+  updateChecklistProgress();
+}
+
+function showChecklist() {
+  document.getElementById('checklistSection').classList.add('show');
+  document.getElementById('checklistSection').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* ══════════════════════════════════════════
+   FINAL RESULTS
+══════════════════════════════════════════ */
+function computeFinalResults() {
+  const clResult = scoreChecklist(checklistAnswers);
+  const finalVerdicts = computeFinalVerdicts(analysisResult, clResult);
+
+  // Update profile cards with qual scores
+  const cards = document.querySelectorAll('.profile-card');
+  Object.entries(PROFILES).forEach(([id, profile], i) => {
+    const fv = finalVerdicts[id];
+    const card = cards[i];
+    if (!card) return;
+    const qqDivs = card.querySelectorAll('.pc-qq-val');
+    if (qqDivs.length >= 3) {
+      qqDivs[1].textContent = fv.qualScore + '%';
+      qqDivs[1].style.color = fv.qualScore >= 65 ? 'var(--buy)' : fv.qualScore >= 45 ? 'var(--hold)' : 'var(--risk)';
+      qqDivs[2].textContent = fv.finalScore + '%';
+      qqDivs[2].style.color = fv.verdictColor;
+    }
+    // Update verdict badge
+    const badge = card.querySelector('.pc-verdict');
+    if (badge) {
+      badge.textContent = fv.verdict;
+      badge.className = `pc-verdict ${fv.verdict === 'COMPRAR' ? 'pv-buy' : fv.verdict === 'WATCHLIST' ? 'pv-hold' : 'pv-no'}`;
+    }
+    // Update score
+    const scoreNum = card.querySelector('.pc-score-num');
+    if (scoreNum) {
+      scoreNum.textContent = fv.finalScore + '%';
+      scoreNum.style.color = fv.verdictColor;
+    }
+  });
+
+  renderFinalSection(finalVerdicts, clResult);
+  document.getElementById('finalSection').classList.add('show');
+  document.getElementById('finalSection').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function renderFinalSection(verdicts, clResult) {
+  // Verdicts grid
+  const grid = document.getElementById('finalVerdictsGrid');
+  grid.innerHTML = Object.entries(PROFILES).map(([id, profile]) => {
+    const v = verdicts[id];
+    const vClass = v.verdict === 'COMPRAR' ? 'pv-buy' : v.verdict === 'WATCHLIST' ? 'pv-hold' : 'pv-no';
+    return `<div class="fv-card" style="border-top-color:${profile.color}">
+      <div class="fvc-header">
+        <span class="fvc-icon">${profile.icon}</span>
+        <span class="fvc-verdict-badge ${vClass}" style="color:${v.verdictColor};border-color:${v.verdictColor}44;background:${v.verdictColor}11">${v.verdict}</span>
+      </div>
+      <div class="fvc-name">${profile.name}</div>
+      <div class="fvc-phil">${profile.philosopher}</div>
+      <div class="fvc-scores">
+        <div class="fvcs"><div class="fvcs-val" style="color:${v.verdictColor}">${v.quantScore}%</div><div class="fvcs-lbl">Cuant.</div></div>
+        <div class="fvcs"><div class="fvcs-val" style="color:${v.qualScore >= 65 ? 'var(--buy)' : v.qualScore >= 45 ? 'var(--hold)' : 'var(--risk)'}">${v.qualScore}%</div><div class="fvcs-lbl">Cual.</div></div>
+        <div class="fvcs"><div class="fvcs-val" style="color:${v.verdictColor};font-size:1.1rem"><strong>${v.finalScore}%</strong></div><div class="fvcs-lbl">Final</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Expert reasoning
+  const buys = Object.entries(verdicts).filter(([,v]) => v.verdict === 'COMPRAR').map(([id]) => PROFILES[id].name);
+  const holds = Object.entries(verdicts).filter(([,v]) => v.verdict === 'WATCHLIST').map(([id]) => PROFILES[id].name);
+  const nos = Object.entries(verdicts).filter(([,v]) => v.verdict === 'NO COMPRAR').map(([id]) => PROFILES[id].name);
+
+  const bestProfile = Object.entries(verdicts).sort((a,b) => b[1].finalScore - a[1].finalScore)[0];
+  const worstProfile = Object.entries(verdicts).sort((a,b) => a[1].finalScore - b[1].finalScore)[0];
+  const vetosFired = clResult.qualVetosFired;
+
+  const ticker = currentTicker;
+  const co = analysisResult.meta.name || ticker;
+  const fvStr = analysisResult.meta.fvUpside ? `Fair Value Upside del ${analysisResult.meta.fvUpside.toFixed(1)}%` : '';
+
+  let expertHTML = `
+    <div class="expert-verdict-box">
+      <div class="evb-head">
+        <span class="evb-icon">🧠</span>
+        <div>
+          <div class="evb-title">Análisis Experto — ${co} · Veredicto Final Combinado</div>
+          <div class="evb-sub">Cuantitativo 80% + Cualitativo 20% · 10 perfiles analizados</div>
+        </div>
+      </div>
+      <div class="evb-body">
+        <div class="reason-block rb-info">
+          <div class="reason-title">📋 Resumen de Veredictos</div>
+          <div class="reason-text">
+            ${buys.length > 0 ? `<strong style="color:var(--buy)">✅ COMPRAR para ${buys.length} perfil${buys.length > 1 ? 'es' : ''}:</strong> ${buys.join(', ')}.<br>` : ''}
+            ${holds.length > 0 ? `<strong style="color:var(--hold)">🟡 WATCHLIST para ${holds.length} perfil${holds.length > 1 ? 'es' : ''}:</strong> ${holds.join(', ')}.<br>` : ''}
+            ${nos.length > 0 ? `<strong style="color:var(--risk)">❌ NO COMPRAR para ${nos.length} perfil${nos.length > 1 ? 'es' : ''}:</strong> ${nos.join(', ')}.` : ''}
+          </div>
+        </div>
+        <div class="reason-block ${buys.length > holds.length + nos.length ? 'rb-buy' : buys.length + holds.length > nos.length ? 'rb-hold' : 'rb-risk'}">
+          <div class="reason-title">🎯 Tesis de Inversión — ${co}</div>
+          <div class="reason-text">
+            El perfil más apropiado para esta empresa es <strong>${PROFILES[bestProfile[0]].icon} ${PROFILES[bestProfile[0]].name}</strong> con un score final del <strong>${bestProfile[1].finalScore}%</strong>.
+            ${fvStr ? `El ${fvStr} indica que la cotización actual ofrece margen de seguridad.` : ''}
+            ${buys.length >= 7 ? `Con <strong>${buys.length} de 10 perfiles en COMPRAR</strong>, esta empresa tiene fundamentales sólidos para prácticamente cualquier tipo de inversor.` :
+            buys.length >= 4 ? `Con <strong>${buys.length} perfiles en COMPRAR</strong>, la empresa es adecuada para inversores con el perfil correcto, especialmente ${buys.slice(0,2).join(' y ')}.` :
+            buys.length > 0 ? `Solo <strong>${buys.length} perfil${buys.length > 1 ? 'es' : ''}</strong> alcanza el umbral de compra, lo que indica que los fundamentales son selectivos en su atractivo.` :
+            `Ningún perfil alcanza el umbral de compra. Los fundamentales o la valoración actual no justifican una posición en este momento.`}
+          </div>
+        </div>
+        ${vetosFired.length > 0 ? `
+        <div class="reason-block rb-warn">
+          <div class="reason-title">⚠️ Vetos Cualitativos Activados (${vetosFired.length})</div>
+          <div class="reason-text">${vetosFired.map(v => `<strong>${v.label}</strong>`).join(', ')}. Estos factores han reducido el veredicto una categoría para todos los perfiles afectados. Investiga estas áreas antes de tomar una decisión de inversión.</div>
+        </div>` : ''}
+        <div class="reason-block rb-info">
+          <div class="reason-title">📌 Preguntas Pendientes Críticas</div>
+          <div class="reason-text">
+            Antes de invertir, responde estas preguntas que el análisis cuantitativo no puede responder:
+            <br><br>
+            ${analysisResult.modules.m1.score < 0.65 ? '• ¿El ROIC bajo es temporal (integración de adquisición, ciclo) o estructural?<br>' : ''}
+            ${analysisResult.modules.m2.score < 0.55 ? '• ¿Qué catalizador específico acelerará el crecimiento en los próximos 2-3 años?<br>' : ''}
+            ${analysisResult.modules.m3.score < 0.65 ? '• ¿Los beneficios reportados reflejan la realidad económica o hay ajustes contables relevantes?<br>' : ''}
+            ${analysisResult.modules.m4.score < 0.70 ? '• ¿Cuándo vencen los principales tramos de deuda y a qué tipo se refinanciarán?<br>' : ''}
+            ${analysisResult.modules.m6.score >= 0.70 ? '• ¿Por qué el mercado está ofreciendo este descuento — hay algo que el modelo no captura?<br>' : '• ¿Hay un catalizador que justifique pagar la prima de valoración actual?<br>'}
+            • ¿Puedes identificar claramente la fuente del moat que sostiene los retornos históricos?<br>
+            • ¿El equipo directivo ha demostrado capacidad de asignación de capital inteligente?
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+          <button class="save-report-btn" onclick="saveReport()">
+            <span class="srb-icon">⬇</span>
+            <div class="srb-text"><span class="srb-main">Guardar Informe Completo</span><span class="srb-sub">HTML autónomo con todos los perfiles y checklist</span></div>
+          </button>
+          <button onclick="resetAnalysis()" style="padding:10px 18px;border-radius:8px;background:var(--s3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-family:var(--f-d);font-size:.78rem;font-weight:600">+ Nuevo Análisis</button>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('finalReasoningArea').innerHTML = expertHTML;
+}
+
+/* ══════════════════════════════════════════
+   SAVE REPORT
+══════════════════════════════════════════ */
+function saveReport() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
+  const fileName = `informe_${currentTicker}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`;
+
+  // Snapshot current state
+  const profilesHTML  = document.getElementById('profilesGrid')?.innerHTML || '';
+  const modulesHTML   = document.getElementById('modulesGrid')?.innerHTML || '';
+  const scoreBarsHTML = document.getElementById('scoreBarsBox')?.innerHTML || '';
+  const reasonHTML    = document.getElementById('reasoningBody')?.innerHTML || '';
+  const finalHTML     = document.getElementById('finalVerdictsGrid')?.innerHTML || '';
+  const expertHTML    = document.getElementById('finalReasoningArea')?.innerHTML || '';
+  const vetoHTML      = document.getElementById('coVetoAlert')?.outerHTML || '';
+  const m0HTML        = document.getElementById('coM0Status')?.outerHTML || '';
+  const chartHTML     = chartImageURL ? `<img style="width:100%;max-height:320px;object-fit:contain;border-radius:8px;background:#0d0f1a;display:block" src="${chartImageURL}" alt="Gráfico ingresos">` : '<div style="padding:20px;text-align:center;color:#4a5175">No se adjuntó gráfico de ingresos</div>';
+  const R = analysisResult;
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Informe ${currentTicker} · ${dateStr}</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070810;--s1:#0d0f1a;--s3:#191d2b;--s4:#1f2438;--text:#e8eaf2;--text2:#9098b8;--text3:#4a5175;--text4:#2a3050;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--buy:#22d45a;--buy-pale:rgba(34,212,90,.08);--hold:#f0b429;--hold-pale:rgba(240,180,41,.08);--risk:#f0483a;--risk-pale:rgba(240,72,58,.08);--accent:#6a8fff;--gold:#e8c55a;--f-d:'Syne',sans-serif;--f-s:'Fraunces',Georgia,serif;--f-m:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0}html{font-size:14px}body{font-family:var(--f-d);background:var(--bg);color:var(--text)}
+.cover{background:var(--s1);padding:40px 48px;border-bottom:1px solid var(--border)}
+.cover h1{font-family:var(--f-s);font-size:2rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.cover-meta{font-family:var(--f-m);font-size:.7rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.cover-sub{font-size:.85rem;color:var(--text2);font-family:var(--f-s)}
+.section{max-width:1280px;margin:0 auto;padding:28px 48px}
+.section-title{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.profile-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:2px solid}
+.pc-icon{font-size:1.1rem}.pc-name{font-size:.8rem;font-weight:700;color:var(--text);margin:6px 0 2px}.pc-phil{font-size:.66rem;color:var(--text3);font-style:italic;font-family:var(--f-s);margin-bottom:8px}
+.pc-verdict{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid;display:inline-block;margin-bottom:8px}
+.pv-buy{background:var(--buy-pale);border-color:rgba(34,212,90,.3);color:var(--buy)}.pv-hold{background:var(--hold-pale);border-color:rgba(240,180,41,.3);color:var(--hold)}.pv-no{background:var(--risk-pale);border-color:rgba(240,72,58,.3);color:var(--risk)}
+.pc-score-num{font-family:var(--f-m);font-size:1.6rem;font-weight:500}
+.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.mod-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.mod-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mh-left{display:flex;align-items:center;gap:7px}.mh-icon{font-size:.95rem}.mh-title{font-size:.78rem;font-weight:700;color:var(--text)}.mh-score{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid}
+.mod-body{padding:12px 14px}
+.check-row{display:flex;align-items:flex-start;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.77rem}
+.check-row:last-child{border-bottom:none}.cr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.cd-buy{background:var(--buy)}.cd-no{background:var(--risk)}.cd-na{background:var(--text4)}
+.cr-label{flex:1;color:var(--text2);line-height:1.3}.cr-val{font-family:var(--f-m);font-size:.73rem;color:var(--text);white-space:nowrap}
+.mod-note{margin:8px 14px 10px;padding:8px 11px;background:var(--s4);border-radius:5px;font-size:.72rem;color:var(--text2);line-height:1.45;border-left:2px solid var(--accent)}
+.score-bars-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.sb-title{font-size:.77rem;font-weight:700;color:var(--text);margin-bottom:14px}
+.score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sbr-label{font-size:.72rem;color:var(--text2);width:170px;flex-shrink:0}.sbr-bar-wrap{flex:1;height:5px;background:var(--s4);border-radius:2px;overflow:hidden}.sbr-fill{height:100%;border-radius:2px}.sbr-val{font-family:var(--f-m);font-size:.68rem;color:var(--text);width:40px;text-align:right;flex-shrink:0}
+.reasoning-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.rb-head{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.77rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.rb-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.reason-block{border-left:2px solid;padding-left:12px}.rb-buy{border-color:var(--buy)}.rb-hold{border-color:var(--hold)}.rb-risk{border-color:var(--risk)}.rb-info{border-color:var(--accent)}.rb-warn{border-color:var(--gold)}
+.reason-title{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:4px}
+.reason-text{font-size:.8rem;color:var(--text2);line-height:1.6;font-family:var(--f-s)}
+.reason-text strong{color:var(--text)}
+.final-verdicts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.fv-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid}
+.fvc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}.fvc-icon{font-size:1rem}.fvc-verdict-badge{font-family:var(--f-m);font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid}
+.fvc-name{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:1px}.fvc-phil{font-size:.65rem;color:var(--text3);font-style:italic;font-family:var(--f-s);margin-bottom:9px}
+.fvc-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+.fvcs{background:var(--s4);border-radius:4px;padding:5px;text-align:center}.fvcs-val{font-family:var(--f-m);font-size:.9rem;font-weight:500}.fvcs-lbl{font-size:.57rem;color:var(--text4);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
+.expert-verdict-box{background:var(--s3);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.evb-head{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;gap:12px}
+.evb-icon{font-size:1.4rem}.evb-title{font-family:var(--f-s);font-size:1rem;font-weight:700;color:var(--text)}.evb-sub{font-size:.73rem;color:var(--text3);margin-top:2px}
+.evb-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.footer{max-width:1280px;margin:0 auto;padding:16px 48px 28px;display:flex;justify-content:space-between;border-top:1px solid var(--border);font-family:var(--f-m);font-size:.7rem;color:var(--text3);flex-wrap:wrap;gap:8px}
+.disclaimer{max-width:1280px;margin:0 auto;padding:0 48px 24px;font-size:.67rem;color:var(--text4);font-family:var(--f-s);font-style:italic;line-height:1.5}
+@media(max-width:800px){.section,.cover,.footer,.disclaimer{padding-left:18px;padding-right:18px}}
+</style></head><body>
+
+<div class="cover">
+  <div class="cover-meta">Informe de Análisis Fundamental Pro · ${dateStr} · 10 Perfiles</div>
+  <h1>${R.meta.name || currentTicker}</h1>
+  <div class="cover-sub">Ticker: ${currentTicker} · Sector: ${R.sectorKey} · ${R.meta.industry || ''} · Fair Value: ${R.meta.fv || 'N/D'}${R.meta.fvUpside ? ' · Upside: +' + R.meta.fvUpside.toFixed(1) + '%' : ''}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">📊 Veredicto por Perfil — Análisis Cuantitativo (80%)</div>
+  <div class="profiles-grid">${profilesHTML}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">🔬 Análisis por Módulo</div>
+  <div class="modules-grid">${modulesHTML}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">⚖️ Puntuación por Módulo</div>
+  <div class="score-bars-box">${scoreBarsHTML}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">📈 Gráfico de Ingresos</div>
+  ${chartHTML}
+</div>
+
+<div class="section">
+  <div class="section-title">🧠 Razonamiento Cuantitativo</div>
+  <div class="reasoning-box"><div class="rb-head">🧠 Razonamiento por Módulos</div><div class="rb-body">${reasonHTML}</div></div>
+</div>
+
+${finalHTML ? `
+<div class="section">
+  <div class="section-title">🎯 Veredicto Final Combinado (80% cuant. + 20% cual.)</div>
+  <div class="final-verdicts-grid">${finalHTML}</div>
+</div>
+<div class="section">${expertHTML}</div>` : ''}
+
+<div class="footer">
+  <span>📊 Análisis Fundamental Pro · ${currentTicker} · ${dateStr}</span>
+  <span>Sistema: 10 Perfiles · 9 Módulos · 53 Preguntas Cualitativas</span>
+</div>
+<div class="disclaimer">Este informe es puramente informativo y no constituye asesoramiento financiero ni recomendación de inversión. Las métricas y valoraciones se basan en datos proporcionados por el usuario. Toda decisión de inversión debe tomarse con criterio propio y con el apoyo de un asesor financiero certificado. Rentabilidades pasadas no garantizan resultados futuros.</div>
+
+</body></html>`;
+
+  const blob = new Blob([html], { type:'text/html;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+
+  showToast(`Informe guardado: ${fileName}`);
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+function showToast(msg) {
+  document.getElementById('toastMsg').textContent = msg;
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openTool(name) {
+  const map = { diagrama:'flowchart_fundamental.html', manual:'manual_analisis_fundamental.html', metricas:'listado_metricas.html' };
+  window.open(map[name], '_blank');
+}
+
+function resetAnalysis() {
+  parsedMetrics = {}; sectorData = null; chartImageURL = null;
+  analysisResult = null; currentTicker = ''; checklistAnswers = {};
+  document.getElementById('resultsSection').classList.remove('show');
+  document.getElementById('checklistSection').classList.remove('show');
+  document.getElementById('finalSection').classList.remove('show');
+  document.getElementById('heroSection').style.display = '';
+  document.getElementById('tbCompany').classList.remove('show');
+  ['fo1','fo2','fo3'].forEach(id => document.getElementById(id).classList.remove('show'));
+  document.getElementById('tickerInp').value = '';
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('coVetoAlert').classList.remove('show');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ══════════════════════════════════════════
+   GUARDAR EN MAIKO'S DASHBOARD
+   Envía los datos al histórico via postMessage
+   o directamente via API si está embebida
+══════════════════════════════════════════ */
+function saveToMAIKOS() {
+  if (!analysisResult) return;
+  const R = analysisResult;
+
+  // Build compact payload with all needed data
+  const profileScoresPct = {};
+  Object.entries(R.profileScores).forEach(([id, ps]) => {
+    profileScoresPct[id] = ps.quantScore;
+  });
+
+  const moduleScores = {};
+  Object.entries(R.modules).forEach(([id, mod]) => {
+    moduleScores[id] = mod.score ?? 0;
+  });
+
+  // Compute global score (same formula as in dashboard)
+  const m = R.modules;
+  const globalScores = [m.m1.score, m.m2.score, m.m3.score, m.m4.score, m.m5.score,
+                        m.m6.score, m.m7.score, m.m8.noDividend ? 0.5 : m.m8.score, m.m9.score];
+  const globalAvg = globalScores.reduce((a,b) => a+b, 0) / globalScores.length;
+  let globalScore = Math.round(globalAvg * 100);
+  if (!R.m0.passes) globalScore = Math.min(globalScore, 40);
+  const globalVerdict = globalScore >= 68 ? 'COMPRAR' : globalScore >= 50 ? 'WATCHLIST' : 'NO COMPRAR';
+
+  // Build brief reasoning summary
+  const topModules = Object.entries(R.modules)
+    .filter(([id]) => id !== 'm0')
+    .sort((a,b) => b[1].score - a[1].score)
+    .slice(0,3)
+    .map(([id, mod]) => {
+      const names = {m1:'Rentabilidad',m2:'Crecimiento',m3:'Calidad',m4:'Riesgo',
+                     m5:'Liquidez',m6:'Valoración',m7:'Val.Intrínseca',m8:'Dividendos',m9:'Momentum'};
+      return `${names[id]}: ${Math.round(mod.score*100)}%`;
+    }).join(' · ');
+
+  const payload = {
+    ticker:       currentTicker,
+    name:         R.meta.name || currentTicker,
+    sector:       R.meta.sector || R.sectorKey,
+    sectorKey:    R.sectorKey,
+    globalScore,
+    globalVerdict,
+    profileScores: profileScoresPct,
+    modules:      moduleScores,
+    fv:           R.meta.fv || null,
+    fvUpside:     R.meta.fvUpside || null,
+    fvConf:       R.meta.fvConf || null,
+    price:        R.meta.estimatedPrice ? R.meta.estimatedPrice.toFixed(2) + (R.meta.fv?.includes('€') ? '€' : '$') : null,
+    reasoning:    `Score global: ${globalScore}% → ${globalVerdict}. Sector: ${R.sectorKey}. ${topModules}. ${R.m0.passes ? 'Sin vetos.' : 'VETO: ' + R.m0.vetos.map(v=>v.label).join(', ')}`,
+    m0Passes:     R.m0.passes,
+    vetos:        R.m0.vetos.map(v => v.label),
+  };
+
+  // Try postMessage to opener/parent first
+  const target = window.opener || window.parent;
+  if (target && target !== window) {
+    target.postMessage({ type: 'SAVE_STOCK_ANALYSIS', payload }, '*');
+    showToast("✓ Guardado en MAIKOS Dashboard");
+    return;
+  }
+
+  // If opened standalone, save directly via API
+  saveToAPIDirectly(payload);
+}
+
+async function saveToAPIDirectly(payload) {
+  showToast("⏳ Guardando...");
+  try {
+    // Load current history
+    let db = [];
+    try {
+      const r = await fetch('/api/get-stocks', { cache:'no-store' });
+      if (r.ok) db = JSON.parse(await r.text());
+    } catch(e) {}
+
+    // Upsert
+    const existing = db.findIndex(s => s.ticker === payload.ticker);
+    const entry = { ...payload, savedAt: new Date().toISOString() };
+    if (existing >= 0) db[existing] = entry;
+    else db.push(entry);
+
+    // Save
+    const saveRes = await fetch('/api/save-stocks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: JSON.stringify(db, null, 2) })
+    });
+
+    if (!saveRes.ok) throw new Error((await saveRes.json()).error);
+    showToast("✓ Guardado en MAIKO'S · GitHub actualizado");
+  } catch(err) {
+    showToast('✗ Error: ' + err.message);
+  }
+}
+
+</script>
+</body>
+</html>

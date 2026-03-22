@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manual de Uso · Diagrama de Análisis Fundamental</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf8f5;
+  --bg2:#f3f0eb;
+  --bg3:#ece8e1;
+  --ink:#1a1510;
+  --ink2:#2e2820;
+  --ink3:#5a5145;
+  --ink4:#8a7d6a;
+  --rule:#ddd5c8;
+  --gold:#b8860b;
+  --gold2:#d4a017;
+  --gold-pale:#fdf8ec;
+  --buy:#1a6b35;
+  --buy2:#22a24a;
+  --buy-pale:#edf7f1;
+  --hold:#8b5e00;
+  --hold2:#c4870a;
+  --hold-pale:#fdf5e6;
+  --risk:#8b1a1a;
+  --risk2:#c42a2a;
+  --risk-pale:#fdf0f0;
+  --blue:#1a3a6b;
+  --blue2:#2a5fb0;
+  --blue-pale:#eef3fc;
+  --purple:#4a1a8b;
+  --purple2:#7b3fe0;
+  --purple-pale:#f3eeff;
+  --orange:#8b3a00;
+  --orange2:#d4620a;
+  --orange-pale:#fef4ec;
+  --teal:#0a5b5b;
+  --teal2:#0e9090;
+  --teal-pale:#edfafa;
+  --f-serif:'Fraunces',Georgia,serif;
+  --f-sans:'DM Sans',sans-serif;
+  --f-mono:'Fira Code',monospace;
+  --shadow:0 2px 16px rgba(26,21,16,.07);
+  --shadow-md:0 4px 28px rgba(26,21,16,.1);
+  --shadow-lg:0 8px 48px rgba(26,21,16,.13);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{font-family:var(--f-sans);background:var(--bg);color:var(--ink);line-height:1.65;overflow-x:hidden}
+
+/* ── TOP NAV ── */
+.topnav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  height:52px;background:rgba(250,248,245,.92);
+  backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--rule);
+  display:flex;align-items:center;padding:0 32px;
+  gap:0;
+}
+.tn-brand{font-family:var(--f-serif);font-size:.95rem;font-weight:600;color:var(--ink);margin-right:32px;white-space:nowrap}
+.tn-brand span{color:var(--gold)}
+.tn-links{display:flex;gap:2px;overflow-x:auto;flex:1}
+.tn-link{
+  padding:6px 12px;border-radius:5px;font-size:.76rem;font-weight:500;
+  color:var(--ink3);cursor:pointer;white-space:nowrap;
+  transition:all .15s;text-decoration:none;border:none;background:none;
+}
+.tn-link:hover{color:var(--ink);background:var(--bg2)}
+.tn-link.active{color:var(--gold);background:var(--gold-pale);font-weight:600}
+.tn-actions{display:flex;gap:8px;margin-left:auto;flex-shrink:0}
+.tn-btn{
+  padding:6px 14px;border-radius:5px;font-size:.75rem;font-weight:600;
+  border:1px solid var(--rule);background:var(--bg2);color:var(--ink3);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.tn-btn:hover{border-color:var(--gold);color:var(--gold)}
+.tn-btn-primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tn-btn-primary:hover{background:var(--ink2);color:var(--bg)}
+
+/* ── LAYOUT ── */
+.layout{display:flex;padding-top:52px;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:var(--bg);border-right:1px solid var(--rule);
+  position:fixed;top:52px;bottom:0;overflow-y:auto;
+  padding:20px 0;
+}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+.sb-section{padding:0 16px 16px}
+.sb-section-title{
+  font-size:.62rem;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--ink4);
+  padding:10px 8px 6px;margin-bottom:4px;
+}
+.sb-item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 10px;border-radius:6px;cursor:pointer;
+  font-size:.78rem;color:var(--ink3);transition:all .15s;
+  text-decoration:none;border:none;background:none;width:100%;text-align:left;
+}
+.sb-item:hover{background:var(--bg2);color:var(--ink)}
+.sb-item.active{background:var(--gold-pale);color:var(--gold);font-weight:600}
+.sb-bullet{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+.sb-num{
+  width:18px;height:18px;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.65rem;font-weight:700;flex-shrink:0;
+  font-family:var(--f-mono);
+}
+.sb-progress{margin:12px 16px;background:var(--bg2);border-radius:4px;height:3px;overflow:hidden}
+.sb-progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width .4s ease}
+.sb-progress-lbl{font-size:.68rem;color:var(--ink4);padding:4px 16px 0;display:flex;justify-content:space-between}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:260px;flex:1;max-width:calc(100vw - 260px)}
+
+/* ── HERO ── */
+.hero{
+  background:var(--ink);padding:56px 64px 52px;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 60%,rgba(184,134,11,.12) 0,transparent 55%),
+    radial-gradient(ellipse at 80% 20%,rgba(26,58,107,.25) 0,transparent 55%);
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:40px 40px;
+}
+.hero-content{position:relative;max-width:860px}
+.hero-kicker{
+  font-family:var(--f-mono);font-size:.72rem;letter-spacing:2px;
+  text-transform:uppercase;color:var(--gold2);margin-bottom:14px;
+  display:flex;align-items:center;gap:10px;
+}
+.hero-kicker::before{content:'';width:24px;height:1px;background:var(--gold)}
+.hero h1{
+  font-family:var(--f-serif);
+  font-size:clamp(2rem,3.5vw,3rem);
+  font-weight:700;color:#faf8f5;line-height:1.12;margin-bottom:14px;
+}
+.hero h1 em{font-style:italic;color:var(--gold2)}
+.hero-sub{
+  font-size:1rem;color:rgba(250,248,245,.55);
+  max-width:600px;line-height:1.7;margin-bottom:32px;
+}
+.hero-pills{display:flex;gap:10px;flex-wrap:wrap}
+.hero-pill{
+  padding:6px 14px;border-radius:20px;font-size:.72rem;font-weight:600;
+  border:1px solid;font-family:var(--f-mono);
+}
+.hp-buy{background:rgba(34,162,74,.12);border-color:rgba(34,162,74,.3);color:#5cdf8c}
+.hp-hold{background:rgba(196,135,10,.12);border-color:rgba(196,135,10,.3);color:#f0c050}
+.hp-no{background:rgba(196,42,42,.12);border-color:rgba(196,42,42,.3);color:#f08080}
+.hp-info{background:rgba(42,95,176,.12);border-color:rgba(42,95,176,.3);color:#80b0f0}
+
+/* ── CONTENT AREA ── */
+.content{padding:0 64px 80px;max-width:1000px}
+@media(max-width:1100px){.content{padding:0 40px 64px}}
+
+/* ── SECTION HEADERS ── */
+.chapter{
+  padding-top:56px;margin-bottom:4px;
+}
+.chapter-kicker{
+  font-family:var(--f-mono);font-size:.65rem;letter-spacing:2px;
+  text-transform:uppercase;color:var(--ink4);margin-bottom:8px;
+  display:flex;align-items:center;gap:8px;
+}
+.chapter-kicker::after{content:'';flex:1;height:1px;background:var(--rule)}
+.chapter h2{
+  font-family:var(--f-serif);
+  font-size:clamp(1.6rem,2.5vw,2.1rem);
+  font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:12px;
+}
+.chapter-intro{
+  font-size:1rem;color:var(--ink3);line-height:1.75;
+  max-width:720px;margin-bottom:36px;
+  border-left:3px solid var(--gold);padding-left:18px;
+  font-style:italic;font-family:var(--f-serif);
+}
+
+/* Module number badge */
+.module-badge{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:8px 16px;border-radius:6px;margin-bottom:24px;
+  font-weight:700;font-size:.82rem;border:1px solid;
+}
+
+/* ── METRIC TABLE (the key component) ── */
+.metric-block{
+  background:#fff;border:1px solid var(--rule);
+  border-radius:10px;overflow:hidden;margin-bottom:20px;
+  box-shadow:var(--shadow);
+}
+.metric-block-header{
+  padding:14px 20px;border-bottom:1px solid var(--rule);
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.metric-name{font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:3px}
+.metric-slug{font-family:var(--f-mono);font-size:.7rem;color:var(--ink4)}
+.metric-cat-tag{
+  font-family:var(--f-mono);font-size:.65rem;letter-spacing:1px;
+  text-transform:uppercase;padding:3px 9px;border-radius:4px;
+  white-space:nowrap;flex-shrink:0;font-weight:600;
+}
+.metric-body{padding:16px 20px}
+.metric-def{font-size:.88rem;color:var(--ink3);line-height:1.65;margin-bottom:14px}
+.metric-formula{
+  background:var(--ink);border-radius:7px;padding:13px 16px;
+  font-family:var(--f-mono);font-size:.82rem;color:#e8d89c;
+  line-height:1.6;margin-bottom:14px;position:relative;
+}
+.metric-formula-label{
+  position:absolute;top:8px;right:12px;
+  font-size:.6rem;letter-spacing:1.5px;color:rgba(232,216,156,.3);text-transform:uppercase;
+}
+
+/* ── RANGES TABLE ── */
+.ranges-table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:.82rem}
+.ranges-table th{
+  padding:7px 12px;text-align:left;font-size:.65rem;
+  letter-spacing:1px;text-transform:uppercase;font-weight:600;
+  background:var(--bg2);color:var(--ink4);border-bottom:1px solid var(--rule);
+}
+.ranges-table td{padding:8px 12px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.45}
+.ranges-table tr:last-child td{border-bottom:none}
+.rt-val{font-family:var(--f-mono);font-weight:600;white-space:nowrap}
+.rt-label{font-weight:600}
+.rt-desc{color:var(--ink3)}
+.range-excelente{color:var(--buy);background:var(--buy-pale)}
+.range-bueno{color:#1a6b35}
+.range-ok{color:var(--hold);background:var(--hold-pale)}
+.range-alerta{color:var(--risk)}
+.range-critico{color:var(--risk);background:var(--risk-pale)}
+
+/* ── CALLOUT BOXES ── */
+.callout{border-radius:8px;padding:15px 18px;margin:16px 0;border-left:3px solid}
+.callout-label{font-size:.65rem;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:5px;font-family:var(--f-mono)}
+.callout p{font-size:.86rem;line-height:1.65;color:var(--ink3)}
+.callout p strong{color:var(--ink)}
+.c-tip{background:var(--buy-pale);border-color:var(--buy2)}.c-tip .callout-label{color:var(--buy)}
+.c-warn{background:var(--risk-pale);border-color:var(--risk2)}.c-warn .callout-label{color:var(--risk)}
+.c-pro{background:var(--blue-pale);border-color:var(--blue2)}.c-pro .callout-label{color:var(--blue)}
+.c-key{background:var(--gold-pale);border-color:var(--gold2)}.c-key .callout-label{color:var(--gold)}
+.c-hold{background:var(--hold-pale);border-color:var(--hold2)}.c-hold .callout-label{color:var(--hold)}
+
+/* ── DECISION TABLE ── */
+.decision-table{
+  width:100%;border-collapse:collapse;margin:16px 0;
+  border-radius:8px;overflow:hidden;border:1px solid var(--rule);
+  font-size:.84rem;
+}
+.decision-table thead tr{background:var(--ink)}
+.decision-table th{padding:10px 14px;text-align:left;color:rgba(250,248,245,.85);font-weight:500;font-size:.72rem;letter-spacing:.5px}
+.decision-table td{padding:10px 14px;border-bottom:1px solid var(--rule);vertical-align:top;line-height:1.5}
+.decision-table tbody tr:last-child td{border-bottom:none}
+.decision-table tbody tr:hover{background:var(--bg2)}
+.dt-buy{color:var(--buy);font-weight:700}
+.dt-hold{color:var(--hold);font-weight:700}
+.dt-no{color:var(--risk);font-weight:700}
+.dt-metric{font-family:var(--f-mono);font-size:.75rem;color:var(--blue2)}
+
+/* ── STEP BY STEP ── */
+.steps{margin:20px 0}
+.step{display:flex;gap:16px;margin-bottom:20px;position:relative}
+.step:not(:last-child)::after{content:'';position:absolute;left:15px;top:36px;bottom:-20px;width:1px;background:var(--rule)}
+.step-num{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--gold);color:var(--ink);
+  font-weight:700;font-size:.82rem;display:flex;
+  align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;z-index:1;
+}
+.step-body{padding-top:5px}
+.step-body h4{font-weight:700;font-size:.92rem;color:var(--ink);margin-bottom:4px}
+.step-body p{font-size:.84rem;color:var(--ink3);margin:0;line-height:1.6}
+.step-body code{font-family:var(--f-mono);background:var(--bg2);padding:1px 5px;border-radius:3px;font-size:.8rem;color:var(--blue2)}
+
+/* ── COMPARISON GRID ── */
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+@media(max-width:700px){.cmp-grid{grid-template-columns:1fr}}
+.cmp-card{background:#fff;border:1px solid var(--rule);border-radius:8px;padding:16px;border-top:3px solid}
+.cmp-card h4{font-weight:700;font-size:.88rem;margin-bottom:10px}
+.cmp-card ul{list-style:none}
+.cmp-card ul li{font-size:.82rem;color:var(--ink3);padding:4px 0;border-bottom:1px solid var(--rule);line-height:1.45;padding-left:12px;position:relative}
+.cmp-card ul li::before{content:'›';position:absolute;left:0;color:var(--ink4)}
+.cmp-card ul li:last-child{border-bottom:none}
+
+/* ── CHECKLIST ── */
+.chklist{list-style:none;margin:14px 0}
+.chklist li{display:flex;align-items:flex-start;gap:9px;padding:7px 0;border-bottom:1px solid var(--rule);font-size:.85rem;color:var(--ink3);line-height:1.5}
+.chklist li:last-child{border-bottom:none}
+.chi{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px}
+.chi-g{background:var(--buy-pale);color:var(--buy2)}
+.chi-r{background:var(--risk-pale);color:var(--risk2)}
+.chi-y{background:var(--hold-pale);color:var(--hold2)}
+.chi-b{background:var(--blue-pale);color:var(--blue2)}
+
+/* ── EXAMPLE BOX ── */
+.example-box{
+  background:var(--ink);border-radius:10px;padding:22px 24px;margin:20px 0;
+  position:relative;overflow:hidden;
+}
+.example-box::before{content:'"';position:absolute;font-family:var(--f-serif);font-size:8rem;color:rgba(255,255,255,.03);top:-20px;left:10px;line-height:1}
+.example-label{font-family:var(--f-mono);font-size:.65rem;letter-spacing:2px;text-transform:uppercase;color:var(--gold2);margin-bottom:10px}
+.example-title{font-family:var(--f-serif);font-size:1.05rem;color:#faf8f5;margin-bottom:8px;font-weight:600}
+.example-text{font-size:.84rem;color:rgba(250,248,245,.6);line-height:1.65}
+.example-metrics{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.em-val{
+  font-family:var(--f-mono);font-size:.78rem;padding:4px 10px;border-radius:5px;
+  font-weight:500;
+}
+.em-buy{background:rgba(34,162,74,.15);color:#5cdf8c}
+.em-hold{background:rgba(196,135,10,.15);color:#f0c050}
+.em-risk{background:rgba(196,42,42,.15);color:#f08080}
+
+/* ── ALERT ── */
+.alert{
+  border-radius:8px;padding:14px 18px;margin:16px 0;
+  display:flex;align-items:flex-start;gap:12px;
+  border:1px solid;
+}
+.alert-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px}
+.alert-body p{font-size:.85rem;color:var(--ink3);margin:0;line-height:1.6}
+.alert-body strong{color:var(--ink)}
+.alert-buy{background:var(--buy-pale);border-color:rgba(34,162,74,.3)}
+.alert-risk{background:var(--risk-pale);border-color:rgba(196,42,42,.3)}
+.alert-hold{background:var(--hold-pale);border-color:rgba(196,135,10,.3)}
+.alert-info{background:var(--blue-pale);border-color:rgba(42,95,176,.3)}
+
+/* ── SCORE BOX ── */
+.score-box{
+  background:var(--bg2);border:1px solid var(--rule);
+  border-radius:10px;padding:20px;margin:20px 0;
+}
+.score-title{font-weight:700;font-size:.9rem;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.score-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.score-item{background:#fff;border:1px solid var(--rule);border-radius:7px;padding:12px;text-align:center}
+.score-val{font-family:var(--f-mono);font-size:1.3rem;font-weight:500;margin-bottom:3px}
+.score-lbl{font-size:.68rem;color:var(--ink4);text-transform:uppercase;letter-spacing:.5px}
+.sv-buy{color:var(--buy2)}.sv-hold{color:var(--hold2)}.sv-risk{color:var(--risk2)}
+
+/* ── VETO BOX ── */
+.veto-box{
+  background:linear-gradient(135deg,#1e0808,#2a0a0a);
+  border:1px solid rgba(196,42,42,.4);border-radius:10px;
+  padding:20px 24px;margin:20px 0;
+}
+.veto-title{font-weight:700;font-size:.95rem;color:#f08080;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.veto-items{display:flex;flex-direction:column;gap:8px}
+.veto-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 12px;background:rgba(196,42,42,.1);border-radius:6px;
+  border:1px solid rgba(196,42,42,.2);
+}
+.veto-item-icon{font-size:1rem;flex-shrink:0}
+.veto-item-text{font-size:.83rem;color:rgba(250,248,245,.7);line-height:1.5}
+.veto-item-text strong{color:#f08080}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--rule);margin:48px 0}
+
+/* ── TOC OVERVIEW ── */
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:20px 0}
+.toc-card{
+  background:#fff;border:1px solid var(--rule);border-radius:8px;
+  padding:14px;cursor:pointer;transition:all .15s;
+  border-top:3px solid;text-decoration:none;display:block;
+}
+.toc-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.toc-card .tc-num{font-family:var(--f-mono);font-size:.68rem;color:var(--ink4);margin-bottom:5px}
+.toc-card .tc-title{font-weight:700;font-size:.85rem;color:var(--ink);margin-bottom:4px}
+.toc-card .tc-metrics{font-size:.72rem;color:var(--ink4)}
+
+/* ── QUICK REF ── */
+.quick-ref{
+  background:var(--ink);border-radius:12px;padding:28px;margin:28px 0;
+}
+.qr-title{font-family:var(--f-serif);font-size:1.15rem;color:#faf8f5;margin-bottom:18px;font-weight:600}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:800px){.qr-grid{grid-template-columns:1fr}}
+.qr-col h4{font-size:.78rem;font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+.qr-buy h4{color:var(--buy2)}
+.qr-hold h4{color:var(--hold2)}
+.qr-no h4{color:#f08080}
+.qr-item{font-size:.78rem;color:rgba(250,248,245,.6);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);line-height:1.4}
+.qr-item:last-child{border-bottom:none}
+.qr-item strong{color:rgba(250,248,245,.9)}
+
+/* ── PRINT BUTTON ── */
+.print-btn{
+  position:fixed;bottom:24px;right:24px;
+  padding:12px 20px;border-radius:8px;
+  background:var(--ink);color:var(--bg);border:none;
+  font-family:var(--f-sans);font-size:.78rem;font-weight:600;
+  cursor:pointer;box-shadow:var(--shadow-md);transition:all .2s;z-index:100;
+  display:flex;align-items:center;gap:7px;
+}
+.print-btn:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+
+/* ── READING PROGRESS ── */
+.read-progress{
+  position:fixed;top:52px;left:0;right:0;height:2px;z-index:199;
+  background:transparent;
+}
+.read-progress-fill{
+  height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  width:0%;transition:width .1s;
+}
+
+@media print{
+  .topnav,.sidebar,.print-btn,.read-progress{display:none!important}
+  .layout{padding-top:0}
+  .main{margin-left:0}
+  .content{padding:20px}
+  body{font-size:11pt}
+}
+</style>
+</head>
+<body>
+
+<!-- READING PROGRESS -->
+<div class="read-progress"><div class="read-progress-fill" id="readProg"></div></div>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="tn-brand">📊 <span>Manual</span> · Análisis Fundamental</div>
+  <div class="tn-links">
+    <a class="tn-link active" href="#intro" onclick="setActive(this)">Introducción</a>
+    <a class="tn-link" href="#m0" onclick="setActive(this)">M0 · Filtro inicial</a>
+    <a class="tn-link" href="#m1" onclick="setActive(this)">M1 · Rentabilidad</a>
+    <a class="tn-link" href="#m2" onclick="setActive(this)">M2 · Crecimiento</a>
+    <a class="tn-link" href="#m3" onclick="setActive(this)">M3 · Riesgo</a>
+    <a class="tn-link" href="#m4" onclick="setActive(this)">M4 · Liquidez</a>
+    <a class="tn-link" href="#m5" onclick="setActive(this)">M5 · Valoración</a>
+    <a class="tn-link" href="#m6" onclick="setActive(this)">M6 · Dividendos</a>
+    <a class="tn-link" href="#m7" onclick="setActive(this)">M7 · Eficiencia</a>
+    <a class="tn-link" href="#m8" onclick="setActive(this)">M8 · FCF</a>
+    <a class="tn-link" href="#m9" onclick="setActive(this)">M9 · Forecast</a>
+    <a class="tn-link" href="#m10" onclick="setActive(this)">M10 · Sector</a>
+    <a class="tn-link" href="#m11" onclick="setActive(this)">M11 · Salud</a>
+    <a class="tn-link" href="#decision" onclick="setActive(this)">Decisión Final</a>
+    <a class="tn-link" href="#quickref" onclick="setActive(this)">Referencia Rápida</a>
+  </div>
+  <div class="tn-actions">
+    <button class="tn-btn" onclick="window.print()">🖨 Imprimir</button>
+    <button class="tn-btn tn-btn-primary" onclick="window.open('flowchart_fundamental.html')">Abrir Diagrama →</button>
+  </div>
+</nav>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-section">
+    <div class="sb-section-title">Progreso de lectura</div>
+    <div class="sb-progress"><div class="sb-progress-fill" id="sbProg" style="width:5%"></div></div>
+    <div class="sb-progress-lbl"><span>Inicio</span><span id="sbProgPct">5%</span></div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-section-title">Índice del Manual</div>
+    <a class="sb-item active" href="#intro" id="si-intro"><span class="sb-bullet" style="background:#8a7d6a"></span>Introducción y cómo usar</a>
+    <a class="sb-item" href="#m0" id="si-m0"><span class="sb-num" style="background:#e8f3ff;color:#1a3a6b">0</span>Filtro Inicial</a>
+    <a class="sb-item" href="#m1" id="si-m1"><span class="sb-num" style="background:#e8f3ff;color:#1a3a6b">1</span>Rentabilidad</a>
+    <a class="sb-item" href="#m2" id="si-m2"><span class="sb-num" style="background:#edf7f1;color:#1a6b35">2</span>Crecimiento</a>
+    <a class="sb-item" href="#m3" id="si-m3"><span class="sb-num" style="background:#fdf0f0;color:#8b1a1a">3</span>Riesgo / Deuda</a>
+    <a class="sb-item" href="#m4" id="si-m4"><span class="sb-num" style="background:#fdf5e6;color:#8b5e00">4</span>Liquidez</a>
+    <a class="sb-item" href="#m5" id="si-m5"><span class="sb-num" style="background:#f3eeff;color:#4a1a8b">5</span>Valoración</a>
+    <a class="sb-item" href="#m6" id="si-m6"><span class="sb-num" style="background:#fef4ec;color:#8b3a00">6</span>Dividendos</a>
+    <a class="sb-item" href="#m7" id="si-m7"><span class="sb-num" style="background:#edfafa;color:#0a5b5b">7</span>Eficiencia</a>
+    <a class="sb-item" href="#m8" id="si-m8"><span class="sb-num" style="background:#e8f3ff;color:#1a3a6b">8</span>Flujo de Caja</a>
+    <a class="sb-item" href="#m9" id="si-m9"><span class="sb-num" style="background:#fdf8ec;color:#8b6200">9</span>Pronósticos</a>
+    <a class="sb-item" href="#m10" id="si-m10"><span class="sb-num" style="background:#fdf0f0;color:#8b1a1a">10</span>Sectorial</a>
+    <a class="sb-item" href="#m11" id="si-m11"><span class="sb-num" style="background:#edfafa;color:#0a5b5b">11</span>Salud / Técnico</a>
+    <a class="sb-item" href="#decision" id="si-decision"><span class="sb-bullet" style="background:#b8860b"></span>Decisión Final</a>
+    <a class="sb-item" href="#quickref" id="si-quickref"><span class="sb-bullet" style="background:#8a7d6a"></span>Referencia Rápida</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-kicker">Manual de Usuario · Diagrama de Análisis Fundamental</div>
+    <h1>Cómo analizar cualquier empresa<br>con el diagrama de <em>1.264 métricas</em></h1>
+    <p class="hero-sub">Esta guía te explica paso a paso qué mirar en cada nodo del diagrama, qué valores son buenos o malos para cada métrica, qué errores evitar y cómo llegar a una decisión fundamentada de comprar, mantener o descartar una acción.</p>
+    <div class="hero-pills">
+      <span class="hero-pill hp-buy">🟢 COMPRAR — Score ≥ 70%</span>
+      <span class="hero-pill hp-hold">🟡 MANTENER — Score 50–70%</span>
+      <span class="hero-pill hp-no">🔴 NO COMPRAR — Score &lt; 50% o veto activo</span>
+      <span class="hero-pill hp-info">11 Módulos · 46 Decisiones</span>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+<!-- ════════════════════════════════════════════ -->
+<!-- INTRO -->
+<!-- ════════════════════════════════════════════ -->
+<div class="chapter" id="intro">
+  <div class="chapter-kicker">Introducción</div>
+  <h2>Cómo usar este manual junto al diagrama</h2>
+  <p class="chapter-intro">El diagrama es el mapa. Este manual es el libro de ruta. Cada vez que estés en un nodo del diagrama y no sepas exactamente qué mirar, ven aquí. Encontrarás la definición exacta de cada métrica, sus umbrales numéricos, qué significa cada valor y qué decisión tomar.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Abre el diagrama en paralelo</h4>
+        <p>Usa el botón "Abrir Diagrama →" del menú superior. El diagrama y este manual deben estar abiertos simultáneamente. En el diagrama, pasa el ratón sobre cualquier nodo para ver un resumen rápido. Para el detalle completo, busca el módulo correspondiente aquí.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Sigue el orden del flujo</h4>
+        <p>Empieza siempre por el <strong>M0 · Filtro Inicial</strong>. Si la empresa no supera ese filtro, no es necesario continuar. Solo si pasa, avanza a M1 → M2 → M3 en paralelo, y así sucesivamente. No saltes módulos.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Busca las métricas por su slug</h4>
+        <p>Cada métrica tiene un identificador único llamado <em>slug</em> (ej: <code>roic</code>, <code>beneish_mscore</code>). Lo encontrarás en gris debajo del nombre en el diagrama y en negrita en este manual. Úsalo para buscar la métrica en tu plataforma de datos.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Aplica los umbrales con contexto sectorial</h4>
+        <p>Los umbrales son orientativos. Siempre compara con el promedio del sector de la empresa. Un margen EBITDA del 8% puede ser excelente en distribución alimentaria y mediocre en software. El contexto es clave.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h4>Suma tu puntuación y toma la decisión</h4>
+        <p>Al final de cada módulo anota cuántos criterios superó la empresa. El consolidador final del diagrama suma todos los módulos con pesos distintos. Si el score ponderado supera el 70% y no hay ningún veto activado, la acción puede considerarse una <strong>compra</strong>.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <span class="alert-icon">ℹ️</span>
+    <div class="alert-body">
+      <p><strong>Módulos con poder de VETO:</strong> Los módulos M3 (Riesgo/Deuda) y M4 (Liquidez) tienen capacidad de veto absoluto. Aunque la empresa puntúe perfecto en el resto, si Altman Z &lt; 1.81, Beneish M-Score &gt; -1.78 o Current Ratio &lt; 0.8, la decisión es automáticamente <strong>NO COMPRAR</strong>. Estos son los guardianes de la cartera.</p>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--f-serif);font-size:1.15rem;margin:28px 0 14px">Vista general del sistema de puntuación</h3>
+  <div class="score-box">
+    <div class="score-title">⚖️ Pesos por Módulo en el Score Total</div>
+    <div class="score-grid">
+      <div class="score-item"><div class="score-val sv-buy">20%</div><div class="score-lbl">M1 Rentabilidad</div></div>
+      <div class="score-item"><div class="score-val sv-buy">15%</div><div class="score-lbl">M2 Crecimiento</div></div>
+      <div class="score-item"><div class="score-val sv-risk">20%</div><div class="score-lbl">M3 Riesgo/Deuda</div></div>
+      <div class="score-item"><div class="score-val sv-risk">10%</div><div class="score-lbl">M4 Liquidez</div></div>
+      <div class="score-item"><div class="score-val sv-buy">20%</div><div class="score-lbl">M5 Valoración</div></div>
+      <div class="score-item"><div class="score-val sv-hold">5%</div><div class="score-lbl">M6 Dividendos</div></div>
+      <div class="score-item"><div class="score-val sv-hold">5%</div><div class="score-lbl">M7 Eficiencia</div></div>
+      <div class="score-item"><div class="score-val sv-buy">15%</div><div class="score-lbl">M8 FCF</div></div>
+      <div class="score-item"><div class="score-val sv-hold">5%</div><div class="score-lbl">M9 Forecast</div></div>
+      <div class="score-item"><div class="score-val sv-hold">3%</div><div class="score-lbl">M10 Sectorial</div></div>
+      <div class="score-item"><div class="score-val sv-hold">2%</div><div class="score-lbl">M11 Técnico</div></div>
+    </div>
+  </div>
+
+  <!-- TOC GRID -->
+  <h3 style="font-family:var(--f-serif);font-size:1.15rem;margin:28px 0 14px">Índice de Módulos</h3>
+  <div class="toc-grid">
+    <a href="#m0" class="toc-card" style="border-top-color:#388bfd"><div class="tc-num">M0 · Pre-análisis</div><div class="tc-title">Filtro Inicial</div><div class="tc-metrics">Beneish, Health Score, Restatements, Sector</div></a>
+    <a href="#m1" class="toc-card" style="border-top-color:#388bfd"><div class="tc-num">M1 · 123 métricas</div><div class="tc-title">Rentabilidad</div><div class="tc-metrics">ROIC, ROE, ROA, Márgenes, Piotroski, CROIC</div></a>
+    <a href="#m2" class="toc-card" style="border-top-color:#26a641"><div class="tc-num">M2 · 237 métricas</div><div class="tc-title">Crecimiento</div><div class="tc-metrics">Revenue CAGR, EPS Growth, EBITDA CAGR, BV CAGR</div></a>
+    <a href="#m3" class="toc-card" style="border-top-color:#f85149"><div class="tc-num">M3 · 46 métricas · VETO</div><div class="tc-title">Riesgo / Deuda</div><div class="tc-metrics">Altman Z, D/EBITDA, D/E, Cobertura, Beta</div></a>
+    <a href="#m4" class="toc-card" style="border-top-color:#d29922"><div class="tc-num">M4 · 18 métricas · VETO</div><div class="tc-title">Liquidez</div><div class="tc-metrics">Current Ratio, Quick, Cash, NWC, NCAV</div></a>
+    <a href="#m5" class="toc-card" style="border-top-color:#a371f7"><div class="tc-num">M5 · 198 métricas</div><div class="tc-title">Valoración</div><div class="tc-metrics">PER, PEG, EV/EBITDA, P/B, DCF, Graham Number</div></a>
+    <a href="#m6" class="toc-card" style="border-top-color:#fb8f44"><div class="tc-num">M6 · 41 métricas</div><div class="tc-title">Dividendos</div><div class="tc-metrics">Yield, Payout FCF, Chowder, CAGR, Streak</div></a>
+    <a href="#m7" class="toc-card" style="border-top-color:#39d353"><div class="tc-num">M7 · 123 métricas</div><div class="tc-title">Eficiencia</div><div class="tc-metrics">CCC, DSO, DPO, DIO, Asset Turnover, Rule of 40</div></a>
+    <a href="#m8" class="toc-card" style="border-top-color:#58a6ff"><div class="tc-num">M8 · 48 métricas</div><div class="tc-title">Flujo de Caja</div><div class="tc-metrics">FCF, OCF, CapEx, FCF/NI, Owner Earnings</div></a>
+    <a href="#m9" class="toc-card" style="border-top-color:#e3b341"><div class="tc-num">M9 · 154 métricas</div><div class="tc-title">Pronósticos</div><div class="tc-metrics">EPS Forecast, Revisiones, CAGR proyectado</div></a>
+    <a href="#m10" class="toc-card" style="border-top-color:#ff7b72"><div class="tc-num">M10 · 84 métricas</div><div class="tc-title">Sectorial</div><div class="tc-metrics">Banco, Seguro, REIT, ETF — métricas propias</div></a>
+    <a href="#m11" class="toc-card" style="border-top-color:#7ee787"><div class="tc-num">M11 · 35 métricas</div><div class="tc-title">Salud / Técnico</div><div class="tc-metrics">Health Scores, RSI, MA200, Momentum</div></a>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- M0: FILTRO INICIAL -->
+<!-- ════════════════════════════════════════════ -->
+<div class="chapter" id="m0">
+  <div class="chapter-kicker">Módulo 0 · Pre-análisis obligatorio</div>
+  <h2>Filtro Inicial: las 4 preguntas antes de empezar</h2>
+  <p class="chapter-intro">Este módulo no puntúa — filtra. Si la empresa falla alguno de estos cuatro criterios, no inviertas tu tiempo en los módulos siguientes. Son los guardianes del análisis. Están diseñados para eliminar de entrada fraudes, empresas en quiebra inminente, sectores especiales que necesitan análisis diferente y empresas con contabilidad dudosa.</p>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">1ª PREGUNTA — ¿Es un sector estándar o especializado?</div><div class="metric-slug">entity_type · sector · industry · industry_group</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">CLASIFICACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Antes de cualquier análisis, identifica si la empresa es un banco, aseguradora, REIT o ETF. Estas entidades tienen contabilidades radicalmente distintas a las empresas estándar y sus métricas no son comparables con los umbrales generales del diagrama.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Tipo de entidad</th><th>¿Aplican los módulos estándar?</th><th>Qué hacer</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-val">Empresa industrial/tech/consumo</td><td class="dt-buy">SÍ, completamente</td><td>Continúa al M0 paso 2</td></tr>
+          <tr><td class="rt-val">Banco / Fintech bancaria</td><td class="dt-no">NO — usa ratios bancarios</td><td>Ve directamente al Módulo 10 → rama Banco</td></tr>
+          <tr><td class="rt-val">Aseguradora</td><td class="dt-no">NO — usa Combined Ratio</td><td>Ve al Módulo 10 → rama Seguros</td></tr>
+          <tr><td class="rt-val">REIT (inmobiliaria cotizada)</td><td class="dt-hold">PARCIALMENTE — usa FFO/AFFO</td><td>Ve al Módulo 10 → rama REIT</td></tr>
+          <tr><td class="rt-val">ETF / Fondo de inversión</td><td class="dt-no">NO — usa Expense Ratio</td><td>Ve al Módulo 10 → rama ETF</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-warn">
+        <div class="callout-label">⚠️ Error frecuente</div>
+        <p>Analizar un banco con PER, ROIC o Deuda/EBITDA estándar no tiene sentido. Los bancos tienen deuda estructural por naturaleza (los depósitos son pasivos). Su métrica de eficiencia es el Cost-to-Income Ratio, no el margen EBITDA.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">2ª PREGUNTA — ¿El Financial Health Score es aceptable?</div><div class="metric-slug">fin_health_overall_score · fin_health_overall_grade · fin_health_cash_flow_score · fin_health_profit_score · fin_health_growth_score</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">SALUD FINANCIERA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Es un score compuesto propietario (0-5) que evalúa rentabilidad, crecimiento, flujo de caja y momentum de precio. No es infalible, pero sirve como primera criba rápida. Si está en D o F, casi siempre hay algo grave. Úsalo como "temperatura" antes del análisis detallado.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Overall Grade</th><th>Overall Score</th><th>Interpretación</th><th>Acción</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">A</td><td class="rt-val">4.5 – 5.0</td><td>Excelente en todos los componentes</td><td class="dt-buy">Continuar análisis con alta expectativa</td></tr>
+          <tr class="range-bueno"><td class="rt-val">B</td><td class="rt-val">3.5 – 4.4</td><td>Bueno, algunos aspectos mejorables</td><td class="dt-buy">Continuar análisis normalmente</td></tr>
+          <tr class="range-ok"><td class="rt-val">C</td><td class="rt-val">2.5 – 3.4</td><td>Neutral, requiere análisis detallado</td><td class="dt-hold">Continuar con precaución</td></tr>
+          <tr class="range-alerta"><td class="rt-val">D</td><td class="rt-val">1.5 – 2.4</td><td>Débil, problemas en varios componentes</td><td class="dt-no">Investigar antes de continuar</td></tr>
+          <tr class="range-critico"><td class="rt-val">F</td><td class="rt-val">0 – 1.4</td><td>Muy débil, múltiples señales negativas</td><td class="dt-no">Descartar salvo análisis contrarian deliberado</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.83rem;color:var(--ink3);margin-top:10px">Verifica también los subcomponentes: <strong>Cash Flow Score</strong> (¿genera caja real?), <strong>Profit Score</strong> (¿es rentable?), <strong>Growth Score</strong> (¿crece?). Si alguno es F, es una señal específica de dónde está el problema.</p>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">3ª PREGUNTA — ¿El Beneish M-Score indica manipulación contable?</div><div class="metric-slug">beneish_mscore · montier_cscore · sloan_ratio</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO CONTABLE</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>Beneish M-Score</strong> es una fórmula que combina 8 ratios financieros para detectar si una empresa puede estar manipulando sus resultados. Fue desarrollado por Messod Beneish en 1999 y detectó el fraude de Enron antes de que se hiciera público. Si el M-Score supera -1.78, hay indicios estadísticos de manipulación contable.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        M-Score = −4.84 + 0.92×DSRI + 0.528×GMI + 0.404×AQI + 0.892×SGI + 0.115×DEPI − 0.172×SGAI + 4.679×TATA − 0.327×LVGI
+        <br><br>
+        <span style="color:rgba(232,216,156,.5);font-size:.78rem">DSRI=variación cobros/ventas · GMI=cambio margen bruto · AQI=activos no corrientes · SGI=crecimiento ventas · DEPI=depreciación · SGAI=gastos generales · TATA=accruals · LVGI=apalancamiento</span>
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Rango M-Score</th><th>Interpretación</th><th>Probabilidad manipulación</th><th>Decisión</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&lt; −2.22</td><td>Sin indicios de manipulación</td><td>&lt; 5%</td><td class="dt-buy">Continuar al paso 4</td></tr>
+          <tr class="range-ok"><td class="rt-val">−2.22 a −1.78</td><td>Zona gris, posible presión de beneficios</td><td>5–36%</td><td class="dt-hold">Investigar con el Montier C-Score y Sloan Ratio</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; −1.78</td><td>Probable manipulación contable</td><td>&gt; 36%</td><td class="dt-no">VETO — no invertir, salvo análisis específico</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout c-pro">
+        <div class="callout-label">🔍 Métricas complementarias</div>
+        <p><strong>Montier C-Score</strong> (0-6): Desarrollado por James Montier, detecta "cocina de libros". Si C-Score ≥ 4, alta probabilidad de manipulación. Verifica siempre junto al Beneish.<br><br>
+        <strong>Sloan Ratio</strong>: Mide el peso de los accruals (ajustes contables) sobre los beneficios. Si &gt; +0.25, la empresa tiene beneficios muy acruales (poco cash); si &lt; −0.25, es contabilidad muy conservadora. El rango ideal está entre −0.1 y +0.1.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">4ª PREGUNTA — ¿Ha habido restatements o cambios de auditor?</div><div class="metric-slug">restatement_bs · restatement_is · restatement_type</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">INTEGRIDAD</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Un <strong>restatement</strong> ocurre cuando una empresa tiene que rectificar estados financieros ya publicados. Es una de las señales de alarma más graves en análisis fundamental. Si ha ocurrido en los últimos 3 años, toda la historia financiera es cuestionable.</p>
+      <ul class="chklist">
+        <li><span class="chi chi-g">✓</span><strong>0 restatements en 5 años:</strong> Contabilidad limpia. Continuar análisis.</li>
+        <li><span class="chi chi-y">!</span><strong>1 restatement menor aislado:</strong> Investigar la causa. Si fue error administrativo menor, puede continuar.</li>
+        <li><span class="chi chi-r">✗</span><strong>2+ restatements o uno grave:</strong> Señal crítica. La empresa tiene problemas de control interno o integridad directiva. Descartar.</li>
+        <li><span class="chi chi-r">✗</span><strong>Cambio de auditor sin justificación:</strong> Los auditores que dimiten suelen hacerlo porque no están de acuerdo con cómo se presentan las cuentas. Es una red flag grave.</li>
+        <li><span class="chi chi-r">✗</span><strong>Opinión de auditor calificada (going concern):</strong> El auditor duda de la continuidad del negocio. Descartar inmediatamente.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- M1: RENTABILIDAD -->
+<!-- ════════════════════════════════════════════ -->
+<div class="chapter" id="m1">
+  <div class="chapter-kicker">Módulo 1 · 123 métricas · Peso: 20%</div>
+  <h2>Rentabilidad: ¿genera valor real este negocio?</h2>
+  <p class="chapter-intro">La rentabilidad mide si la empresa convierte sus recursos en beneficio de forma eficiente. No basta con que gane dinero — debe ganar más de lo que le cuesta el capital. Un negocio con ROIC inferior al WACC destruye valor aunque tenga beneficios contables.</p>
+
+  <div class="module-badge" style="background:#e8f3ff;border-color:#388bfd;color:#1a3a6b">📊 MÓDULO 1 — 6 Decisiones · Necesitas ≥ 5/6 para puntuación máxima</div>
+
+  <!-- ROIC vs WACC -->
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · ROIC vs WACC — ¿Crea o destruye valor?</div><div class="metric-slug">roic · roic_avg_5y · roic_avg_10y · roic_cagr_5y · wacc · return_capital</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>ROIC (Return on Invested Capital):</strong> Mide cuánto beneficio operativo neto de impuestos genera la empresa por cada euro de capital total invertido (deuda + patrimonio). Es la métrica de calidad de negocio más respetada por inversores profesionales porque no depende de la estructura de capital.</p>
+      <p class="metric-def"><strong>WACC (Weighted Average Cost of Capital):</strong> Es el coste promedio de todo el capital que usa la empresa — lo que exigen como mínimo los accionistas y los prestamistas. Si el ROIC no supera este umbral, la empresa destruye valor aunque muestre beneficios.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula ROIC</div>
+        ROIC = NOPAT / Capital Invertido
+        <br>NOPAT = EBIT × (1 − Tasa Impositiva)
+        <br>Capital Invertido = Patrimonio Neto + Deuda Neta + Goodwill
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>ROIC</th><th>Relación con WACC</th><th>Interpretación</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 20%</td><td>ROIC &gt;&gt; WACC</td><td>Negocio excepcional con ventaja competitiva duradera (moat)</td><td class="dt-buy">✓ Fuerte</td></tr>
+          <tr class="range-bueno"><td class="rt-val">15–20%</td><td>ROIC &gt; WACC claramente</td><td>Muy buena calidad de negocio</td><td class="dt-buy">✓ Bueno</td></tr>
+          <tr class="range-ok"><td class="rt-val">10–15%</td><td>ROIC &gt; WACC moderadamente</td><td>Negocio sólido, crea valor</td><td class="dt-hold">✓ Aceptable</td></tr>
+          <tr class="range-alerta"><td class="rt-val">WACC–10%</td><td>ROIC ≈ WACC</td><td>Valor neutro, negocio ordinario</td><td class="dt-hold">⚠️ Débil</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; WACC</td><td>ROIC &lt; WACC</td><td>Destruye valor económico aunque tenga beneficios</td><td class="dt-no">✗ Descarta</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-key">
+        <div class="callout-label">🔑 Lo más importante</div>
+        <p>No mires solo el ROIC del último año. Mira el <strong>ROIC promedio de 5 y 10 años</strong>. Un ROIC consistentemente alto durante una década es la prueba más sólida de que existe una ventaja competitiva real (pricing power, efecto red, costes de cambio). Un ROIC variable año a año puede deberse a factores cíclicos. Además, verifica que el ROIC no esté inflado por Goodwill excesivo de adquisiciones caras.</p>
+      </div>
+
+      <div class="example-box">
+        <div class="example-label">Ejemplo real — Caso ilustrativo</div>
+        <div class="example-title">Empresa de software B2B vs. empresa siderúrgica</div>
+        <div class="example-text">La empresa de software tiene ROIC del 28% con WACC del 9% → spread de +19 puntos. Por cada €100 invertidos, crea €19 de valor neto. La empresa siderúrgica tiene ROIC del 7% con WACC del 9% → spread de −2 puntos. Aunque reporta beneficios, destruye €2 de cada €100 invertidos. Incluso con un PER bajo, la siderúrgica es peor inversión estructural.</div>
+        <div class="example-metrics">
+          <span class="em-val em-buy">ROIC Software: 28%</span>
+          <span class="em-val em-buy">WACC: 9%</span>
+          <span class="em-val em-buy">Spread: +19pts</span>
+          <span class="em-val em-risk">ROIC Sider.: 7%</span>
+          <span class="em-val em-risk">Spread: −2pts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROE / ROA -->
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · ROE y ROA — Retorno sobre el capital y los activos</div><div class="metric-slug">roe · roe_avg_5y · roe_avg_10y · roa · roa_avg_5y · roce · rote</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>ROE (Return on Equity):</strong> Beneficio neto entre patrimonio neto de los accionistas. Mide cuánto gana la empresa por cada euro de capital propio. Alta relevancia pero con trampa: puede inflarse artificialmente con mucha deuda (efecto DuPont). Complementa siempre con el ROA.</p>
+      <p class="metric-def"><strong>ROA (Return on Assets):</strong> Beneficio neto entre activos totales. Mide la eficiencia con la que usa todos sus activos para generar beneficio. No está distorsionado por el apalancamiento, por lo que es más limpio para comparar empresas con distinta estructura de capital.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        ROE = Beneficio Neto / Patrimonio Neto × 100
+        <br>ROA = Beneficio Neto / Activos Totales × 100
+        <br>ROCE = EBIT / (Total Activos − Pasivos Corrientes) × 100
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Métrica</th><th>Excelente</th><th>Bueno</th><th>Aceptable</th><th>Débil</th><th>Alerta</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">ROE</td><td class="dt-buy">&gt; 20%</td><td class="dt-buy">15–20%</td><td class="dt-hold">12–15%</td><td class="dt-hold">8–12%</td><td class="dt-no">&lt; 8%</td></tr>
+          <tr><td class="rt-label">ROA</td><td class="dt-buy">&gt; 10%</td><td class="dt-buy">7–10%</td><td class="dt-hold">5–7%</td><td class="dt-hold">2–5%</td><td class="dt-no">&lt; 2%</td></tr>
+          <tr><td class="rt-label">ROCE</td><td class="dt-buy">&gt; WACC+10%</td><td class="dt-buy">&gt; WACC+5%</td><td class="dt-hold">&gt; WACC</td><td class="dt-hold">≈ WACC</td><td class="dt-no">&lt; WACC</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-warn">
+        <div class="callout-label">⚠️ La trampa del ROE alto con deuda</div>
+        <p>Usa el <strong>análisis DuPont</strong>: ROE = Margen Neto × Rotación de Activos × Apalancamiento Financiero. Si el ROE es alto pero el apalancamiento es muy alto (D/E &gt; 2x) y el margen neto y la rotación son mediocres, el ROE está siendo inflado por el endeudamiento, no por la calidad del negocio. Una empresa con ROE del 30% y D/E de 5x puede ser peor que una con ROE del 16% y sin deuda.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- MÁRGENES -->
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · La Cascada de Márgenes — Gross → EBITDA → EBIT → Net</div><div class="metric-slug">gp_margin · ebitda_margin · ebit_margin · ni_margin · oper_inc_margin · gp_margin_avg_5y · ebitda_margin_avg_5y · ni_margin_avg_5y</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Los márgenes miden cuánto beneficio queda de cada euro vendido en distintos momentos del proceso contable. Analizarlos en cascada revela dónde se "pierde" la rentabilidad y si los problemas son estructurales (margen bruto bajo) u operativos (alto SGA o intereses).</p>
+      <table class="ranges-table">
+        <thead><tr><th>Margen</th><th>Qué mide</th><th>Umbral general</th><th>Contexto sectorial</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Margen Bruto</td><td>Ventas − Coste directo / Ventas</td><td class="dt-buy">&gt; 40% tech / &gt; 20% industria</td><td>Software: 65–85% / Retail: 10–30% / Manufactura: 20–40%</td></tr>
+          <tr><td class="rt-label">Margen EBITDA</td><td>EBITDA / Ventas</td><td class="dt-buy">&gt; 20% general</td><td>SaaS: 20–40% / Utilities: 35–50% / Retail: 5–12%</td></tr>
+          <tr><td class="rt-label">Margen EBIT</td><td>EBIT / Ventas</td><td class="dt-buy">&gt; 15% bueno</td><td>Más conservador que EBITDA por incluir D&A</td></tr>
+          <tr><td class="rt-label">Margen Neto</td><td>Beneficio Neto / Ventas</td><td class="dt-buy">&gt; 10% bueno / &gt; 20% excelente</td><td>Incluye efecto de deuda e impuestos</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-tip">
+        <div class="callout-label">✅ Cómo leer la cascada</div>
+        <p>Si el <strong>Margen Bruto es alto pero el EBITDA es bajo</strong> → la empresa tiene gastos de personal o marketing excesivos (SGA alto).<br>
+        Si el <strong>EBITDA es bueno pero el Margen Neto es bajo</strong> → tiene mucha deuda (intereses altos) o impuestos elevados.<br>
+        Si el <strong>Margen Bruto es bajo</strong> → el problema es estructural: sus productos tienen poco precio relativo a su coste. Muy difícil de solucionar.</p>
+      </div>
+      <p style="font-size:.84rem;color:var(--ink3)"><strong>Lo que realmente importa:</strong> No el nivel absoluto del margen, sino su <em>tendencia</em>. Verifica siempre el <strong>CAGR del margen a 3, 5 y 10 años</strong> (<code>ebitda_margin_cagr_5y</code>, <code>ni_margin_cagr_5y</code>). Una expansión sostenida de márgenes durante 5 años es señal de pricing power real y mejora operativa. Una compresión sostenida es una alarma estructural aunque el margen absoluto sea aceptable.</p>
+    </div>
+  </div>
+
+  <!-- PIOTROSKI -->
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 4 · Piotroski F-Score — El semáforo de 9 señales</div><div class="metric-slug">piotroski_score</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">SALUD</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>Piotroski F-Score</strong> fue desarrollado por el profesor Joseph Piotroski de Stanford en 2000. Es una puntuación del 0 al 9 que combina 9 señales binarias (0 o 1 cada una) evaluando rentabilidad, solidez financiera y eficiencia operativa. Ha demostrado históricamente ser un predictor efectivo de retornos a 1-2 años.</p>
+      <div class="cmp-grid">
+        <div class="cmp-card" style="border-top-color:var(--buy2)">
+          <h4 style="color:var(--buy)">Rentabilidad (F1–F4)</h4>
+          <ul>
+            <li><strong>F1:</strong> ROA &gt; 0 en el año actual (1 pt)</li>
+            <li><strong>F2:</strong> OCF &gt; 0 — genera caja operativa (1 pt)</li>
+            <li><strong>F3:</strong> ΔROAa — ROA mejoró vs año anterior (1 pt)</li>
+            <li><strong>F4:</strong> Accruals — OCF/Activos &gt; ROA (1 pt)</li>
+          </ul>
+        </div>
+        <div class="cmp-card" style="border-top-color:var(--blue2)">
+          <h4 style="color:var(--blue)">Solidez Financiera (F5–F7)</h4>
+          <ul>
+            <li><strong>F5:</strong> ΔApalancamiento — D/A bajó (1 pt)</li>
+            <li><strong>F6:</strong> ΔLiquidez corriente mejoró (1 pt)</li>
+            <li><strong>F7:</strong> No emitió acciones nuevas (1 pt)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="cmp-grid">
+        <div class="cmp-card" style="border-top-color:var(--purple2)">
+          <h4 style="color:var(--purple)">Eficiencia Operativa (F8–F9)</h4>
+          <ul>
+            <li><strong>F8:</strong> ΔMargen bruto — mejoró vs año anterior (1 pt)</li>
+            <li><strong>F9:</strong> ΔRotación activos — Asset Turnover mejoró (1 pt)</li>
+          </ul>
+        </div>
+        <div class="cmp-card" style="border-top-color:var(--gold2)">
+          <h4 style="color:var(--gold)">Interpretación del Score</h4>
+          <ul>
+            <li><strong>8-9 puntos:</strong> Señal de compra fuerte</li>
+            <li><strong>6-7 puntos:</strong> Empresa sólida</li>
+            <li><strong>4-5 puntos:</strong> Neutral</li>
+            <li><strong>1-3 puntos:</strong> Señal de venta/evitar</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout c-pro">
+        <div class="callout-label">🔍 Uso profesional del F-Score</div>
+        <p>El F-Score funciona especialmente bien en empresas <strong>value</strong> (bajo P/B). Piotroski demostró que dentro de las empresas con P/B bajo, las que tienen F-Score ≥ 8 superan a las de F-Score ≤ 3 en un 23% anual de media. Úsalo como filtro de calidad dentro de un universo ya filtrado por valoración.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CROIC y Owner Earnings -->
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 5 · CROIC y Owner Earnings — La prueba del efectivo real</div><div class="metric-slug">croic · owner_earnings · owner_earnings_avg_5y · owner_earnings_avg_10y · owner_earnings_yield</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>CROIC (Cash Return on Invested Capital):</strong> Similar al ROIC pero usa el FCF (Flujo de Caja Libre) en lugar del NOPAT. Es más difícil de manipular que el ROIC porque el FCF es más honesto que el beneficio contable. Si el CROIC es muy inferior al ROIC, hay "calidad de beneficio" baja.</p>
+      <p class="metric-def"><strong>Owner Earnings (Buffett):</strong> Concepto de Warren Buffett de la carta a accionistas de Berkshire de 1986. = Beneficio Neto + D&A − CapEx de mantenimiento. Representa el efectivo que el propietario puede retirar del negocio sin comprometer su capacidad de operación futura.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        CROIC = FCF Levered / Capital Invertido Promedio × 100
+        <br>Owner Earnings = NI + D&A − CapEx Mantenimiento ± Cambios Capital Circulante
+        <br>Owner Earnings Yield = Owner Earnings / Market Cap × 100
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Métrica</th><th>Señal positiva</th><th>Señal negativa</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">CROIC vs ROIC</td><td class="dt-buy">CROIC ≥ ROIC (calidad contable alta)</td><td class="dt-no">CROIC &lt;&lt; ROIC (beneficios poco cash)</td></tr>
+          <tr><td class="rt-label">CROIC absoluto</td><td class="dt-buy">&gt; WACC y &gt; 12%</td><td class="dt-no">&lt; WACC o negativo</td></tr>
+          <tr><td class="rt-label">Owner Earnings</td><td class="dt-buy">Positivos y crecientes a tasa &gt; inflación</td><td class="dt-no">Negativos o decrecientes</td></tr>
+          <tr><td class="rt-label">Owner Earnings Yield</td><td class="dt-buy">&gt; 5–6% (supera bonos 10y)</td><td class="dt-hold">1–3% (comparable a bonos, sin prima de riesgo)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- M2: CRECIMIENTO -->
+<!-- ════════════════════════════════════════════ -->
+<div class="chapter" id="m2">
+  <div class="chapter-kicker">Módulo 2 · 237 métricas · Peso: 15%</div>
+  <h2>Crecimiento: ¿está expandiendo su negocio de forma sostenida?</h2>
+  <p class="chapter-intro">El crecimiento determina cuánto valdrá la empresa en el futuro. Pero no todo el crecimiento es igual. El crecimiento orgánico vale más que el inorgánico (adquisiciones). El crecimiento de FCF vale más que el de ingresos. La consistencia vale más que un año excepcional.</p>
+
+  <div class="module-badge" style="background:#edf7f1;border-color:#26a641;color:#1a6b35">📈 MÓDULO 2 — 6 Decisiones · Necesitas ≥ 4/6 para puntuación mínima</div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · Revenue CAGR — ¿Cuánto y con qué consistencia crecen las ventas?</div><div class="metric-slug">total_rev_growth · total_rev_cagr_3y · total_rev_cagr_5y · total_rev_cagr_7y · total_rev_cagr_10y · total_rev_trend_score · total_rev_qtr_growth</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">CRECIMIENTO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Revenue CAGR (Compound Annual Growth Rate):</strong> Tasa de crecimiento anual compuesto de los ingresos. La métrica más importante de este módulo. No mira un año sino la tendencia de 3, 5, 7 y 10 años. La consistencia es más valiosa que la velocidad.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula CAGR</div>
+        CAGR = (Ingresos_año_final / Ingresos_año_inicial)^(1/n) − 1
+        <br>Donde n = número de años del período analizado
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Revenue CAGR 5 años</th><th>Perfil</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 20%</td><td>Hipercrecimiento</td><td>Empresa en fase de expansión acelerada. Verificar si es sostenible y si mejoran márgenes.</td></tr>
+          <tr class="range-bueno"><td class="rt-val">12–20%</td><td>Alto crecimiento</td><td>Excelente para la mayoría de sectores. Crecimiento sostenible a largo plazo.</td></tr>
+          <tr class="range-ok"><td class="rt-val">8–12%</td><td>Crecimiento moderado-alto</td><td>Saludable. Empresa dinámica con mercado creciente o ganando cuota.</td></tr>
+          <tr class="range-ok"><td class="rt-val">5–8%</td><td>Crecimiento moderado</td><td>Aceptable en sectores maduros. Por encima del PIB nominal.</td></tr>
+          <tr class="range-alerta"><td class="rt-val">0–5%</td><td>Crecimiento lento</td><td>Empresa madura o estancada. Solo válida si tiene yield alto o valoración muy baja.</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 0%</td><td>Contracción</td><td>Declive. Requiere análisis profundo de la causa antes de invertir.</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-key">
+        <div class="callout-label">🔑 Señales clave que mirar</div>
+        <p><strong>Aceleración vs desaceleración:</strong> Compara CAGR 3y vs CAGR 5y vs CAGR 10y. Si el CAGR 3y es mayor que el CAGR 10y, el negocio está acelerando (positivo). Si el CAGR 3y es menor que el CAGR 10y, está desacelerando (cuidado).<br><br>
+        <strong>Revenue Trend Score:</strong> Evalúa la consistencia trimestral. Si está &gt; 70, la empresa crece de forma constante. Si está &lt; 40, el crecimiento es errático.<br><br>
+        <strong>Crecimiento orgánico vs por adquisiciones:</strong> El crecimiento inorgánico puede ocultar que el negocio base está estancado. Lee las notas del informe anual para identificar cuánto del crecimiento es orgánico.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · EPS CAGR — ¿Los beneficios por acción crecen más que las ventas?</div><div class="metric-slug">eps_diluted_growth · eps_diluted_cagr_3y · eps_diluted_cagr_5y · eps_diluted_cagr_10y · eps_trend_score</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">CRECIMIENTO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>EPS Diluido CAGR:</strong> Tasa de crecimiento del Beneficio Por Acción diluido (incluyendo posibles nuevas acciones por opciones, bonos convertibles, etc.). Es más relevante que el crecimiento del beneficio neto total porque refleja lo que le corresponde a cada acción.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Relación EPS CAGR vs Revenue CAGR</th><th>Interpretación</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">EPS CAGR &gt; Revenue CAGR</td><td>Los márgenes se expanden — cada euro vendido genera más beneficio</td><td class="dt-buy">✓ Señal fuerte positiva</td></tr>
+          <tr class="range-ok"><td class="rt-val">EPS CAGR ≈ Revenue CAGR</td><td>Márgenes estables — crecimiento equilibrado</td><td class="dt-hold">✓ Aceptable</td></tr>
+          <tr class="range-alerta"><td class="rt-val">EPS CAGR &lt; Revenue CAGR</td><td>Márgenes comprimiéndose o dilución de acciones</td><td class="dt-no">⚠️ Investigar</td></tr>
+          <tr class="range-critico"><td class="rt-val">Revenue crece pero EPS cae</td><td>Seria compresión de márgenes o dilución masiva</td><td class="dt-no">✗ Señal negativa fuerte</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · EBITDA CAGR — Crecimiento del beneficio operativo</div><div class="metric-slug">ebitda_cagr_3y · ebitda_cagr_5y · ebitda_cagr_10y · ebitda_growth · ebitda_unadj_cagr_5y · ebit_cagr_5y · oper_inc_cagr_5y</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">CRECIMIENTO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El crecimiento del EBITDA refleja la mejora del negocio operativo eliminando el ruido de la estructura de capital (intereses) y la contabilidad (D&A). El <strong>EBITDA ajustado</strong> (sin partidas extraordinarias) es el más relevante para evaluar la tendencia real.</p>
+      <table class="ranges-table">
+        <thead><tr><th>EBITDA CAGR 5y</th><th>Señal</th><th>Contexto</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 15%</td><td class="dt-buy">Excelente</td><td>Escalado de márgenes operativos</td></tr>
+          <tr class="range-bueno"><td class="rt-val">8–15%</td><td class="dt-buy">Muy bueno</td><td>Expansión sostenida</td></tr>
+          <tr class="range-ok"><td class="rt-val">5–8%</td><td class="dt-hold">Aceptable</td><td>Crecimiento moderado estable</td></tr>
+          <tr class="range-alerta"><td class="rt-val">0–5%</td><td class="dt-hold">Débil</td><td>Solo si valoración compensatoria</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 0%</td><td class="dt-no">Alerta</td><td>Deterioro operativo</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.83rem;color:var(--ink3);margin-top:10px">Compara siempre el EBITDA sin ajustar (<code>ebitda_unadj</code>) con el EBITDA ajustado (<code>ebitda</code>). Si la diferencia es grande y el "ajustado" es mucho mejor, la empresa podría estar sobre-ajustando para maquillar el resultado real.</p>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 4 · Book Value per Share CAGR — ¿Acumula riqueza real?</div><div class="metric-slug">bv_share_cagr_3y · bv_share_cagr_5y · bv_share_cagr_10y · equity_common_cagr_5y · retained_earn</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">CRECIMIENTO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El crecimiento del <strong>Book Value por acción</strong> mide cuánta riqueza contable acumula la empresa para sus accionistas. Si el Book Value crece de forma constante, significa que la empresa retiene beneficios que se materializan en patrimonio real. Si decrece, puede ser por pérdidas, recompras excesivas o dividendos superiores al beneficio.</p>
+      <table class="ranges-table">
+        <thead><tr><th>BV/Share CAGR 5y</th><th>Señal</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 12%</td><td class="dt-buy">Excelente acumulación</td><td>Empresa compoundando riqueza a alta tasa</td></tr>
+          <tr class="range-bueno"><td class="rt-val">8–12%</td><td class="dt-buy">Muy bueno</td><td>Crecimiento sólido del valor contable</td></tr>
+          <tr class="range-ok"><td class="rt-val">5–8%</td><td class="dt-hold">Aceptable</td><td>Por encima de inflación</td></tr>
+          <tr class="range-alerta"><td class="rt-val">0–5%</td><td class="dt-hold">Débil</td><td>Empresa madura o distribución total de beneficios</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 0%</td><td class="dt-no">Deterioro patrimonial</td><td>Verificar si se debe a recompras agresivas (puede ser positivo) o a pérdidas (muy negativo)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-tip">
+        <div class="callout-label">✅ Excepción importante</div>
+        <p>Empresas como Apple, Visa o Mastercard tienen Book Value bajo o incluso negativo por recompras masivas de acciones. Esto no es necesariamente negativo si el ROIC es muy alto — significa que devuelven capital porque no tienen donde reinvertirlo al mismo retorno. Contextualiza siempre.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 5 · FCF CAGR — ¿El flujo de caja crece más que el beneficio?</div><div class="metric-slug">fcf_levered_growth · fcf_levered_cagr_3y · fcf_levered_cagr_5y · fcf_levered_cagr_10y · fcf_levered_trend_score · fcf_to_ni</div></div>
+      <span class="metric-cat-tag" style="background:#edf7f1;color:#1a6b35">CRECIMIENTO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El crecimiento del <strong>FCF (Free Cash Flow)</strong> es el indicador de crecimiento más honesto porque el efectivo no se puede maquillar tan fácilmente como el beneficio contable. Si el FCF crece más rápido que el EPS, la empresa está mejorando la calidad de sus beneficios.</p>
+      <table class="ranges-table">
+        <thead><tr><th>FCF CAGR 5y vs EPS CAGR 5y</th><th>Interpretación</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">FCF CAGR &gt; EPS CAGR</td><td>Mejora en la conversión de beneficios en caja</td><td class="dt-buy">✓ Señal de calidad excelente</td></tr>
+          <tr class="range-ok"><td class="rt-val">FCF CAGR ≈ EPS CAGR</td><td>Calidad de beneficios estable</td><td class="dt-hold">✓ Neutral</td></tr>
+          <tr class="range-alerta"><td class="rt-val">FCF CAGR &lt; EPS CAGR</td><td>Los beneficios no se materializan en caja</td><td class="dt-no">⚠️ Investigar</td></tr>
+          <tr class="range-critico"><td class="rt-val">FCF negativo con EPS positivo</td><td>Posible manipulación contable o ciclo de inversión intenso</td><td class="dt-no">✗ Señal de alerta</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.83rem;color:var(--ink3);margin-top:10px">El ratio <code>fcf_to_ni</code> (FCF / Net Income) mide directamente la conversión de beneficios en caja. <strong>Ideal: &gt; 1.0</strong> (genera más caja que beneficio declarado). Si está consistentemente &lt; 0.7 durante varios años, hay un problema de calidad contable.</p>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 6 · Revisiones de Analistas — ¿El mercado está subiendo sus expectativas?</div><div class="metric-slug">analyst_pos_eps_revisions_ratio_90d · analyst_neg_eps_revisions_ratio_90d · eps_proj_cagr_5y · revenue_proj_cagr_5y · earnings_growth_lt</div></div>
+      <span class="metric-cat-tag" style="background:#fdf8ec;color:#8b6200">PRONÓSTICO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>Earnings Revision Momentum</strong> mide si los analistas están revisando al alza o a la baja sus estimaciones de EPS. Las revisiones al alza sistemáticas son uno de los mejores predictores de rendimiento bursátil a 3-6 meses, porque anticipan sorpresas positivas en los próximos reportes.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        Positive Revisions Ratio 90d = Analistas que subieron EPS / Total analistas que revisaron × 100
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Positive Revisions Ratio (90 días)</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 70%</td><td class="dt-buy">Momentum muy positivo — mayoría sube estimaciones</td></tr>
+          <tr class="range-bueno"><td class="rt-val">60–70%</td><td class="dt-buy">Momentum positivo</td></tr>
+          <tr class="range-ok"><td class="rt-val">40–60%</td><td class="dt-hold">Neutral — mercado dividido</td></tr>
+          <tr class="range-alerta"><td class="rt-val">30–40%</td><td class="dt-no">Momentum negativo</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 30%</td><td class="dt-no">Deterioro de expectativas — huye o espera</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- M3: RIESGO / DEUDA -->
+<!-- ════════════════════════════════════════════ -->
+<div class="chapter" id="m3">
+  <div class="chapter-kicker">Módulo 3 · 46 métricas · Peso: 20% · ⚡ PODER DE VETO</div>
+  <h2>Riesgo y Deuda: ¿puede sobrevivir esta empresa un ciclo adverso?</h2>
+  <p class="chapter-intro">Este es el módulo más crítico del diagrama. Una empresa rentable y en crecimiento puede quebrar si su estructura financiera es frágil. Los inversores profesionales pasan tanto tiempo analizando el riesgo como la rentabilidad. Dos nodos de este módulo tienen poder de veto absoluto: si Altman Z &lt; 1.81 o Net Debt/EBITDA &gt; 6x con OCF negativo, la respuesta es NO COMPRAR sin excepciones.</p>
+
+  <div class="veto-box">
+    <div class="veto-title">🚨 VETOS ABSOLUTOS DEL MÓDULO 3</div>
+    <div class="veto-items">
+      <div class="veto-item"><span class="veto-item-icon">🔴</span><div class="veto-item-text"><strong>Altman Z-Score &lt; 1.81:</strong> Alta probabilidad de quiebra en 24 meses. No importa lo bueno que parezca el resto. NO COMPRAR.</div></div>
+      <div class="veto-item"><span class="veto-item-icon">🔴</span><div class="veto-item-text"><strong>Net Debt/EBITDA &gt; 6x simultáneamente con OCF negativo:</strong> La empresa no puede pagar su deuda ni siquiera con su caja operativa. Riesgo de reestructuración inminente.</div></div>
+      <div class="veto-item"><span class="veto-item-icon">🔴</span><div class="veto-item-text"><strong>Beneish M-Score &gt; -1.78 + Altman Z &lt; 2.5:</strong> Fraude contable probable combinado con fragilidad financiera. Señal crítica máxima.</div></div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · Altman Z-Score — El detector de quiebras</div><div class="metric-slug">altman_z_score</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO · VETO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>Altman Z-Score</strong> fue desarrollado por Edward Altman en 1968 combinando 5 ratios financieros ponderados. Ha demostrado predecir quiebras con ~72% de precisión 2 años antes de que ocurran. No es infalible, pero es el mejor indicador cuantitativo de riesgo de quiebra disponible.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula (empresas industriales cotizadas)</div>
+        Z = 1.2×X1 + 1.4×X2 + 3.3×X3 + 0.6×X4 + 1.0×X5
+        <br><br>
+        X1 = Capital Circulante / Activos Totales
+        <br>X2 = Beneficios Retenidos / Activos Totales
+        <br>X3 = EBIT / Activos Totales
+        <br>X4 = Valor de Mercado Equity / Deuda Total Contable
+        <br>X5 = Ventas / Activos Totales
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Altman Z-Score</th><th>Zona</th><th>Probabilidad quiebra 2 años</th><th>Acción</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 3.0</td><td>Zona Segura</td><td>&lt; 5%</td><td class="dt-buy">✓ Sin riesgo significativo de quiebra</td></tr>
+          <tr class="range-ok"><td class="rt-val">2.6 – 3.0</td><td>Zona Segura-Gris</td><td>5–15%</td><td class="dt-hold">Monitorizar pero aceptable</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1.81 – 2.6</td><td>Zona Gris</td><td>15–50%</td><td class="dt-hold">⚠️ Requiere análisis adicional profundo</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 1.81</td><td>Zona de Distress</td><td>&gt; 50%</td><td class="dt-no">🚨 VETO — No invertir</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-warn">
+        <div class="callout-label">⚠️ Limitaciones del Altman Z</div>
+        <p>El Z-Score original está calibrado para empresas industriales. Para empresas de servicios usa el Z"-Score (versión modificada). Para empresas de mercados emergentes existe el Z'-Score. Los bancos y REITs tienen versiones propias. Verifica que estás usando la versión correcta para el sector.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · Net Debt/EBITDA — El ratio rey del apalancamiento</div><div class="metric-slug">net_debt_to_ebitda · total_debt_to_ebitda · debt_to_fcf · net_debt · total_debt · total_debt_growth · total_debt_trend_score</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO · VETO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Net Debt/EBITDA:</strong> Cuántos años de EBITDA necesitaría la empresa para pagar toda su deuda neta (deuda − caja). Es el ratio más usado por agencias de rating, bancos de inversión y analistas de crédito para medir el nivel de apalancamiento.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        Net Debt = Deuda Total − Caja y Equivalentes − Inversiones Corto Plazo
+        <br>Net Debt / EBITDA = Net Debt / EBITDA LTM
+        <br>Total Debt / FCF = Años para pagar deuda solo con FCF (más conservador)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Net Debt/EBITDA</th><th>Rating implícito</th><th>Interpretación</th><th>Decisión</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">Negativo (caja neta)</td><td>AAA equivalente</td><td>La empresa tiene más caja que deuda — fortaleza máxima</td><td class="dt-buy">✓ Excelente</td></tr>
+          <tr class="range-excelente"><td class="rt-val">0 – 1.0x</td><td>AA–A</td><td>Casi sin deuda neta, muy saneada</td><td class="dt-buy">✓ Muy bueno</td></tr>
+          <tr class="range-bueno"><td class="rt-val">1.0 – 2.0x</td><td>A–BBB</td><td>Deuda manejable, típico de empresas sólidas</td><td class="dt-buy">✓ Bueno</td></tr>
+          <tr class="range-ok"><td class="rt-val">2.0 – 3.0x</td><td>BBB</td><td>Deuda significativa pero sostenible con EBITDA estable</td><td class="dt-hold">✓ Aceptable — vigilar</td></tr>
+          <tr class="range-alerta"><td class="rt-val">3.0 – 4.0x</td><td>BB</td><td>Apalancamiento elevado, vulnerable a ciclos adversos</td><td class="dt-hold">⚠️ Solo si sector tolera más deuda</td></tr>
+          <tr class="range-alerta"><td class="rt-val">4.0 – 5.0x</td><td>B</td><td>Alto riesgo, deuda dominante en la estructura</td><td class="dt-no">⚠️ Muy arriesgado</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; 5.0x</td><td>CCC o peor</td><td>Estructura insostenible — riesgo de impago</td><td class="dt-no">🚨 Evitar salvo análisis turnaround específico</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-key">
+        <div class="callout-label">🔑 Umbrales sectoriales — NO uses siempre los mismos</div>
+        <p><strong>Utilities/Infraestructura:</strong> Toleran hasta 5-6x por la predictibilidad de sus flujos.<br>
+        <strong>Tecnología/Software:</strong> Idealmente &lt; 1.5x porque sus flujos son menos predecibles.<br>
+        <strong>Retail/Distribución:</strong> Típicamente 1.5-3x con EBITDA estable.<br>
+        <strong>Medios/Entretenimiento:</strong> Cada vez más comprimidos por disrupciones; &lt; 2.5x ideal.<br>
+        <strong>Industria cíclica (acero, químicas):</strong> &lt; 2x en el pico del ciclo para sobrevivir las caídas.</p>
+      </div>
+      <p style="font-size:.83rem;color:var(--ink3);margin-top:10px">Complementa con <code>total_debt_trend_score</code>: si la deuda está bajando consistentemente (trend score bajo = bueno), la empresa está desapalancándose. Si sube sin que crezca el EBITDA, es una señal de deterioro.</p>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · Ratios D/E y estructura de capital</div><div class="metric-slug">debt_to_equity · debt_to_equity_adj · debt_to_capital · debt_to_assets · equity_to_assets · lt_debt_to_equity · financial_leverage · net_debt_to_equity</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Debt/Equity:</strong> Deuda total entre patrimonio neto. Mide cuánto capital ajeno usa la empresa en relación al propio. <strong>Equity/Assets</strong> (o su inverso Financial Leverage) mide la proporción de activos financiada con capital propio.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Ratio</th><th>Ideal</th><th>Aceptable</th><th>Elevado</th><th>Peligroso</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Debt/Equity</td><td class="dt-buy">&lt; 0.5x</td><td class="dt-hold">0.5–1.5x</td><td class="dt-hold">1.5–3x</td><td class="dt-no">&gt; 3x</td></tr>
+          <tr><td class="rt-label">Equity/Assets</td><td class="dt-buy">&gt; 60%</td><td class="dt-hold">40–60%</td><td class="dt-hold">25–40%</td><td class="dt-no">&lt; 25%</td></tr>
+          <tr><td class="rt-label">Financial Leverage</td><td class="dt-buy">&lt; 2x</td><td class="dt-hold">2–3x</td><td class="dt-hold">3–5x</td><td class="dt-no">&gt; 5x</td></tr>
+          <tr><td class="rt-label">LT Debt/Equity</td><td class="dt-buy">&lt; 0.4x</td><td class="dt-hold">0.4–1.0x</td><td class="dt-hold">1.0–2x</td><td class="dt-no">&gt; 2x</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 4 · Cobertura de Intereses — ¿Puede pagar lo que le cobra el banco?</div><div class="metric-slug">interest_coverage · interest_coverage_ebitda · interest_coverage_ebitda_capex · ocf_to_debt · debt_coverage_st · capex_coverage</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Interest Coverage Ratio:</strong> EBIT dividido entre los gastos financieros (intereses). Mide cuántas veces podría pagar sus intereses con su beneficio operativo. Si este ratio cae por debajo de 1.5x, la empresa está técnicamente en riesgo de no poder atender sus obligaciones de deuda ante cualquier caída en resultados.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Versiones</div>
+        IC (EBIT) = EBIT / Intereses netos — la más conservadora
+        <br>IC (EBITDA) = EBITDA / Intereses netos — más utilizada en M&A
+        <br>IC (EBITDA-CapEx) = (EBITDA − CapEx) / Intereses — la más estricta
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Interest Coverage (EBIT)</th><th>Interpretación</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 10x</td><td>La deuda es completamente manejable, no supone riesgo alguno</td><td class="dt-buy">✓ Excelente</td></tr>
+          <tr class="range-bueno"><td class="rt-val">5 – 10x</td><td>Posición cómoda</td><td class="dt-buy">✓ Bueno</td></tr>
+          <tr class="range-ok"><td class="rt-val">3 – 5x</td><td>Aceptable, con margen ante una caída moderada de resultados</td><td class="dt-hold">✓ OK</td></tr>
+          <tr class="range-alerta"><td class="rt-val">2 – 3x</td><td>Ajustado. Un año malo puede comprometer el pago de intereses</td><td class="dt-hold">⚠️ Vigilar</td></tr>
+          <tr class="range-critico"><td class="rt-val">1 – 2x</td><td>Muy frágil. Cualquier contracción y no cubre intereses</td><td class="dt-no">⚠️ Alto riesgo</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 1x</td><td>No puede pagar sus intereses con el beneficio operativo actual</td><td class="dt-no">🚨 VETO implícito</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 5 · DOL, DFL y DCL — Grado de apalancamiento operativo y financiero</div><div class="metric-slug">degree_of_operating_leverage · degree_of_financial_leverage · degree_of_combined_leverage</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>DOL (Degree of Operating Leverage)</strong> mide cuánto varía el EBIT cuando cambian las ventas en un 1%. Si DOL = 3, una caída del 10% en ventas causa una caída del 30% en EBIT. Es el amplificador del riesgo operativo. Empresas con muchos costes fijos tienen DOL alto.</p>
+      <p class="metric-def">El <strong>DCL (Degree of Combined Leverage)</strong> = DOL × DFL, mide el riesgo total combinado (operativo + financiero). Un DCL alto significa que la empresa es muy sensible a cualquier variación en ventas o tipos de interés.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Ratio</th><th>Bajo (seguro)</th><th>Moderado</th><th>Alto (riesgo)</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">DOL</td><td class="dt-buy">&lt; 2x</td><td class="dt-hold">2–4x</td><td class="dt-no">&gt; 5x</td></tr>
+          <tr><td class="rt-label">DFL</td><td class="dt-buy">&lt; 1.5x</td><td class="dt-hold">1.5–2.5x</td><td class="dt-no">&gt; 3x</td></tr>
+          <tr><td class="rt-label">DCL</td><td class="dt-buy">&lt; 3x</td><td class="dt-hold">3–6x</td><td class="dt-no">&gt; 8x</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 6 · Beta y Volatilidad — El riesgo de mercado</div><div class="metric-slug">beta · beta_2y · beta_1y · realvol_1y · realvol_90d · realvol_60d · realvol_30d · asset_price_stddev_1y</div></div>
+      <span class="metric-cat-tag" style="background:#fdf0f0;color:#8b1a1a">RIESGO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Beta:</strong> Mide la sensibilidad del precio de la acción respecto al movimiento del índice de mercado (S&P 500 o equivalente). Beta = 1 significa que se mueve igual que el mercado. Beta &gt; 1 significa que amplifica los movimientos. Beta &lt; 1 significa que es más defensiva.</p>
+      <p class="metric-def"><strong>Volatilidad Realizada:</strong> La desviación estándar de los retornos diarios anualizada durante los últimos 30, 60, 90 días o 1 año. Mide cuánto fluctúa el precio en la práctica, independientemente del mercado.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Beta (5 años)</th><th>Perfil</th><th>Para quién</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">0.3 – 0.7</td><td>Muy defensiva</td><td>Inversores conservadores, fondos de renta</td></tr>
+          <tr class="range-bueno"><td class="rt-val">0.7 – 1.0</td><td>Defensiva-moderada</td><td>Balance crecimiento/seguridad</td></tr>
+          <tr class="range-ok"><td class="rt-val">1.0 – 1.3</td><td>Cíclica moderada</td><td>Perfil estándar de renta variable</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1.3 – 1.8</td><td>Cíclica-agresiva</td><td>Inversores con tolerancia alta al riesgo</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; 2.0</td><td>Muy volátil</td><td>Especulativo — solo para traders o inversores muy agresivos</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ M4 ════════ -->
+<div class="chapter" id="m4">
+  <div class="chapter-kicker">Módulo 4 · 18 métricas · Peso: 10% · ⚡ PODER DE VETO</div>
+  <h2>Liquidez: ¿puede pagar sus facturas del mes que viene?</h2>
+  <p class="chapter-intro">Una empresa puede ser muy rentable a largo plazo y quebrar en el corto plazo si no tiene liquidez para pagar sus obligaciones inmediatas. La liquidez es el oxígeno del negocio — cuando falta, todo lo demás deja de importar. El veto de este módulo: Current Ratio &lt; 0.8 es señal de insolvencia técnica inminente.</p>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · Current Ratio, Quick Ratio y Cash Ratio</div><div class="metric-slug">current_ratio · quick_ratio · cash_ratio · cash_to_assets · cash_to_capital</div></div>
+      <span class="metric-cat-tag" style="background:#fdf5e6;color:#8b5e00">RIESGO · VETO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Los tres ratios de liquidez miden la capacidad de pagar las obligaciones de corto plazo, con distinto nivel de conservadurismo:</p>
+      <ul class="chklist">
+        <li><span class="chi chi-b">💧</span><strong>Current Ratio</strong> (Activo Corriente / Pasivo Corriente): El más usado. Incluye inventario y cobros pendientes. Es optimista porque no todo el activo corriente es líquido inmediatamente.</li>
+        <li><span class="chi chi-b">💧</span><strong>Quick Ratio</strong> (Activo Corriente − Inventario / Pasivo Corriente): Más estricto. Elimina el inventario porque puede no venderse rápido en una crisis.</li>
+        <li><span class="chi chi-b">💧</span><strong>Cash Ratio</strong> (Caja + Equivalentes / Pasivo Corriente): El más conservador. Solo cuenta el efectivo disponible inmediatamente.</li>
+      </ul>
+      <table class="ranges-table">
+        <thead><tr><th>Ratio</th><th>Excelente</th><th>Bueno</th><th>Aceptable</th><th>Riesgo</th><th>VETO</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Current Ratio</td><td class="dt-buy">&gt; 2.5x</td><td class="dt-buy">2.0–2.5x</td><td class="dt-hold">1.2–2.0x</td><td class="dt-no">0.8–1.2x</td><td class="dt-no">&lt; 0.8x</td></tr>
+          <tr><td class="rt-label">Quick Ratio</td><td class="dt-buy">&gt; 1.5x</td><td class="dt-buy">1.0–1.5x</td><td class="dt-hold">0.7–1.0x</td><td class="dt-no">0.4–0.7x</td><td class="dt-no">&lt; 0.4x</td></tr>
+          <tr><td class="rt-label">Cash Ratio</td><td class="dt-buy">&gt; 0.8x</td><td class="dt-buy">0.5–0.8x</td><td class="dt-hold">0.2–0.5x</td><td class="dt-no">&lt; 0.2x</td><td>—</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-tip">
+        <div class="callout-label">✅ Excepción: empresas con CCC negativo</div>
+        <p>Amazon, supermercados y otras empresas que cobran antes de pagar a proveedores pueden tener Current Ratio &lt; 1 de forma estructural y sostenible. Para estas empresas, el Current Ratio bajo NO es una señal de alarma. Analiza siempre el Cash Conversion Cycle en M7 antes de aplicar el veto de liquidez.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · Net Working Capital (NWC) — El capital de trabajo</div><div class="metric-slug">nwc · nwc_margin · nwc_growth · nwc_proj</div></div>
+      <span class="metric-cat-tag" style="background:#fdf5e6;color:#8b5e00">LIQUIDEZ</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Net Working Capital:</strong> Activo Corriente − Pasivo Corriente. Es el capital disponible para financiar las operaciones del día a día. Un NWC positivo significa que tiene más recursos corrientes que obligaciones corrientes. Un NWC negativo puede indicar estrés de liquidez (o ventaja estructural en modelos como supermercados).</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        NWC = Activo Corriente − Pasivo Corriente
+        <br>NWC Margin = NWC / Ventas × 100 (eficiencia relativa)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>NWC</th><th>Señal</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">Positivo y creciendo</td><td class="dt-buy">✓ Ideal</td><td>Empresa solvente y expandiendo su base operativa</td></tr>
+          <tr class="range-ok"><td class="rt-val">Positivo y estable</td><td class="dt-hold">✓ OK</td><td>Solvencia mantenida sin crecimiento del colchón</td></tr>
+          <tr class="range-alerta"><td class="rt-val">Positivo pero decreciendo</td><td class="dt-hold">⚠️ Vigilar</td><td>Se está consumiendo el colchón de liquidez — identificar causa</td></tr>
+          <tr class="range-critico"><td class="rt-val">Negativo y empeorando</td><td class="dt-no">✗ Riesgo</td><td>Estrés de liquidez real (salvo CCC negativo estructural)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · OCF/Liabilities — ¿El flujo operativo cubre los pasivos?</div><div class="metric-slug">ocf_to_liabilities · ocf_to_liabilities_cur · debt_coverage_st</div></div>
+      <span class="metric-cat-tag" style="background:#fdf5e6;color:#8b5e00">LIQUIDEZ</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Mide si el flujo operativo anual de caja es suficiente para cubrir los pasivos totales o corrientes. Es una métrica dinámica (basada en flujos, no en balances) y por tanto más realista que los ratios estáticos de balance.</p>
+      <table class="ranges-table">
+        <thead><tr><th>OCF / Pasivos Corrientes</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 0.8x</td><td class="dt-buy">Excelente — el OCF anual cubre casi todos los pasivos corrientes</td></tr>
+          <tr class="range-bueno"><td class="rt-val">0.4 – 0.8x</td><td class="dt-buy">Buena cobertura dinámica</td></tr>
+          <tr class="range-ok"><td class="rt-val">0.2 – 0.4x</td><td class="dt-hold">Aceptable, necesita gestión activa del capital circulante</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 0.2x</td><td class="dt-no">Riesgo — el OCF es insuficiente para cubrir pasivos corrientes</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 4 · NCAV — El "precio de liquidación" de Benjamin Graham</div><div class="metric-slug">ncav · ncav_ps · price_to_ncav · nnwc · nnwc_ps · price_to_nnwc · cash_net</div></div>
+      <span class="metric-cat-tag" style="background:#fdf5e6;color:#8b5e00">LIQUIDEZ · DEEP VALUE</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>NCAV (Net Current Asset Value):</strong> Concepto de Benjamin Graham. = Activo Corriente − Pasivo Total. Representa el valor mínimo de liquidación de la empresa (lo que quedaría para los accionistas si se vendieran solo los activos corrientes y se pagara toda la deuda). Si la capitalización bursátil está por debajo del NCAV, la empresa cotiza por debajo de su valor de liquidación — una ganga extrema al estilo Graham.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        NCAV = Activo Corriente − Pasivo Total
+        <br>Price/NCAV = Market Cap / NCAV (menor es mejor)
+        <br>NNWC (Net-Net WC) = Caja + 0.75×Cobros + 0.5×Inventario − Pasivo Total (más conservador)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Price / NCAV</th><th>Señal</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&lt; 0.67x (2/3 del NCAV)</td><td class="dt-buy">Deep Value Graham clásico</td><td>La empresa cotiza a menos de 2/3 de su valor de liquidación</td></tr>
+          <tr class="range-bueno"><td class="rt-val">0.67x – 1.0x</td><td class="dt-buy">Infravalorada Graham</td><td>Cotiza por debajo del valor de liquidación</td></tr>
+          <tr class="range-ok"><td class="rt-val">1.0 – 1.5x</td><td class="dt-hold">Razonable para value</td><td>Cotiza ligeramente sobre el NCAV — algo de prima de negocio en marcha</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; 3x</td><td class="dt-no">No aplica NCAV</td><td>El valor de mercado incluye principalmente intangibles y expectativas de futuro</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ M5: VALORACIÓN ════════ -->
+<div class="chapter" id="m5">
+  <div class="chapter-kicker">Módulo 5 · 198 métricas · Peso: 20%</div>
+  <h2>Valoración: ¿está cara o barata la acción?</h2>
+  <p class="chapter-intro">Una empresa excelente a un precio absurdo es una mala inversión. Una empresa mediocre a un precio ridículo puede ser una buena inversión. La valoración es el arte de determinar si el precio que paga el mercado es razonable respecto a lo que recibe. Ningún ratio de valoración funciona de forma aislada — siempre hay que contextualizar con el sector, el crecimiento y la calidad del negocio.</p>
+
+  <div class="module-badge" style="background:#f3eeff;border-color:#a371f7;color:#4a1a8b">💰 MÓDULO 5 — 8 Decisiones · Necesitas ≥ 4/8 para puntuación de compra</div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · PER — El ratio de valoración más utilizado del mundo</div><div class="metric-slug">pe_ltm · pe_fwd · pe_ntm · pe_ltm_adj · pe_ltm_avg_5y · pe_ltm_avg_10y · pe_to_pe_avg_3y</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>PER (Price-to-Earnings Ratio):</strong> Precio de la acción dividido entre el beneficio por acción. Indica cuántos euros pagas por cada euro de beneficio. PER trailing usa el beneficio de los últimos 12 meses (histórico). PER forward usa las estimaciones del próximo año (más relevante porque el precio descuenta el futuro).</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        PER LTM = Precio / BPA (últimos 12 meses)
+        <br>PER Fwd = Precio / BPA estimado (próximos 12 meses)
+        <br>PER NTM = Precio / BPA próximos 12 meses (rolling, sin desfaces fiscales)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Tipo de empresa</th><th>PER Fwd razonable</th><th>PER caro</th><th>Nota</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Utilities / Infraestructura</td><td class="dt-buy">12–18x</td><td class="dt-no">&gt; 25x</td><td>Alta predictibilidad de flujos</td></tr>
+          <tr><td class="rt-label">Banca / Financiero</td><td class="dt-buy">8–14x</td><td class="dt-no">&gt; 20x</td><td>Usar mejor P/BV</td></tr>
+          <tr><td class="rt-label">Consumo estable (Nestlé, P&G)</td><td class="dt-buy">18–26x</td><td class="dt-no">&gt; 35x</td><td>Prima por estabilidad</td></tr>
+          <tr><td class="rt-label">Tecnología madura (Microsoft)</td><td class="dt-buy">22–32x</td><td class="dt-no">&gt; 45x</td><td>Compensado por altos márgenes</td></tr>
+          <tr><td class="rt-label">Tecnología crecimiento alto</td><td class="dt-hold">25–50x</td><td class="dt-no">&gt; 80x</td><td>Verificar con PEG</td></tr>
+          <tr><td class="rt-label">Industria cíclica</td><td class="dt-hold">Bajo en pico / Alto en valle</td><td>—</td><td>PER bajo en cíclicas = señal de venta (pico ciclo)</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-key">
+        <div class="callout-label">🔑 El PER relativo — siempre compara con la historia propia</div>
+        <p>Usa <code>pe_to_pe_avg_3y</code>: si el PER actual está por encima del 100% de su media de 3 años, la acción está cara respecto a su historia. Si está por debajo del 80%, puede ser una oportunidad. Esto es más fiable que comparar el PER con umbrales fijos porque cada empresa tiene su rango histórico natural.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · PEG — El PER ajustado por crecimiento</div><div class="metric-slug">peg_ltm · peg_fwd · peg_fwd_5y · pegy_ltm · pegy_fwd</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>PEG (Price/Earnings to Growth):</strong> Divide el PER entre la tasa de crecimiento del EPS. Normaliza el PER por el crecimiento, permitiendo comparar empresas de alto y bajo crecimiento de forma más justa. Popularizado por Peter Lynch. <strong>PEGY</strong> incluye también el Dividend Yield en el denominador.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        PEG = PER / Tasa Crecimiento EPS (%)
+        <br>PEGY = PER / (Tasa Crecimiento EPS + Dividend Yield) — para empresas con dividendo
+        <br>PEG Fwd 5y = PER Fwd / EPS CAGR estimado 5 años
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>PEG</th><th>Señal</th><th>Interpretación de Lynch</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&lt; 0.5x</td><td class="dt-buy">Muy barata</td><td>El mercado no está reconociendo el crecimiento — oportunidad clara</td></tr>
+          <tr class="range-bueno"><td class="rt-val">0.5 – 1.0x</td><td class="dt-buy">Barata / Justa</td><td>Pagas el crecimiento a precio razonable</td></tr>
+          <tr class="range-ok"><td class="rt-val">1.0 – 1.5x</td><td class="dt-hold">Valoración justa</td><td>Precio refleja el crecimiento esperado</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1.5 – 2.5x</td><td class="dt-hold">Prima moderada</td><td>Pagas prima sobre el crecimiento — se necesita alta calidad</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; 2.5x</td><td class="dt-no">Cara</td><td>El precio descuenta un crecimiento que puede no materializarse</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-warn">
+        <div class="callout-label">⚠️ Limitaciones del PEG</div>
+        <p>El PEG no funciona bien para: empresas con crecimiento muy bajo (PEG matemáticamente alto aunque estén baratas), empresas cíclicas (el crecimiento es artificial en el pico), y empresas con pérdidas actuales pero alto crecimiento futuro. Para estas situaciones, usa EV/EBITDA o P/FCF.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · EV/EBITDA — El ratio preferido en M&A y análisis institucional</div><div class="metric-slug">ev_to_ebitda_ltm · ev_to_ebitda_fwd · ev_to_ebit_ltm · ev_to_ebit_fwd · ev_to_revenue_ltm · ev_to_fcf_ltm · ev_to_ic_ltm · enterprise_value</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>EV/EBITDA:</strong> Enterprise Value (valor total de la empresa incluyendo deuda) dividido entre el EBITDA. A diferencia del PER, incluye la deuda en el numerador, por lo que es más comparable entre empresas con diferente estructura de capital. Es el múltiplo estándar en fusiones y adquisiciones.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula EV</div>
+        EV = Market Cap + Deuda Total − Caja − Equivalentes + Intereses Minoritarios
+        <br>EV/EBITDA = Enterprise Value / EBITDA LTM
+        <br>EV/EBIT = EV / EBIT (más conservador, incluye D&A)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Sector</th><th>EV/EBITDA barato</th><th>EV/EBITDA justo</th><th>EV/EBITDA caro</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Industria básica / Commodities</td><td class="dt-buy">&lt; 5x</td><td class="dt-hold">5–8x</td><td class="dt-no">&gt; 12x</td></tr>
+          <tr><td class="rt-label">Retail / Distribución</td><td class="dt-buy">&lt; 6x</td><td class="dt-hold">6–10x</td><td class="dt-no">&gt; 14x</td></tr>
+          <tr><td class="rt-label">Telecomunicaciones</td><td class="dt-buy">&lt; 5x</td><td class="dt-hold">5–8x</td><td class="dt-no">&gt; 10x</td></tr>
+          <tr><td class="rt-label">Consumo / Salud / Pharma</td><td class="dt-buy">&lt; 10x</td><td class="dt-hold">10–16x</td><td class="dt-no">&gt; 22x</td></tr>
+          <tr><td class="rt-label">Tecnología madura</td><td class="dt-buy">&lt; 14x</td><td class="dt-hold">14–22x</td><td class="dt-no">&gt; 30x</td></tr>
+          <tr><td class="rt-label">Software SaaS / Cloud</td><td class="dt-hold">&lt; 20x</td><td class="dt-hold">20–35x</td><td class="dt-no">&gt; 50x</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 4 · P/Book y Graham Number — Valoración por activos</div><div class="metric-slug">price_to_book · ptbv · ben_graham_number · ben_graham_value · price_to_ncav · book_to_market · pb_to_pb_avg_3y · price_to_book_roe_ratio</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Price/Book Value:</strong> Precio de mercado de las acciones dividido entre el valor contable del patrimonio neto por acción. Compara lo que el mercado paga con lo que la contabilidad dice que vale. Muy útil para bancos, inmobiliarias y empresas con muchos activos tangibles.</p>
+      <p class="metric-def"><strong>Graham Number:</strong> Fórmula de Benjamin Graham para calcular el precio máximo que se debería pagar por una acción. Si el precio actual está por debajo del Graham Number, la acción puede estar infravalorada.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        Graham Number = √(22.5 × BPA × Book Value por Acción)
+        <br>Price/Book ROE = (P/BV) / ROE — mide si se paga prima justificada por el ROE
+        <br>Book to Market = 1 / P/BV (ratio preferido por académicos — Fama/French)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Price/Book</th><th>Sector bancario</th><th>Sector estándar</th><th>Tech/Marcas</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&lt; 1x</td><td class="dt-buy">Muy barato (posible problema)</td><td class="dt-buy">Deep value Graham</td><td>—</td></tr>
+          <tr class="range-bueno"><td class="rt-val">1–2x</td><td class="dt-buy">Valoración razonable</td><td class="dt-buy">Barato a justo</td><td>—</td></tr>
+          <tr class="range-ok"><td class="rt-val">2–4x</td><td class="dt-hold">Caro para banco</td><td class="dt-hold">Prima moderada</td><td class="dt-buy">Razonable si ROE &gt; 15%</td></tr>
+          <tr class="range-alerta"><td class="rt-val">4–8x</td><td class="dt-no">Muy caro</td><td class="dt-hold">Prima alta</td><td class="dt-hold">Solo si ROE &gt; 25%</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; 10x</td><td class="dt-no">Impagable</td><td class="dt-no">Especulativo</td><td class="dt-hold">Solo franquicias tipo Apple, Visa</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 5 · FCF Yield y P/FCF — La valoración más honesta</div><div class="metric-slug">fcf_yield_ltm · fcf_yield_avg_5y · price_to_fcf_ltm · price_to_ocf_ltm · earnings_yield_ltm · earnings_yield_fwd</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>FCF Yield:</strong> Flujo de Caja Libre dividido entre la capitalización bursátil. Es el "tipo de interés real" que paga la empresa. Si supera el rendimiento del bono a 10 años más la prima de riesgo esperada, la empresa puede estar infravalorada en términos absolutos.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        FCF Yield = FCF Levered / Market Cap × 100
+        <br>Earnings Yield = 1 / PER × 100 (comparar con tipos de interés)
+        <br>P/FCF = Market Cap / FCF Levered (menor es mejor)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>FCF Yield</th><th>Comparado con bono 10y</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 8%</td><td>+4% sobre bono 10y típico</td><td class="dt-buy">Muy atractivo — investigar si no es trampa</td></tr>
+          <tr class="range-bueno"><td class="rt-val">5–8%</td><td>+2–4% sobre bono</td><td class="dt-buy">Atractivo para renta variable</td></tr>
+          <tr class="range-ok"><td class="rt-val">3–5%</td><td>+0–2% sobre bono</td><td class="dt-hold">Razonable si hay crecimiento futuro</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1.5–3%</td><td>Comparable al bono o menos</td><td class="dt-hold">Poco atractivo — por qué asumir más riesgo que el bono</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 1.5%</td><td>Peor que el bono</td><td class="dt-no">Cara — el crecimiento tiene que ser excepcional para justificarlo</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-pro">
+        <div class="callout-label">🔍 FCF Yield vs Earnings Yield — ¿Cuál usar?</div>
+        <p>El <strong>Earnings Yield</strong> (1/PER) incluye beneficios contables que pueden no materializarse en caja. El <strong>FCF Yield</strong> usa caja real, más difícil de manipular. Si Earnings Yield &gt; FCF Yield significativamente, la calidad de beneficios es baja. Lo ideal es que ambos sean similares o que FCF Yield &gt; Earnings Yield.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 6 · DCF, DDM y EPV — Modelos de valoración intrínseca</div><div class="metric-slug">dcf_fair_value · dcf_fair_value_upside · ddm_fair_value · ddm_fair_value_upside · epv_fair_value · epv_fair_value_upside · fair_value · fair_value_upside · fair_value_confidence · comps_fair_value</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN · PREDICCIONES</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Los modelos de valoración intrínseca calculan el valor "verdadero" de la empresa independientemente del precio de mercado. El <strong>Fair Value Upside/Downside</strong> es la diferencia porcentual entre el precio actual y el valor intrínseco estimado por el modelo.</p>
+      <ul class="chklist">
+        <li><span class="chi chi-b">📊</span><strong>DCF Fair Value:</strong> Descuento de Flujos de Caja Libre futuros al WACC. El más técnico y sensible a los inputs. Útil para empresas con FCF predecible.</li>
+        <li><span class="chi chi-b">📊</span><strong>DDM Fair Value:</strong> Dividend Discount Model. Descuenta dividendos futuros. Solo válido para empresas con dividendo estable y predecible.</li>
+        <li><span class="chi chi-b">📊</span><strong>EPV Fair Value:</strong> Earnings Power Value. Asume crecimiento cero — calcula el valor de la empresa si solo mantiene sus operaciones actuales. Es el más conservador.</li>
+        <li><span class="chi chi-b">📊</span><strong>Comps Fair Value:</strong> Valoración por comparables de mercado (múltiplos del sector).</li>
+        <li><span class="chi chi-b">📊</span><strong>Fair Value Composite:</strong> Media ponderada de todos los modelos anteriores.</li>
+      </ul>
+      <table class="ranges-table">
+        <thead><tr><th>Fair Value Upside</th><th>Señal</th><th>Acción</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 30%</td><td class="dt-buy">Fuertemente infravalorada</td><td>Compra con alta convicción si hay Fair Value Confidence alta</td></tr>
+          <tr class="range-bueno"><td class="rt-val">15–30%</td><td class="dt-buy">Infravalorada</td><td>Zona de compra</td></tr>
+          <tr class="range-ok"><td class="rt-val">5–15%</td><td class="dt-hold">Moderadamente atractiva</td><td>Considera entrar si otros factores son positivos</td></tr>
+          <tr class="range-alerta"><td class="rt-val">−5% a +5%</td><td class="dt-hold">Valoración justa</td><td>Espera corrección para mejorar margen de seguridad</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; −15%</td><td class="dt-no">Sobrevalorada</td><td>No compres ahora — espera corrección del 20%+</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.83rem;color:var(--ink3);margin-top:10px">Presta atención al <code>fair_value_confidence</code>. Si la confianza es baja, el modelo tiene mucha incertidumbre y el upside calculado es menos fiable. Ante baja confianza, exige mayor margen de seguridad.</p>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 7 · Shareholder Yield — El retorno total real al accionista</div><div class="metric-slug">shareholder_yield · net_payout_yield · buyback_yield · owner_earnings_yield · debt_paydown_yield</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Shareholder Yield:</strong> La suma de todo el dinero que la empresa devuelve al accionista en forma de dividendos, recompras netas de acciones y reducción de deuda. Es más completo que el simple Dividend Yield porque incluye todas las formas de retorno de capital.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        Shareholder Yield = Dividend Yield + Buyback Yield + Debt Paydown Yield
+        <br>Net Payout Yield = (Dividendos + Recompras Netas) / Market Cap
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Shareholder Yield</th><th>Señal</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 8%</td><td class="dt-buy">Muy atractivo</td><td>La empresa devuelve mucho capital — positivo si es sostenible</td></tr>
+          <tr class="range-bueno"><td class="rt-val">5–8%</td><td class="dt-buy">Atractivo</td><td>Buena combinación de rendimiento y retorno de capital</td></tr>
+          <tr class="range-ok"><td class="rt-val">3–5%</td><td class="dt-hold">Razonable</td><td>Equilibrio entre retorno y reinversión</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1–3%</td><td class="dt-hold">Bajo</td><td>La empresa reinvierte casi todo — válido si el ROIC es muy alto</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 1%</td><td class="dt-hold">Reinversión pura</td><td>Todo se reinvierte — válido solo en empresas de hipercrecimiento con ROIC excepcional</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 8 · Dilución vs Recompras — ¿La empresa cuida al accionista?</div><div class="metric-slug">shares_out_cagr_5y · shares_out_cagr_10y · short_interest · short_ratio · shares_float_pct · buyback_yield</div></div>
+      <span class="metric-cat-tag" style="background:#f3eeff;color:#4a1a8b">VALORACIÓN</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">Si el número de acciones en circulación crece año a año, cada accionista posee una fracción menor del negocio — sus beneficios se diluyen aunque el negocio crezca. Al contrario, si la empresa recompra acciones, cada accionista posee una fracción mayor y el BPA crece aunque el beneficio total no lo haga.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Shares CAGR 5 años</th><th>Señal</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&lt; −3%</td><td class="dt-buy">Recompras agresivas</td><td>La empresa reduce significativamente las acciones — muy positivo para el BPA</td></tr>
+          <tr class="range-bueno"><td class="rt-val">−3% a 0%</td><td class="dt-buy">Recompras moderadas</td><td>El número de acciones se reduce — positivo</td></tr>
+          <tr class="range-ok"><td class="rt-val">0% a +1%</td><td class="dt-hold">Neutral</td><td>Compensación stock-based sin dilución neta significativa</td></tr>
+          <tr class="range-alerta"><td class="rt-val">+1% a +3%</td><td class="dt-no">Dilución moderada</td><td>El accionista pierde fracción — requiere alto crecimiento para compensar</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; +3%</td><td class="dt-no">Dilución grave</td><td>La empresa financia crecimiento diluyendo al accionista — señal negativa</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-warn">
+        <div class="callout-label">⚠️ Short Interest — La apuesta contraria del mercado</div>
+        <p>El <code>short_interest</code> y <code>short_ratio</code> miden cuántas acciones están vendidas en corto (apostando a la baja). Short Interest &gt; 20% del float indica que una parte significativa del mercado cree que la empresa tiene problemas. No es una señal definitiva (los cortos se equivocan), pero merece investigación adicional antes de invertir.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ M6: DIVIDENDOS ════════ -->
+<div class="chapter" id="m6">
+  <div class="chapter-kicker">Módulo 6 · 41 métricas · Peso: 5%</div>
+  <h2>Dividendos: ¿retorna capital de forma sostenible y creciente?</h2>
+  <p class="chapter-intro">Este módulo es opcional para empresas que no pagan dividendo (startups, empresas en fase de hipercrecimiento). Para inversores orientados a renta, es fundamental. La clave no es el yield absoluto sino la sostenibilidad y el crecimiento del dividendo.</p>
+
+  <div class="module-badge" style="background:#fef4ec;border-color:#fb8f44;color:#8b3a00">💵 MÓDULO 6 — Solo analizar si la empresa paga dividendo · 4 Decisiones</div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · Dividend Yield y Payout Ratio — ¿Es sostenible lo que paga?</div><div class="metric-slug">div_yield · div_yield_ex_special · payout_ratio · payout_ratio_common · fcf_payout_ratio · dividend_coverage · div_share</div></div>
+      <span class="metric-cat-tag" style="background:#fef4ec;color:#8b3a00">DIVIDENDOS</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Dividend Yield:</strong> Dividendo anual por acción dividido entre el precio actual. Mide el "rendimiento por dividendo" de comprar la acción hoy. Un yield muy alto (>8%) suele indicar que el mercado desconfía de su sostenibilidad — la acción ha caído y el yield ha subido.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas</div>
+        Dividend Yield = DPA / Precio × 100
+        <br>EPS Payout Ratio = DPA / BPA × 100
+        <br>FCF Payout Ratio = Total Dividendos / FCF Levered × 100 ← más fiable
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Métrica</th><th>Seguro/Ideal</th><th>Aceptable</th><th>Riesgo</th><th>Trampa</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Dividend Yield</td><td class="dt-buy">2–5%</td><td class="dt-hold">1–2% o 5–7%</td><td class="dt-no">&gt; 7%</td><td class="dt-no">&gt; 8% (suele ser trampa)</td></tr>
+          <tr><td class="rt-label">EPS Payout Ratio</td><td class="dt-buy">&lt; 60%</td><td class="dt-hold">60–75%</td><td class="dt-no">75–90%</td><td class="dt-no">&gt; 90% (insostenible)</td></tr>
+          <tr><td class="rt-label">FCF Payout Ratio</td><td class="dt-buy">&lt; 50%</td><td class="dt-hold">50–70%</td><td class="dt-no">70–90%</td><td class="dt-no">&gt; 100% (paga más que genera)</td></tr>
+          <tr><td class="rt-label">Dividend Coverage</td><td class="dt-buy">&gt; 2x</td><td class="dt-hold">1.5–2x</td><td class="dt-no">1.1–1.5x</td><td class="dt-no">&lt; 1x (destruye capital)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · Chowder Rule y Dividend CAGR — ¿El dividendo crece satisfactoriamente?</div><div class="metric-slug">chowder_rule · chowder_rule_fwd · div_share_cagr_3y · div_share_cagr_5y · div_share_cagr_7y · div_share_cagr_10y · div_share_growth</div></div>
+      <span class="metric-cat-tag" style="background:#fef4ec;color:#8b3a00">DIVIDENDOS</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Chowder Rule:</strong> = Dividend Yield actual + Dividend CAGR 5 años. Si la suma supera 12 para empresas con yield &lt; 3%, o supera 8 para empresas con yield ≥ 3%, la empresa pasa el test. Es un criterio rápido desarrollado por el blogger "Chowder" para el dividend growth investing.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        Chowder Number = Dividend Yield + Dividend CAGR 5y
+        <br>✓ Si Yield &lt; 3%: Chowder ≥ 12 = pasa
+        <br>✓ Si Yield ≥ 3%: Chowder ≥ 8 = pasa
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Dividend CAGR 5y</th><th>Calificación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 10%</td><td class="dt-buy">Crecimiento excepcional — duplica el dividendo en ~7 años</td></tr>
+          <tr class="range-bueno"><td class="rt-val">7–10%</td><td class="dt-buy">Crecimiento sólido</td></tr>
+          <tr class="range-ok"><td class="rt-val">5–7%</td><td class="dt-hold">Crecimiento moderado, por encima de inflación</td></tr>
+          <tr class="range-alerta"><td class="rt-val">3–5%</td><td class="dt-hold">Crecimiento lento, apenas supera inflación</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 3% o negativo</td><td class="dt-no">Congelado o reduciendo — señal de problemas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · Dividend Streak — La prueba del compromiso histórico</div><div class="metric-slug">div_payment_streak · div_growth_streak · last_div_announced_date · div_frequency</div></div>
+      <span class="metric-cat-tag" style="background:#fef4ec;color:#8b3a00">DIVIDENDOS</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>Dividend Streak</strong> mide cuántos años consecutivos la empresa ha pagado (Payment Streak) o incrementado (Growth Streak) su dividendo sin interrupción. Un historial largo demuestra compromiso y capacidad financiera durante múltiples ciclos económicos, guerras, crisis y recesiones.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Growth Streak</th><th>Categoría</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 25 años</td><td>Dividend Aristocrat (S&P 500)</td><td class="dt-buy">Máxima fiabilidad histórica</td></tr>
+          <tr class="range-bueno"><td class="rt-val">10–25 años</td><td>Dividend Achiever</td><td class="dt-buy">Muy confiable</td></tr>
+          <tr class="range-ok"><td class="rt-val">5–10 años</td><td>Historial establecido</td><td class="dt-hold">Aceptable, vigilar</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1–5 años</td><td>Historial corto</td><td class="dt-hold">Poco historial para confiar</td></tr>
+          <tr class="range-critico"><td class="rt-val">Recortó recientemente</td><td>Rompió el streak</td><td class="dt-no">Señal de estrés financiero grave — precio suele caer 20–40%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ M7: EFICIENCIA ════════ -->
+<div class="chapter" id="m7">
+  <div class="chapter-kicker">Módulo 7 · 123 métricas · Peso: 5%</div>
+  <h2>Eficiencia Operativa: ¿usa bien sus recursos?</h2>
+  <p class="chapter-intro">La eficiencia operativa mide cómo de bien convierte la empresa sus activos y su capital humano en ventas y beneficios. Una empresa muy eficiente puede superar a competidores más grandes con menos recursos.</p>
+
+  <div class="module-badge" style="background:#edfafa;border-color:#0e9090;color:#0a5b5b">⚙️ MÓDULO 7 — 5 Decisiones · Indicadores de calidad operativa</div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · Cash Conversion Cycle (CCC) — El ciclo de conversión de caja</div><div class="metric-slug">cash_conversion_cycle · days_sales_out · days_inventory_out · days_payables_out</div></div>
+      <span class="metric-cat-tag" style="background:#edfafa;color:#0a5b5b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El <strong>CCC</strong> mide cuántos días tarda la empresa en convertir su inversión en inventario en efectivo recibido. Un CCC negativo significa que la empresa cobra a sus clientes antes de tener que pagar a sus proveedores — una ventaja estructural enorme (el modelo Amazon/Costco).</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        CCC = DSO + DIO − DPO
+        <br>DSO (Days Sales Outstanding) = Cobros pendientes / (Ventas / 365)
+        <br>DIO (Days Inventory Outstanding) = Inventario / (COGS / 365)
+        <br>DPO (Days Payables Outstanding) = Cuentas por pagar / (COGS / 365)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>CCC</th><th>Señal</th><th>Quién lo logra</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&lt; 0 días (negativo)</td><td class="dt-buy">Ventaja estructural máxima</td><td>Amazon, Costco, Apple (negocio software)</td></tr>
+          <tr class="range-bueno"><td class="rt-val">0–20 días</td><td class="dt-buy">Muy eficiente</td><td>Retail moderno, SaaS (suscripciones)</td></tr>
+          <tr class="range-ok"><td class="rt-val">20–50 días</td><td class="dt-hold">Eficiencia normal</td><td>Manufactura, distribución</td></tr>
+          <tr class="range-alerta"><td class="rt-val">50–90 días</td><td class="dt-hold">Eficiencia moderada-baja</td><td>Industria, construcción</td></tr>
+          <tr class="range-critico"><td class="rt-val">&gt; 90 días</td><td class="dt-no">Ineficiente</td><td>Puede indicar problemas de cobro o exceso de inventario</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-key">
+        <div class="callout-label">🔑 Analiza la tendencia, no solo el número</div>
+        <p>Si el DSO está aumentando (tarda más en cobrar) sin cambio en las condiciones de crédito a clientes, puede indicar problemas de cobro o relajación de criterios de venta. Si el DIO aumenta (más inventario sin vender), puede indicar problemas de demanda. Si el DPO cae (paga antes a proveedores), puede estar perdiendo poder de negociación.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · Asset Turnover — ¿Cuánto vende por cada euro de activo?</div><div class="metric-slug">asset_turns · fixed_asset_turnover · inventory_turnover · receivables_turnover</div></div>
+      <span class="metric-cat-tag" style="background:#edfafa;color:#0a5b5b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Asset Turnover:</strong> Ventas divididas entre activos totales promedio. Mide cuántos euros de ingresos genera la empresa por cada euro de activo que posee. Varía enormemente por sector — el retail tiene ratios altos, las utilities muy bajos.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Sector</th><th>Asset Turnover típico</th><th>Señal positiva</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">Software / Servicios</td><td class="dt-buy">&gt; 0.8x</td><td>Capital-light por naturaleza</td></tr>
+          <tr><td class="rt-label">Retail / Distribución</td><td class="dt-buy">&gt; 1.5x</td><td>Negocio de volumen, baja inversión en activo</td></tr>
+          <tr><td class="rt-label">Manufactura</td><td class="dt-hold">0.5–1.0x</td><td>Normal para el sector</td></tr>
+          <tr><td class="rt-label">Utilities / Energía</td><td class="dt-hold">0.2–0.5x</td><td>Negocio capital-intensivo estructural</td></tr>
+          <tr><td class="rt-label">Bancos</td><td class="dt-hold">0.05–0.15x</td><td>No aplica el ratio estándar</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · Rule of 40 — El benchmark de las empresas SaaS</div><div class="metric-slug">rule_of_40 · ebitda_margin · total_rev_growth</div></div>
+      <span class="metric-cat-tag" style="background:#edfafa;color:#0a5b5b">EFICIENCIA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">La <strong>Rule of 40</strong> es el estándar de la industria de software y SaaS para evaluar si una empresa equilibra adecuadamente el crecimiento con la rentabilidad. Si la empresa crece rápido sacrificando mucha rentabilidad (o viceversa), la Rule of 40 lo penaliza.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmula</div>
+        Rule of 40 = Revenue Growth (%) + EBITDA Margin (%)
+        <br>Ejemplo: Crece al 25% con Margen EBITDA del 20% → Rule of 40 = 45 ✓
+        <br>Ejemplo: Crece al 5% con Margen EBITDA del 30% → Rule of 40 = 35 ✗ (para SaaS)
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Rule of 40</th><th>Para SaaS/Tech de crecimiento</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 60</td><td class="dt-buy">Empresas top-tier (Snowflake fase temprana, Datadog)</td></tr>
+          <tr class="range-bueno"><td class="rt-val">40–60</td><td class="dt-buy">Bueno — supera el benchmark</td></tr>
+          <tr class="range-alerta"><td class="rt-val">25–40</td><td class="dt-hold">Por debajo del ideal para SaaS</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 25</td><td class="dt-no">Ni crece mucho ni es rentable — problema serio</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:.83rem;color:var(--ink3);margin-top:10px">La Rule of 40 solo aplica para empresas de software, SaaS y tecnología de alto crecimiento. Para empresas maduras, industriales o de consumo, no tiene relevancia.</p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ M8: FCF ════════ -->
+<div class="chapter" id="m8">
+  <div class="chapter-kicker">Módulo 8 · 48 métricas · Peso: 15%</div>
+  <h2>Flujo de Caja: ¿genera efectivo real o solo beneficios contables?</h2>
+  <p class="chapter-intro">El flujo de caja es el número más honesto de las finanzas. Mientras que el beneficio puede manipularse con técnicas contables, el efectivo en caja es mucho más difícil de falsificar. Warren Buffett siempre ha dicho que mira el cash flow libre antes que el EPS.</p>
+
+  <div class="module-badge" style="background:#e8f3ff;border-color:#58a6ff;color:#1a3a6b">💧 MÓDULO 8 — 5 Decisiones · Peso: 15% del score total</div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 1 · FCF y FCF/NI — La verdad del flujo de caja</div><div class="metric-slug">fcf_levered · fcf_levered_margin · fcf_to_ni · fcf_to_ocf · fcf_yield_ltm · fcf_yield_avg_5y</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">FLUJO DE CAJA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>FCF Levered (Free Cash Flow):</strong> Flujo de Caja Operativo menos CapEx. Representa el dinero que la empresa genera y del que puede disponer libremente: pagar dividendos, recomprar acciones, reducir deuda o hacer adquisiciones.</p>
+      <div class="metric-formula">
+        <div class="metric-formula-label">Fórmulas clave</div>
+        FCF Levered = Flujo Operativo − CapEx
+        <br>FCF Margin = FCF / Ventas × 100
+        <br>FCF/NI = FCF / Beneficio Neto (calidad de beneficios)
+        <br>FCF Yield = FCF / Market Cap × 100
+      </div>
+      <table class="ranges-table">
+        <thead><tr><th>Métrica</th><th>Excelente</th><th>Bueno</th><th>Aceptable</th><th>Alerta</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">FCF Margin</td><td class="dt-buy">&gt; 20%</td><td class="dt-buy">15–20%</td><td class="dt-hold">8–15%</td><td class="dt-no">&lt; 5%</td></tr>
+          <tr><td class="rt-label">FCF/NI ratio</td><td class="dt-buy">&gt; 1.2x</td><td class="dt-buy">0.9–1.2x</td><td class="dt-hold">0.7–0.9x</td><td class="dt-no">&lt; 0.7x</td></tr>
+          <tr><td class="rt-label">FCF Yield</td><td class="dt-buy">&gt; 7%</td><td class="dt-buy">4–7%</td><td class="dt-hold">2–4%</td><td class="dt-no">&lt; 1.5%</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-warn">
+        <div class="callout-label">⚠️ FCF negativo — ¿cuándo no es una alarma?</div>
+        <p>FCF negativo puede ser temporal y positivo si se debe a CapEx de crecimiento (construir nueva fábrica, inversión en expansión). El problema es el FCF negativo estructural. Para distinguirlo: mira si el CapEx es mucho mayor que en años anteriores (señal de inversión de crecimiento) y si el Revenue crece paralelamente. Si ni el Revenue crece ni hay justificación clara para el CapEx elevado, es una señal de alarma real.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 2 · OCF vs CapEx — ¿El negocio se autofinancia?</div><div class="metric-slug">cash_from_operations · cash_from_operations_margin · cash_from_operations_cagr_5y · capex · capex_margin · capex_margin_avg_5y</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">FLUJO DE CAJA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def"><strong>Operating Cash Flow (OCF):</strong> Efectivo generado por las operaciones del negocio. Incluye el efecto de los cambios en capital circulante (cobros, pagos, inventario). <strong>CapEx:</strong> Dinero invertido en activos de capital (maquinaria, edificios, tecnología, infraestructura).</p>
+      <table class="ranges-table">
+        <thead><tr><th>OCF / CapEx</th><th>Señal</th><th>Interpretación</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 5x</td><td class="dt-buy">Negocio capital-light excepcional</td><td>Genera 5 veces más caja de la que invierte</td></tr>
+          <tr class="range-bueno"><td class="rt-val">3–5x</td><td class="dt-buy">Capital-light muy bueno</td><td>Alto FCF generation</td></tr>
+          <tr class="range-ok"><td class="rt-val">2–3x</td><td class="dt-hold">Capital moderado</td><td>Normal en muchos sectores</td></tr>
+          <tr class="range-alerta"><td class="rt-val">1–2x</td><td class="dt-hold">Capital-intensivo</td><td>Poco margen para dividendos/recompras</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 1x</td><td class="dt-no">OCF no cubre CapEx</td><td>Necesita financiación externa para mantener el negocio</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Decisión 3 · CAPEX Intensity — ¿Capital-light o capital-intensivo?</div><div class="metric-slug">capex · capex_margin · capex_coverage · ebitda_less_capex · ebitda_less_capex_margin · ebitda_less_3y_avg_capex_margin</div></div>
+      <span class="metric-cat-tag" style="background:#e8f3ff;color:#1a3a6b">FLUJO DE CAJA</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">La intensidad del CapEx determina cuánto del EBITDA se "consume" en inversiones necesarias para mantener y crecer el negocio. La métrica <strong>EBITDA − CapEx</strong> representa el cash disponible real después de inversiones. Negocios capital-light (software, marcas, servicios) tienen EBITDA − CapEx muy similar al EBITDA.</p>
+      <table class="ranges-table">
+        <thead><tr><th>(EBITDA − CapEx) / EBITDA</th><th>Tipo de negocio</th><th>Señal</th></tr></thead>
+        <tbody>
+          <tr class="range-excelente"><td class="rt-val">&gt; 85%</td><td>Capital-light puro (software, marcas)</td><td class="dt-buy">El CapEx es mínimo relativo al EBITDA</td></tr>
+          <tr class="range-bueno"><td class="rt-val">70–85%</td><td>Capital-light</td><td class="dt-buy">Muy buen negocio</td></tr>
+          <tr class="range-ok"><td class="rt-val">50–70%</td><td>Capital moderado</td><td class="dt-hold">Normal en manufactura moderna</td></tr>
+          <tr class="range-alerta"><td class="rt-val">30–50%</td><td>Capital-intensivo</td><td class="dt-hold">El CapEx consume gran parte del EBITDA</td></tr>
+          <tr class="range-critico"><td class="rt-val">&lt; 30%</td><td>Capital-intensivo extremo</td><td class="dt-no">Utilities, infraestructura, telcos pesadas</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ M9-M11 SUMMARY ════════ -->
+<div class="chapter" id="m9">
+  <div class="chapter-kicker">Módulo 9 · 154 métricas · Peso: 5%</div>
+  <h2>Pronósticos y Consenso</h2>
+  <p class="chapter-intro">Las métricas de pronóstico reflejan las expectativas colectivas del mercado profesional. No son verdades absolutas, pero el consenso mueve los precios a corto plazo.</p>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">EPS y Revenue Forecast — Las expectativas del consenso</div><div class="metric-slug">eps_proj · eps_proj_mean_raw · revenue_proj · ebitda_proj · analyst_pos_eps_revisions_ratio_90d · eps_proj_cagr_5y</div></div>
+      <span class="metric-cat-tag" style="background:#fdf8ec;color:#8b6200">PRONÓSTICO</span>
+    </div>
+    <div class="metric-body">
+      <p class="metric-def">El consenso de analistas proyecta EPS, Revenue y EBITDA futuros. Lo más importante no es el número absoluto sino las <strong>revisiones</strong>: si los analistas suben sus estimaciones de forma sistemática, el precio suele seguirles.</p>
+      <table class="ranges-table">
+        <thead><tr><th>Métrica</th><th>Señal positiva</th><th>Señal negativa</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">EPS Forecast vs EPS actual</td><td class="dt-buy">EPS Proj &gt; EPS actual</td><td class="dt-no">EPS Proj &lt; EPS actual (deterioro)</td></tr>
+          <tr><td class="rt-label">Revisiones 90d (ratio pos.)</td><td class="dt-buy">&gt; 0.60 positivo</td><td class="dt-no">&lt; 0.40 deterioro</td></tr>
+          <tr><td class="rt-label">EPS CAGR proyectado 5y</td><td class="dt-buy">&gt; 10%</td><td class="dt-no">&lt; 5%</td></tr>
+          <tr><td class="rt-label">Dispersión del consenso (stdev)</td><td class="dt-buy">Baja (acuerdo)</td><td class="dt-hold">Alta (incertidumbre)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="chapter" id="m10">
+  <div class="chapter-kicker">Módulo 10 · 84 métricas</div>
+  <h2>Métricas Sectoriales Específicas</h2>
+  <p class="chapter-intro">Solo aplica si la empresa es un banco, aseguradora, REIT o ETF. Estas entidades tienen métricas propias que sustituyen a los ratios estándar.</p>
+
+  <div class="cmp-grid">
+    <div class="cmp-card" style="border-top-color:var(--blue2)">
+      <h4 style="color:var(--blue)">🏦 BANCOS — Métricas clave</h4>
+      <ul>
+        <li><strong>NIM (Net Interest Margin):</strong> Margen de tipos. &gt;3% = excelente, &lt;1.5% = comprimido</li>
+        <li><strong>NPL Ratio:</strong> Créditos dudosos / Total créditos. &lt;2% = sano, &gt;5% = estrés</li>
+        <li><strong>CET1 Capital Ratio:</strong> Capital de calidad / Activos ponderados. &gt;12% = robusto</li>
+        <li><strong>ROA bancario:</strong> &gt;1% = excelente, 0.5-1% = normal, &lt;0.5% = débil</li>
+        <li><strong>Cost-to-Income Ratio:</strong> &lt;50% = eficiente, &gt;70% = ineficiente</li>
+      </ul>
+    </div>
+    <div class="cmp-card" style="border-top-color:var(--teal2)">
+      <h4 style="color:var(--teal)">🛡️ SEGUROS — Métricas clave</h4>
+      <ul>
+        <li><strong>Combined Ratio:</strong> (Siniestros + Gastos) / Primas. &lt;95% = excelente, &gt;105% = pérdidas</li>
+        <li><strong>Loss Ratio:</strong> Siniestros / Primas. &lt;65% = bueno</li>
+        <li><strong>Expense Ratio:</strong> Gastos / Primas. &lt;30% = eficiente</li>
+        <li><strong>Float:</strong> Primas cobradas no siniestradas — fuente de inversión gratuita</li>
+      </ul>
+    </div>
+    <div class="cmp-card" style="border-top-color:var(--gold2)">
+      <h4 style="color:var(--gold)">🏢 REITs — Métricas clave</h4>
+      <ul>
+        <li><strong>FFO:</strong> Funds From Operations. El "beneficio real" del REIT</li>
+        <li><strong>AFFO:</strong> Adjusted FFO − CapEx mantenimiento. Más conservador</li>
+        <li><strong>AFFO Payout Ratio:</strong> &lt;85% = sostenible, &gt;100% = insostenible</li>
+        <li><strong>P/FFO y P/AFFO:</strong> &lt;15x = barato, &gt;25x = caro</li>
+        <li><strong>NAV (Net Asset Value):</strong> Valor de los inmuebles menos deuda</li>
+      </ul>
+    </div>
+    <div class="cmp-card" style="border-top-color:var(--risk2)">
+      <h4 style="color:var(--risk)">📊 ETFs — Métricas clave</h4>
+      <ul>
+        <li><strong>Expense Ratio:</strong> &lt;0.1% = excelente, &lt;0.3% = bueno, &gt;1% = caro</li>
+        <li><strong>Tracking Error:</strong> Desviación vs índice. Cuanto menor, mejor</li>
+        <li><strong>AUM y volumen:</strong> Fondos grandes = mejor liquidez</li>
+        <li><strong>Gestión activa vs pasiva:</strong> La mayoría de activos no baten al índice</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="chapter" id="m11">
+  <div class="chapter-kicker">Módulo 11 · 35 métricas · Peso: 2%</div>
+  <h2>Salud Financiera y Análisis Técnico Complementario</h2>
+
+  <div class="metric-block">
+    <div class="metric-block-header">
+      <div><div class="metric-name">Financial Health Scores, RSI y Medias Móviles</div><div class="metric-slug">fin_health_overall_score · rsi_14d · asset_price_pct_avg_200d · asset_price_pct_avg_50d · fin_health_price_momentum_score</div></div>
+      <span class="metric-cat-tag" style="background:#edfafa;color:#0a5b5b">TÉCNICO · SALUD</span>
+    </div>
+    <div class="metric-body">
+      <table class="ranges-table">
+        <thead><tr><th>Métrica</th><th>Señal positiva</th><th>Señal negativa</th><th>Uso</th></tr></thead>
+        <tbody>
+          <tr><td class="rt-label">RSI 14d</td><td class="dt-buy">40–65 (zona normal)</td><td class="dt-no">&gt;80 sobrecompra / &lt;25 extremo</td><td>Timing de entrada</td></tr>
+          <tr><td class="rt-label">Price % of MA200</td><td class="dt-buy">&gt;100% (sobre MA200)</td><td class="dt-no">&lt;80% (muy por debajo)</td><td>Tendencia de largo plazo</td></tr>
+          <tr><td class="rt-label">Price % of MA50</td><td class="dt-buy">&gt;100%</td><td class="dt-no">&lt;90%</td><td>Tendencia de medio plazo</td></tr>
+          <tr><td class="rt-label">Health Overall Score</td><td class="dt-buy">Grade A o B</td><td class="dt-no">Grade D o F</td><td>Primer filtro rápido</td></tr>
+          <tr><td class="rt-label">Price Momentum Score</td><td class="dt-buy">&gt; 3/5 o Grade B+</td><td class="dt-no">&lt; 2/5 o Grade D</td><td>Confirmar tendencia</td></tr>
+        </tbody>
+      </table>
+      <div class="callout c-hold">
+        <div class="callout-label">🟡 El análisis técnico es secundario al fundamental</div>
+        <p>Usa el análisis técnico únicamente para el timing de entrada — nunca para decidir si comprar o no. Una empresa con fundamentales excelentes pero RSI en 75 puede esperar a que corrija hasta RSI 50-60 para entrar con mejor precio. Una empresa con fundamentales pobres no se compra aunque el RSI sea 25.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ DECISIÓN FINAL ════════ -->
+<div class="chapter" id="decision">
+  <div class="chapter-kicker">Fase Final · Consolidación y Decisión</div>
+  <h2>La Decisión Final: Comprar, Mantener o No Comprar</h2>
+  <p class="chapter-intro">Una vez completados los módulos relevantes, consolida los resultados. El sistema usa pesos diferenciados por módulo y tiene dos tipos de vetos: vetos absolutos (descalifican directamente) y vetos relativos (penalizan el score total). La decisión final también debe considerar el contexto macro y tu perfil inversor.</p>
+
+  <div class="quick-ref">
+    <div class="qr-title">🎯 Tabla de Decisión Rápida</div>
+    <div class="qr-grid">
+      <div class="qr-col qr-buy">
+        <h4>🟢 COMPRAR</h4>
+        <div class="qr-item"><strong>Score Total ≥ 70%</strong></div>
+        <div class="qr-item"><strong>Sin ningún veto activo</strong></div>
+        <div class="qr-item">Fair Value Upside &gt; 15%</div>
+        <div class="qr-item">FCF Yield &gt; 4%</div>
+        <div class="qr-item">Altman Z &gt; 2.5</div>
+        <div class="qr-item">Beneish M &lt; -1.78</div>
+        <div class="qr-item">ROIC &gt; WACC</div>
+        <div class="qr-item">Revenue CAGR 5y &gt; 5%</div>
+        <div class="qr-item">Piotroski ≥ 7</div>
+        <div class="qr-item">Net D/EBITDA &lt; 3x</div>
+      </div>
+      <div class="qr-col qr-hold">
+        <h4>🟡 MANTENER / WATCHLIST</h4>
+        <div class="qr-item"><strong>Score Total 50–70%</strong></div>
+        <div class="qr-item">Empresa buena, precio no óptimo</div>
+        <div class="qr-item">Fair Value Upside 5–15%</div>
+        <div class="qr-item">FCF Yield 2–4%</div>
+        <div class="qr-item">Algún módulo con señales mixtas</div>
+        <div class="qr-item">ROIC ≈ WACC</div>
+        <div class="qr-item">Revisiones de analistas neutras</div>
+        <div class="qr-item">→ Añadir a watchlist y esperar</div>
+        <div class="qr-item">→ Reevaluar en próximo reporte</div>
+        <div class="qr-item">→ Esperar pullback del 10–15%</div>
+      </div>
+      <div class="qr-col qr-no">
+        <h4>🔴 NO COMPRAR</h4>
+        <div class="qr-item"><strong>Score Total &lt; 50%</strong></div>
+        <div class="qr-item"><strong>O cualquier veto activo:</strong></div>
+        <div class="qr-item">Altman Z &lt; 1.81</div>
+        <div class="qr-item">Beneish M &gt; -1.78</div>
+        <div class="qr-item">Current Ratio &lt; 0.8</div>
+        <div class="qr-item">Net D/EBITDA &gt; 6x + OCF neg.</div>
+        <div class="qr-item">Fair Value Downside &gt; 20%</div>
+        <div class="qr-item">FCF negativo sistemático</div>
+        <div class="qr-item">Restatements graves</div>
+        <div class="qr-item">Revisiones en caída sistemática</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="font-family:var(--f-serif);font-size:1.15rem;margin:32px 0 16px">Checklist Final de Verificación</h3>
+  <ul class="chklist">
+    <li><span class="chi chi-g">1</span>¿Superó el M0 Filtro Inicial sin vetos? (Beneish, restatements, sector correcto)</li>
+    <li><span class="chi chi-g">2</span>¿Tiene ROIC consistentemente &gt; WACC en los últimos 5 años? (M1)</li>
+    <li><span class="chi chi-g">3</span>¿Revenue y EPS CAGR 5y son positivos y el EPS crece igual o más que el Revenue? (M2)</li>
+    <li><span class="chi chi-r">4</span>¿El Altman Z-Score supera 2.5 y el Net Debt/EBITDA está por debajo de 3x? (M3 — veto)</li>
+    <li><span class="chi chi-r">5</span>¿El Current Ratio supera 1.2 y el NWC es positivo? (M4 — veto)</li>
+    <li><span class="chi chi-g">6</span>¿El Fair Value Upside supera el 15% o el PER está por debajo de su media histórica? (M5)</li>
+    <li><span class="chi chi-g">7</span>¿Si paga dividendo: el Payout FCF &lt; 65% y el Chowder Rule &gt; 8? (M6)</li>
+    <li><span class="chi chi-g">8</span>¿El FCF es positivo, creciente y el FCF/NI &gt; 0.85? (M8)</li>
+    <li><span class="chi chi-g">9</span>¿Las revisiones de analistas son positivas (&gt; 60% al alza en 90 días)? (M9)</li>
+    <li><span class="chi chi-y">10</span>¿El precio está en zona razonable según RSI y medias móviles (para el timing)? (M11)</li>
+  </ul>
+
+  <div class="callout c-key">
+    <div class="callout-label">🔑 Regla de oro final</div>
+    <p>Si una empresa pasa los módulos M1, M3 y M5 (rentabilidad, riesgo y valoración), ya tienes el 60% de la información más relevante. Los demás módulos refinan la decisión pero no la determinan. <strong>Nunca compres algo que no entiendas completamente aunque los números parezcan perfectos.</strong> El análisis cuantitativo del diagrama siempre debe complementarse con la comprensión cualitativa del modelo de negocio, la industria y el equipo directivo.</p>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ════════ QUICK REFERENCE ════════ -->
+<div class="chapter" id="quickref">
+  <div class="chapter-kicker">Referencia Rápida</div>
+  <h2>Todos los umbrales en una sola tabla</h2>
+  <p class="chapter-intro">Imprime esta página y ténalay junto al diagrama. Contiene los umbrales más importantes de cada módulo para consulta rápida durante el análisis.</p>
+
+  <table class="decision-table">
+    <thead><tr><th>Métrica</th><th>Slug</th><th>✓ Compra</th><th>⚠️ Neutral</th><th>✗ Evitar</th><th>Módulo</th></tr></thead>
+    <tbody>
+      <tr><td>Beneish M-Score</td><td class="dt-metric">beneish_mscore</td><td class="dt-buy">&lt; -2.22</td><td class="dt-hold">-2.22 a -1.78</td><td class="dt-no">&gt; -1.78 🚨</td><td>M0</td></tr>
+      <tr><td>Financial Health Score</td><td class="dt-metric">fin_health_overall_score</td><td class="dt-buy">A o B</td><td class="dt-hold">C</td><td class="dt-no">D o F</td><td>M0</td></tr>
+      <tr><td>ROIC</td><td class="dt-metric">roic</td><td class="dt-buy">&gt; 15%</td><td class="dt-hold">10-15%</td><td class="dt-no">&lt; WACC</td><td>M1</td></tr>
+      <tr><td>WACC</td><td class="dt-metric">wacc</td><td class="dt-buy">ROIC &gt; WACC</td><td class="dt-hold">ROIC ≈ WACC</td><td class="dt-no">ROIC &lt; WACC</td><td>M1</td></tr>
+      <tr><td>ROE</td><td class="dt-metric">roe</td><td class="dt-buy">&gt; 15%</td><td class="dt-hold">10-15%</td><td class="dt-no">&lt; 8%</td><td>M1</td></tr>
+      <tr><td>ROA</td><td class="dt-metric">roa</td><td class="dt-buy">&gt; 7%</td><td class="dt-hold">4-7%</td><td class="dt-no">&lt; 3%</td><td>M1</td></tr>
+      <tr><td>Margen EBITDA</td><td class="dt-metric">ebitda_margin</td><td class="dt-buy">&gt; 20%</td><td class="dt-hold">10-20%</td><td class="dt-no">&lt; 8%</td><td>M1</td></tr>
+      <tr><td>Margen Neto</td><td class="dt-metric">ni_margin</td><td class="dt-buy">&gt; 12%</td><td class="dt-hold">6-12%</td><td class="dt-no">&lt; 3%</td><td>M1</td></tr>
+      <tr><td>Piotroski F-Score</td><td class="dt-metric">piotroski_score</td><td class="dt-buy">8-9</td><td class="dt-hold">5-7</td><td class="dt-no">&lt; 4</td><td>M1</td></tr>
+      <tr><td>FCF/NI</td><td class="dt-metric">fcf_to_ni</td><td class="dt-buy">&gt; 1.0x</td><td class="dt-hold">0.7-1.0x</td><td class="dt-no">&lt; 0.7x</td><td>M1/M8</td></tr>
+      <tr><td>Revenue CAGR 5y</td><td class="dt-metric">total_rev_cagr_5y</td><td class="dt-buy">&gt; 10%</td><td class="dt-hold">5-10%</td><td class="dt-no">&lt; 0%</td><td>M2</td></tr>
+      <tr><td>EPS CAGR 5y</td><td class="dt-metric">eps_diluted_cagr_5y</td><td class="dt-buy">&gt; Rev CAGR</td><td class="dt-hold">≈ Rev CAGR</td><td class="dt-no">&lt;&lt; Rev CAGR</td><td>M2</td></tr>
+      <tr><td>EBITDA CAGR 5y</td><td class="dt-metric">ebitda_cagr_5y</td><td class="dt-buy">&gt; 12%</td><td class="dt-hold">6-12%</td><td class="dt-no">&lt; 3%</td><td>M2</td></tr>
+      <tr><td>Revisiones EPS +90d</td><td class="dt-metric">analyst_pos_eps_revisions_ratio_90d</td><td class="dt-buy">&gt; 0.65</td><td class="dt-hold">0.40-0.65</td><td class="dt-no">&lt; 0.40</td><td>M2</td></tr>
+      <tr><td>Altman Z-Score</td><td class="dt-metric">altman_z_score</td><td class="dt-buy">&gt; 3.0</td><td class="dt-hold">1.81-3.0</td><td class="dt-no">&lt; 1.81 🚨</td><td>M3</td></tr>
+      <tr><td>Net Debt / EBITDA</td><td class="dt-metric">net_debt_to_ebitda</td><td class="dt-buy">&lt; 1.5x</td><td class="dt-hold">1.5-3x</td><td class="dt-no">&gt; 5x 🚨</td><td>M3</td></tr>
+      <tr><td>Debt / Equity</td><td class="dt-metric">debt_to_equity</td><td class="dt-buy">&lt; 0.5x</td><td class="dt-hold">0.5-1.5x</td><td class="dt-no">&gt; 3x</td><td>M3</td></tr>
+      <tr><td>Interest Coverage</td><td class="dt-metric">interest_coverage</td><td class="dt-buy">&gt; 6x</td><td class="dt-hold">3-6x</td><td class="dt-no">&lt; 2x 🚨</td><td>M3</td></tr>
+      <tr><td>Beta 5y</td><td class="dt-metric">beta</td><td class="dt-buy">0.6-1.1</td><td class="dt-hold">1.1-1.5</td><td class="dt-no">&gt; 2.0</td><td>M3</td></tr>
+      <tr><td>Current Ratio</td><td class="dt-metric">current_ratio</td><td class="dt-buy">&gt; 2.0x</td><td class="dt-hold">1.2-2.0x</td><td class="dt-no">&lt; 0.8x 🚨</td><td>M4</td></tr>
+      <tr><td>Quick Ratio</td><td class="dt-metric">quick_ratio</td><td class="dt-buy">&gt; 1.2x</td><td class="dt-hold">0.7-1.2x</td><td class="dt-no">&lt; 0.5x</td><td>M4</td></tr>
+      <tr><td>PER Forward</td><td class="dt-metric">pe_fwd</td><td class="dt-buy">&lt; 15x (gral)</td><td class="dt-hold">15-25x</td><td class="dt-no">&gt; 2× sect. avg</td><td>M5</td></tr>
+      <tr><td>PEG Fwd</td><td class="dt-metric">peg_fwd</td><td class="dt-buy">&lt; 1.0x</td><td class="dt-hold">1.0-1.5x</td><td class="dt-no">&gt; 2.5x</td><td>M5</td></tr>
+      <tr><td>EV/EBITDA</td><td class="dt-metric">ev_to_ebitda_ltm</td><td class="dt-buy">&lt; 10x (gral)</td><td class="dt-hold">10-18x</td><td class="dt-no">&gt; 30x</td><td>M5</td></tr>
+      <tr><td>Fair Value Upside</td><td class="dt-metric">fair_value_upside</td><td class="dt-buy">&gt; 20%</td><td class="dt-hold">5-20%</td><td class="dt-no">&lt; 0%</td><td>M5</td></tr>
+      <tr><td>FCF Yield</td><td class="dt-metric">fcf_yield_ltm</td><td class="dt-buy">&gt; 6%</td><td class="dt-hold">3-6%</td><td class="dt-no">&lt; 1.5%</td><td>M5/M8</td></tr>
+      <tr><td>Shareholder Yield</td><td class="dt-metric">shareholder_yield</td><td class="dt-buy">&gt; 6%</td><td class="dt-hold">3-6%</td><td class="dt-no">&lt; 1%</td><td>M5</td></tr>
+      <tr><td>Shares CAGR 5y</td><td class="dt-metric">shares_out_cagr_5y</td><td class="dt-buy">&lt; 0% (recompras)</td><td class="dt-hold">0-2%</td><td class="dt-no">&gt; 3%</td><td>M5</td></tr>
+      <tr><td>Dividend Yield</td><td class="dt-metric">div_yield</td><td class="dt-buy">2-5%</td><td class="dt-hold">1-2%</td><td class="dt-no">&gt; 8% (trampa)</td><td>M6</td></tr>
+      <tr><td>FCF Payout Ratio</td><td class="dt-metric">fcf_payout_ratio</td><td class="dt-buy">&lt; 55%</td><td class="dt-hold">55-75%</td><td class="dt-no">&gt; 90%</td><td>M6</td></tr>
+      <tr><td>Chowder Rule</td><td class="dt-metric">chowder_rule</td><td class="dt-buy">&gt; 12</td><td class="dt-hold">8-12</td><td class="dt-no">&lt; 6</td><td>M6</td></tr>
+      <tr><td>Div. Growth Streak</td><td class="dt-metric">div_growth_streak</td><td class="dt-buy">&gt; 10 años</td><td class="dt-hold">5-10 años</td><td class="dt-no">Recortó reciente</td><td>M6</td></tr>
+      <tr><td>Cash Conv. Cycle</td><td class="dt-metric">cash_conversion_cycle</td><td class="dt-buy">&lt; 15 días o neg.</td><td class="dt-hold">15-60 días</td><td class="dt-no">&gt; 90 días</td><td>M7</td></tr>
+      <tr><td>Asset Turnover</td><td class="dt-metric">asset_turns</td><td class="dt-buy">&gt; 0.8x (gral.)</td><td class="dt-hold">0.4-0.8x</td><td class="dt-no">&lt; 0.3x</td><td>M7</td></tr>
+      <tr><td>Rule of 40</td><td class="dt-metric">rule_of_40</td><td class="dt-buy">&gt; 40 (SaaS)</td><td class="dt-hold">25-40</td><td class="dt-no">&lt; 20</td><td>M7</td></tr>
+      <tr><td>FCF Levered</td><td class="dt-metric">fcf_levered</td><td class="dt-buy">Positivo y creciendo</td><td class="dt-hold">Positivo estable</td><td class="dt-no">Negativo sistemático</td><td>M8</td></tr>
+      <tr><td>FCF Margin</td><td class="dt-metric">fcf_levered_margin</td><td class="dt-buy">&gt; 15%</td><td class="dt-hold">8-15%</td><td class="dt-no">&lt; 3%</td><td>M8</td></tr>
+      <tr><td>Owner Earnings</td><td class="dt-metric">owner_earnings</td><td class="dt-buy">Positivos y crecientes</td><td class="dt-hold">Positivos estables</td><td class="dt-no">Negativos</td><td>M8</td></tr>
+      <tr><td>RSI 14d</td><td class="dt-metric">rsi_14d</td><td class="dt-buy">35-65</td><td class="dt-hold">65-75 o 25-35</td><td class="dt-no">&gt;80 o &lt;20</td><td>M11</td></tr>
+      <tr><td>Price % of MA200</td><td class="dt-metric">asset_price_pct_avg_200d</td><td class="dt-buy">&gt;95%</td><td class="dt-hold">80-95%</td><td class="dt-no">&lt;75%</td><td>M11</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-risk" style="margin-top:24px">
+    <span class="alert-icon">🚨</span>
+    <div class="alert-body">
+      <p><strong>Los marcados con 🚨 son VETOS ABSOLUTOS.</strong> Si alguno de estos valores se activa, la decisión es NO COMPRAR independientemente del resto de métricas. Son: Altman Z &lt; 1.81, Beneish M &gt; -1.78, Current Ratio &lt; 0.8, Interest Coverage &lt; 1.5x con Net D/EBITDA &gt; 5x.</p>
+    </div>
+  </div>
+
+  <div class="callout c-pro" style="margin-top:24px">
+    <div class="callout-label">🔍 Recuerda siempre</div>
+    <p>Este sistema es una herramienta, no un oráculo. Los números históricos pueden no predecir el futuro. Usa siempre el juicio cualitativo junto a este análisis cuantitativo: entiende el modelo de negocio, evalúa al equipo directivo, y comprueba que no hay cambios estructurales en el sector que invaliden las métricas históricas. El diagrama y este manual te dan un marco riguroso para tomar decisiones más informadas — pero la responsabilidad final siempre es tuya.</p>
+  </div>
+</div>
+
+</div><!-- end content -->
+</main>
+</div><!-- end layout -->
+
+<button class="print-btn" onclick="window.print()">🖨 Imprimir Manual</button>
+
+<script>
+// Reading progress
+window.addEventListener('scroll', () => {
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = Math.round((window.scrollY / total) * 100);
+  document.getElementById('readProg').style.width = pct + '%';
+  document.getElementById('sbProg').style.width = pct + '%';
+  document.getElementById('sbProgPct').textContent = pct + '%';
+
+  // Update active sidebar item
+  const sections = ['intro','m0','m1','m2','m3','m4','m5','m6','m7','m8','m9','m10','m11','decision','quickref'];
+  let current = 'intro';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top < 150) current = id;
+  });
+  document.querySelectorAll('.sb-item').forEach(el => el.classList.remove('active'));
+  const activeEl = document.getElementById('si-' + current);
+  if (activeEl) activeEl.classList.add('active');
+});
+
+function setActive(el) {
+  document.querySelectorAll('.tn-link').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
