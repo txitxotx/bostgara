@@ -1,34 +1,257 @@
-TITULOS;NOMBRE;COMPRA;INVERTIDO
-;Total;;159.214,39
-;RENTA FIJA (4);;112.526,42
-399,7;GVC Gaesco Renta Fija Horizonte;100,08;40.000,00
-2.092,25;GVC Gaesco Renta Fija Flexible CONJUNTA;11,06;23.106,86
-3.360,12;GVC Gaesco Renta Fija Flexible;10,42;35.000,00
-1.523,52;GVC Gaesco Constantfons FI;9,46;14.419,56
-;RENTA VARIABLE (13);;38.298,06
-9,8501;Pictet-China Index P EUR;142,13;1.399,98
-82,527496;GVC Gaesco Zebra US Small Caps;92,09;7.600,00
+Títulos;Activo;Precio;Cantidad
+3,7476;Pictet-China Index P EUR;133,42;500,00
+2,742293;GVC Gaesco Zebra US Small Caps;94,81;260,00
+12,060771;GVC Gaesco Global Equity DS A ;16,58;200,00
+10,050011;GVC Gaesco Small Caps A FI;15,92;160,00
+0,541869;GVC Gaesco Emergentfond FI;258,37;140,00
+7,800685;GVC Gaesco 300 Places Worldwide CONJUNTA;15,38;120,00
+8,604388;GVC Gaesco Japón A FI CONJUNTA;13,95;120,00
+6,5005558;GVC Gaesco 300 Places Worldwide;15,38;100,00
+7,170324;GVC Gaesco Japón A FI;13,95;100,00
+238,645146;GVC Gaesco Global Equity DS A ;16,76;4.000,00
+15,855696;GVC Gaesco 300 Places Worldwide;15,64;247,92
+3,5737;Pictet-China Index P EUR;139,91;500,00
+7,892;Fidelity MSCI World Index Fund;12,67;100,00
+0,7214;Pictet-China Index P EUR;138,61;99,99
+6,8944;Fidelity S&P 500 Index Fund EUR;14,50;100,00
+2,608;GVC Gaesco Zebra US Small Caps;99,69;260,00
+11,344282;GVC Gaesco Global Equity DS A ;17,63;200,00
+9,612242;GVC Gaesco Small Caps A FI;16,65;160,00
+7,133514;GVC Gaesco 300 Places Worldwide CONJUNTA;16,82;120,00
+8,01815;GVC Gaesco Japón A FI CONJUNTA;14,97;120,00
+6,681792;GVC Gaesco Japón A FI;14,97;100,00
+5,944596;GVC Gaesco 300 Places Worldwide;16,82;100,00
+0,54008;GVC Gaesco Emergentfond FI;259,22;140,00
+0,677;Pictet-China Index P EUR;147,71;100,00
+7,992;Fidelity MSCI World Index Fund;12,51;100,00
+6,959;Fidelity S&P 500 Index Fund EUR;14,37;99,99
+2,605436;GVC Gaesco Zebra US Small Caps;99,79;260,00
+11,902168;GVC Gaesco Global Equity DS A ;16,80;200,00
+9,806432;GVC Gaesco Small Caps A FI;16,32;160,00
+0,569163;GVC Gaesco Emergentfond FI;245,98;140,00
+7,275154;GVC Gaesco 300 Places Worldwide CONJUNTA;16,49;120,00
+8,380197;GVC Gaesco Japón A FI CONJUNTA;14,32;120,00
+6,983498;GVC Gaesco Japón A FI;14,32;100,00
+6,062628;GVC Gaesco 300 Places Worldwide;16,49;100,00
+0,6958;Pictet-China Index P EUR;143,72;100,00
+8,026;Fidelity MSCI World Index Fund;12,46;100,00
+6,931;Fidelity S&P 500 Index Fund EUR;14,43;99,99
+2,647477;GVC Gaesco Zebra US Small Caps;98,21;260,00
+12,575394;GVC Gaesco Global Equity DS A ;15,90;200,00
+10,330223;GVC Gaesco Small Caps A FI;15,49;160,00
+0,569163;GVC Gaesco Emergentfond FI;245,98;140,00
+7,389746;GVC Gaesco 300 Places Worldwide CONJUNTA;16,24;120,00
+9,060209;GVC Gaesco Japón A FI CONJUNTA;13,24;120,00
+6,158122;GVC Gaesco 300 Places Worldwide;16,24;100,00
+7,550174;GVC Gaesco Japón A FI;13,24;100,00
 760,432862;"GVC Gaesco Value Minu ""A""";8,09;6.150,18
-173,523651;GVC Gaesco V.I.F Clsae A FI;8,64;1.500,00
-101,936392;GVC Gaesco Small Caps A FI;15,7;1.600,00
-91,616816;GVC Gaesco Japón A FI CONJUNTA;13,1;1.200,00
-194,961848;GVC Gaesco Japón A FI;12,31;2.400,00
-367,45214;GVC Gaesco Global Equity DS A ;16,33;6.000,00
-5,806272;GVC Gaesco Emergentfond FI;241,12;1.400,00
-76,946343;GVC Gaesco 300 Places Worldwide CONJUNTA;15,6;1.200,00
-407,0330358;GVC Gaesco 300 Places Worldwide;13,38;5.447,92
-88,39114129;Fidelity S&P 500 Index Fund EUR;13,58;1.199,98
-102,1266366;Fidelity MSCI World Index Fund;11,75;1.200,00
-;CRIPTOMONEDAS (8);;3.714,36
+8,057;Fidelity MSCI World Index Fund;12,41;100,00
+0,6749;Pictet-China Index P EUR;148,16;99,99
+424,43471959;GVC Gaesco Bolsalíder A FI;14,18;6.018,48
+6,948;Fidelity S&P 500 Index Fund EUR;14,39;100,00
+2,852938;GVC Gaesco Zebra US Small Caps;91,13;260,00
+13,174362;GVC Gaesco Global Equity DS A ;15,18;200,00
+10,757358;GVC Gaesco Small Caps A FI;14,87;160,00
+0,57153;GVC Gaesco Emergentfond FI;244,96;140,00
+9,288708;GVC Gaesco Japón A FI CONJUNTA;12,92;120,00
+7,898243;GVC Gaesco 300 Places Worldwide CONJUNTA;15,19;120,00
+7,74059;GVC Gaesco Japón A FI;12,92;100,00
+6,58187;GVC Gaesco 300 Places Worldwide;15,19;100,00
+986,337623;GVC Gaesco Renta Fija Flexible CONJUNTA;11,18;11.030,57
+0,6485;Pictet-China Index P EUR;154,20;100,00
+8,035;Fidelity MSCI World Index Fund;12,45;100,00
+6,893;Fidelity S&P 500 Index Fund EUR;14,51;100,00
+20.223,59616;Linea;0,01;258,28
+356,61;Jito;0,99;353,58
+2,752722;GVC Gaesco Zebra US Small Caps;94,45;260,00
+13,331417;GVC Gaesco Global Equity DS A ;15,00;200,00
+10,482932;GVC Gaesco Small Caps A FI;15,26;160,00
+0,584812;GVC Gaesco Emergentfond FI;239,39;140,00
+9,269003;GVC Gaesco Japón A FI CONJUNTA;12,95;120,00
+7,895748;GVC Gaesco 300 Places Worldwide CONJUNTA;15,20;120,00
+7,72417;GVC Gaesco Japón A FI;12,95;100,00
+6,57979;GVC Gaesco 300 Places Worldwide;15,20;100,00
+0,001028;Bitcoin;97.003,89;99,72
 40,8163;XRP;2,12;86,44
-129,43;Sui;2,65;342,91
-10,3669667;Solana;144,69;1.500,00
+35,58;Sui;2,43;86,42
+0,003995;Bitcoin;100.000,00;399,50
+8,319;Fidelity MSCI World Index Fund;12,02;100,00
+0,6466;Pictet-China Index P EUR;154,66;100,00
+7,178;Fidelity S&P 500 Index Fund EUR;13,93;100,00
+93,85;Sui;2,73;256,49
 16.949,15;Pump.fun;0,01;86,14
+62,5;Jito;1,37;85,60
 3.389,83;Pudgy Penguins;0,03;85,06
-20.223,60;Linea;0,01;258,28
-1.261;Kaspa;0,07;85
-0,01368148;Bitcoin;92.864,95;1.270,53
-;EPSV (2);;4.675,55
-15,932693;Baskepensiones renta fija a corto EPSV;7;111,55
+1.261;Kaspa;0,07;85,00
+2,678113;GVC Gaesco Zebra US Small Caps;97,08;260,00
+13,297392;GVC Gaesco Global Equity DS A ;15,04;200,00
+10,11861;GVC Gaesco Small Caps A FI;15,81;160,00
+0,58953;GVC Gaesco Emergentfond FI;237,48;140,00
+7,625601;GVC Gaesco 300 Places Worldwide CONJUNTA;15,74;120,00
+9,141605;GVC Gaesco Japón A FI CONJUNTA;13,13;120,00
+6,354668;GVC Gaesco 300 Places Worldwide;15,74;100,00
+7,618004;GVC Gaesco Japón A FI;13,13;100,00
+213,12;Jito;1,54;327,56
+80,99;Jito;1,54;124,48
+0,707;Pictet-China Index P EUR;141,44;100,00
+8,5532;Fidelity MSCI World Index Fund;11,69;100,00
+7,32284214;Fidelity S&P 500 Index Fund EUR;13,66;100,00
+0,0010726;Bitcoin;92.998,32;99,75
+337,38;Jito;1,74;586,11
+10,075714;GVC Gaesco Small Caps A FI;15,88;160,00
+0,00103092;Bitcoin;97.000,74;100,00
+193,33;Jito;1,46;281,97
+144,05;Jito;1,46;210,21
+13,063708;GVC Gaesco Global Equity DS A ;15,31;200,00
+0,600884;GVC Gaesco Emergentfond FI;232,99;140,00
+9,159956;GVC Gaesco Japón A FI CONJUNTA;13,10;120,00
+7,482132;GVC Gaesco 300 Places Worldwide CONJUNTA;16,04;120,00
+6,23511;GVC Gaesco 300 Places Worldwide;16,04;100,00
+7,633296;GVC Gaesco Japón A FI;13,10;100,00
+2,737558;GVC Gaesco Zebra US Small Caps;94,98;260,00
+0,7265;Pictet-China Index P EUR;137,65;100,00
+2,1187;Solana;135,00;286,02
+1,585;Solana;135,00;213,98
+3,3333;Solana;150,00;500,00
+8,582;Fidelity MSCI World Index Fund;11,65;100,00
+7,436;Fidelity S&P 500 Index Fund EUR;13,45;100,00
+3,3299667;Solana;150,15;500,00
+902,087166;GVC Gaesco Renta Fija Flexible CONJUNTA;11,09;10.000,00
+2,820538;GVC Gaesco Zebra US Small Caps;92,18;260,00
+13,79808;GVC Gaesco Global Equity DS A ;14,49;200,00
+10,057666;GVC Gaesco Small Caps A FI;15,91;160,00
+0,615048;GVC Gaesco Emergentfond FI;227,62;140,00
+7,79165;GVC Gaesco 300 Places Worldwide CONJUNTA;15,40;120,00
+10,383541;GVC Gaesco Japón A FI CONJUNTA;11,56;120,00
+8,66;GVC Gaesco Japón A FI;11,55;100,00
+6,5;GVC Gaesco 300 Places Worldwide;15,38;100,00
+588,255175;GVC Gaesco Renta Fija Flexible CONJUNTA;11,05;6.500,00
+0,7787;Pictet-China Index P EUR;128,42;100,00
+8,91273541;Fidelity MSCI World Index Fund;11,22;100,00
+7,72731839;Fidelity S&P 500 Index Fund EUR;12,94;100,00
+1.588,244036;GVC Gaesco Renta Fija Flexible CONJUNTA;11,02;17.500,00
+173,523651;GVC Gaesco V.I.F Clsae A FI;8,64;1.500,00
+2,895278;GVC Gaesco Zebra US Small Caps;89,80;260,00
+14,25942;GVC Gaesco Global Equity DS A ;14,03;200,00
+10,645204;GVC Gaesco Small Caps A FI;15,03;160,00
+0,624193;GVC Gaesco Emergentfond FI;224,29;140,00
+10,311059;GVC Gaesco Japón A FI CONJUNTA;11,64;120,00
+8,65387;GVC Gaesco 300 Places Worldwide CONJUNTA;13,87;120,00
+55,187143;GVC Gaesco Zebra US Small Caps;90,60;5.000,00
+16,9;GVC Gaesco Japón A FI;11,83;200,00
+14,2;GVC Gaesco 300 Places Worldwide;14,08;200,00
+7,846;Fidelity S&P 500 Index Fund EUR;12,75;100,00
+8,99038029;Fidelity MSCI World Index Fund;11,12;100,00
+8,6;GVC Gaesco Japón A FI;11,63;100,00
+8,37598104;Fidelity S&P 500 Index Fund EUR;11,94;100,00
+7,54;GVC Gaesco 300 Places Worldwide;13,26;100,00
+9,61936185;Fidelity MSCI World Index Fund;10,40;100,00
+20,78;GVC Gaesco Constantfons FI;9,62;200,00
+7,87959972;Fidelity S&P 500 Index Fund EUR;12,69;100,00
+0,00128626;Bitcoin;77.013,98;99,06
+9,14795909;Fidelity MSCI World Index Fund;10,93;100,00
+519,97;GVC Gaesco Constantfons FI;9,62;5.000,00
+509,64;GVC Gaesco Constantfons FI;9,61;4.900,00
+16,5;GVC Gaesco Japón A FI;12,12;200,00
+8,15513857;GVC Gaesco Bolsalíder A FI;12,26;100,00
+6,98;GVC Gaesco 300 Places Worldwide;14,33;100,00
+0,00127061;Bitcoin;78.741,71;100,05
+0,00120565;Bitcoin;82.984,28;100,05
+6,36;GVC Gaesco 300 Places Worldwide;15,72;100,00
+8,15544008;GVC Gaesco Bolsalíder A FI;12,26;100,00
+0,00104207;Bitcoin;95.060,79;99,06
+0,00076195;Bitcoin;97.499,84;74,29
+0,00098842;Bitcoin;100.210,44;99,05
+8,76576198;GVC Gaesco Bolsalíder A FI;11,41;100,00
+6,66;GVC Gaesco 300 Places Worldwide;15,02;100,00
+8,62;GVC Gaesco Japón A FI;11,60;100,00
+6,48;GVC Gaesco 300 Places Worldwide;15,43;100,00
+8,44;GVC Gaesco Japón A FI;11,85;100,00
+8,86679843;GVC Gaesco Bolsalíder A FI;11,28;100,00
+5,330524;Baskepensiones renta fija a corto EPSV;7,25;38,63
+8,68;GVC Gaesco Japón A FI;11,52;100,00
+6,74;GVC Gaesco 300 Places Worldwide;14,84;100,00
+9,19979442;GVC Gaesco Bolsalíder A FI;10,87;100,00
+8,34;GVC Gaesco Japón A FI;11,99;100,00
+7,08;GVC Gaesco 300 Places Worldwide;14,12;100,00
+9,26709911;GVC Gaesco Bolsalíder A FI;10,79;100,00
+8,44;GVC Gaesco Japón A FI;11,85;100,00
+7,74;GVC Gaesco 300 Places Worldwide;12,92;100,00
+9,49060691;GVC Gaesco Bolsalíder A FI;10,54;100,00
+8,02;GVC Gaesco 300 Places Worldwide;12,47;100,00
+9,58012889;GVC Gaesco Bolsalíder A FI;10,44;100,00
+8,62;GVC Gaesco Japón A FI;11,60;100,00
+8,36;GVC Gaesco Japón A FI;11,96;100,00
+7,12;GVC Gaesco 300 Places Worldwide;14,04;100,00
+9,183207;GVC Gaesco Bolsalíder A FI;10,89;100,00
+7,22;GVC Gaesco 300 Places Worldwide;13,85;100,00
+8,62;GVC Gaesco Japón A FI;11,60;100,00
+9,22580882;GVC Gaesco Bolsalíder A FI;10,84;100,00
+3.360,12;GVC Gaesco Renta Fija Flexible;10,42;35.000,00
+8,98237116;GVC Gaesco Bolsalíder A FI;11,13;100,00
+7,02;GVC Gaesco 300 Places Worldwide;14,25;100,00
+8,7;GVC Gaesco Japón A FI;11,49;100,00
+8,38;GVC Gaesco Japón A FI;11,93;100,00
+7,18;GVC Gaesco 300 Places Worldwide;13,93;100,00
+9,61815651;GVC Gaesco Bolsalíder A FI;10,40;100,00
+7,16;GVC Gaesco 300 Places Worldwide;13,97;100,00
+9,8195007;GVC Gaesco Bolsalíder A FI;10,18;100,00
+7,3;GVC Gaesco 300 Places Worldwide;13,70;100,00
+9,98327329;GVC Gaesco Bolsalíder A FI;10,02;100,00
+7,66;GVC Gaesco 300 Places Worldwide;13,05;100,00
+9,94517904;GVC Gaesco Bolsalíder A FI;10,06;100,00
+7,46;GVC Gaesco 300 Places Worldwide;13,40;100,00
+9,93811299;GVC Gaesco Bolsalíder A FI;10,06;100,00
+5,378944;Baskepensiones renta fija a corto EPSV;6,97;37,47
+8,06;GVC Gaesco 300 Places Worldwide;12,41;100,00
+10,40771915;GVC Gaesco Bolsalíder A FI;9,61;100,00
+8,42;GVC Gaesco 300 Places Worldwide;11,88;100,00
+10,87261053;GVC Gaesco Bolsalíder A FI;9,20;100,00
+10,62384567;GVC Gaesco Bolsalíder A FI;9,41;100,00
+7,7;GVC Gaesco 300 Places Worldwide;12,99;100,00
+7,56;GVC Gaesco 300 Places Worldwide;13,23;100,00
+10,62535108;GVC Gaesco Bolsalíder A FI;9,41;100,00
+7,4;GVC Gaesco 300 Places Worldwide;13,51;100,00
+10,52220293;GVC Gaesco Bolsalíder A FI;9,50;100,00
+399,7;GVC Gaesco Renta Fija Horizonte;100,08;40.000,00
+473,13;GVC Gaesco Constantfons FI;9,13;4.319,56
+10,58614351;GVC Gaesco Bolsalíder A FI;9,45;100,00
+7,48;GVC Gaesco 300 Places Worldwide;13,37;100,00
+11,16173323;GVC Gaesco Bolsalíder A FI;8,96;100,00
+8,04;GVC Gaesco 300 Places Worldwide;12,44;100,00
+10,94330795;GVC Gaesco Bolsalíder A FI;9,14;100,00
+8,12;GVC Gaesco 300 Places Worldwide;12,32;100,00
+8,34;GVC Gaesco 300 Places Worldwide;11,99;100,00
+11,59110617;GVC Gaesco Bolsalíder A FI;8,63;100,00
+10,71033949;GVC Gaesco Bolsalíder A FI;9,34;100,00
+7,66;GVC Gaesco 300 Places Worldwide;13,05;100,00
+8,08;GVC Gaesco 300 Places Worldwide;12,38;100,00
+11,31635122;GVC Gaesco Bolsalíder A FI;8,84;100,00
+8,98;GVC Gaesco 300 Places Worldwide;11,14;100,00
+12,50473215;GVC Gaesco Bolsalíder A FI;8,00;100,00
+5,223225;Baskepensiones renta fija a corto EPSV;6,79;35,45
+8,78;GVC Gaesco 300 Places Worldwide;11,39;100,00
+12,31621394;GVC Gaesco Bolsalíder A FI;8,12;100,00
+13,55692216;GVC Gaesco Bolsalíder A FI;7,38;100,00
+9,98;GVC Gaesco 300 Places Worldwide;10,02;100,00
+8,84;GVC Gaesco 300 Places Worldwide;11,31;100,00
+12,81240688;GVC Gaesco Bolsalíder A FI;7,80;100,00
+8,32;GVC Gaesco 300 Places Worldwide;12,02;100,00
+11,95583396;GVC Gaesco Bolsalíder A FI;8,36;100,00
+9,48;GVC Gaesco 300 Places Worldwide;10,55;100,00
+12,72672637;GVC Gaesco Bolsalíder A FI;7,86;100,00
+11,95341435;GVC Gaesco Bolsalíder A FI;8,37;100,00
+9,18;GVC Gaesco 300 Places Worldwide;10,89;100,00
+8,2;GVC Gaesco 300 Places Worldwide;12,20;100,00
+11,96961895;GVC Gaesco Bolsalíder A FI;8,35;100,00
+7,7;GVC Gaesco 300 Places Worldwide;12,99;100,00
+11,55874673;GVC Gaesco Bolsalíder A FI;8,65;100,00
+12,21751694;GVC Gaesco Bolsalíder A FI;8,18;100,00
+8,56;GVC Gaesco 300 Places Worldwide;11,68;100,00
+10,88594365;GVC Gaesco Bolsalíder A FI;9,19;100,00
+7,24;GVC Gaesco 300 Places Worldwide;13,81;100,00
+7,66;GVC Gaesco 300 Places Worldwide;13,05;100,00
+10,6994139;GVC Gaesco Bolsalíder A FI;9,35;100,00
 80,161137;Baskepensiones Bolsa Euro EPSV;56,94;4.564,00
-;Total;;159.214,39
+11,74014078;GVC Gaesco Bolsalíder A FI;8,52;100,00
+8,56;GVC Gaesco 300 Places Worldwide;11,68;100,00
