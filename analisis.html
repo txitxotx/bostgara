@@ -6,8 +6,6 @@
 <title>Análisis de Acciones · MAIKO'S DASHBOARD</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ── RESET & VARS ── */
 :root{
@@ -462,17 +460,6 @@ body::before{content:'';position:fixed;inset:0;
         <div class="file-ok" id="fo3">✓ <span id="fo3name">—</span></div>
       </div>
 
-      <!-- PDF Pro Research Report -->
-      <div>
-        <div class="dz-sub" style="margin-bottom:5px;color:var(--text3);font-size:.7rem">PDF Pro Research Report — enriquece el análisis con datos cualitativos</div>
-        <div class="drop-zone" id="dz4" style="padding:14px;border-color:rgba(163,113,247,.3)">
-          <input type="file" accept=".pdf" onchange="handlePDF(this.files[0])">
-          <div class="dz-label" style="font-size:.75rem"><strong style="color:#a371f7">📑 PDF Pro Research</strong></div>
-          <div class="dz-sub">Investing.com · Morningstar · cualquier informe PDF</div>
-        </div>
-        <div class="file-ok" id="fo4" style="border-color:rgba(163,113,247,.3);background:rgba(163,113,247,.06);color:#a371f7">✓ <span id="fo4name">—</span></div>
-      </div>
-
       <div class="up-row">
         <input type="text" class="ticker-inp" id="tickerInp" placeholder="Ticker (ej: SAN.PA, AAPL)" maxlength="12" oninput="checkReady()">
         <button class="analyze-btn" id="analyzeBtn" disabled onclick="runAnalysis()">Analizar →</button>
@@ -580,7 +567,6 @@ body::before{content:'';position:fixed;inset:0;
       <button class="dtab" data-tab="scores" onclick="switchTab(this)">⚖️ Puntuaciones</button>
       <button class="dtab" data-tab="peers" onclick="switchTab(this)">🏆 Comparativa Sector</button>
       <button class="dtab" data-tab="chart" onclick="switchTab(this)">📈 Gráfico Ingresos</button>
-      <button class="dtab" data-tab="pdf" onclick="switchTab(this)" id="pdfTab" style="display:none">📑 PDF Research</button>
       <button class="dtab" data-tab="reasoning" onclick="switchTab(this)">🧠 Razonamiento</button>
     </div>
 
@@ -608,11 +594,6 @@ body::before{content:'';position:fixed;inset:0;
         <div class="cib-head">📈 Evolución de Ingresos y Márgenes</div>
         <div id="chartImgArea"><div class="cib-empty">No se ha subido ningún gráfico de ingresos.<br>Sube una imagen en la zona de upload para verla aquí.</div></div>
       </div>
-    </div>
-
-    <!-- TAB: PDF Research -->
-    <div class="tab-content" id="tab-pdf" style="display:none">
-      <div id="pdfPanelContent"></div>
     </div>
 
     <!-- TAB: Reasoning -->
@@ -1733,9 +1714,6 @@ function calcScore(checks) {
 let parsedMetrics = {};
 let sectorData = null;
 let chartImageURL = null;
-let pdfData = null;      // Pro Research PDF parsed data
-let pdfRawBase64 = null; // For saving in the report
-let pdfFileName = '';
 let analysisResult = null;
 let currentTicker = '';
 let checklistAnswers = {};
@@ -1745,7 +1723,7 @@ let activeTab = 'modules';
 /* ══════════════════════════════════════════
    FILE HANDLING
 ══════════════════════════════════════════ */
-['dz1','dz2','dz3','dz4'].forEach(id => {
+['dz1','dz2','dz3'].forEach(id => {
   const dz = document.getElementById(id);
   dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
   dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
@@ -1768,7 +1746,6 @@ function handleCSV(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    window._csvRaw = e.target.result; // Store for ZIP
     parsedMetrics = parseCSVMetrics(e.target.result);
     document.getElementById('fo1name').textContent = `${file.name} (${Object.keys(parsedMetrics).length} métricas)`;
     document.getElementById('fo1').classList.add('show');
@@ -1781,7 +1758,6 @@ function handleExcel(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    window._excelRaw = e.target.result; // Store ArrayBuffer for ZIP
     try {
       const wb = XLSX.read(e.target.result, { type:'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
@@ -1811,114 +1787,6 @@ function handleImage(file) {
     document.getElementById('fo3').classList.add('show');
   };
   reader.readAsDataURL(file);
-}
-
-function handlePDF(file) {
-  if (!file) return;
-  pdfFileName = file.name;
-  document.getElementById('fo4name').textContent = file.name;
-  document.getElementById('fo4').classList.add('show');
-  // Store base64 for saving in report ZIP
-  const reader2 = new FileReader();
-  reader2.onload = e2 => { pdfRawBase64 = e2.target.result; };
-  reader2.readAsDataURL(file);
-  // Extract text from PDF using PDF.js
-  const reader = new FileReader();
-  reader.onload = async e => {
-    try {
-      await extractPDFData(e.target.result);
-      document.getElementById('fo4name').textContent = file.name + ' ✓ datos extraídos';
-    } catch(err) {
-      console.warn('[PDF]', err.message);
-      document.getElementById('fo4name').textContent = file.name + ' (sin extracción)';
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-async function extractPDFData(arrayBuffer) {
-  // Use PDF.js from CDN to extract text
-  const pdfjsLib = window['pdfjs-dist/build/pdf'];
-  if (!pdfjsLib) {
-    // Fallback: store raw without extraction
-    console.warn('[PDF] pdf.js not loaded, skipping text extraction');
-    pdfData = { raw: true, fileName: pdfFileName };
-    return;
-  }
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  let fullText = '';
-  for (let i = 1; i <= Math.min(pdf.numPages, 10); i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    fullText += content.items.map(item => item.str).join(' ') + '\n';
-  }
-  pdfData = parsePDFReport(fullText);
-  console.log('[PDF] Extracted:', Object.keys(pdfData).filter(k => pdfData[k] != null).length, 'fields');
-}
-
-function parsePDFReport(text) {
-  const d = {};
-  const num = (pattern) => {
-    const m = text.match(pattern);
-    return m ? parseFloat(m[1].replace(',','.')) : null;
-  };
-  const str = (pattern) => {
-    const m = text.match(pattern);
-    return m ? m[1].trim() : null;
-  };
-
-  // Key indicators
-  d.price           = num(/Stock Price\s+\$?([\d,.]+)/i) || num(/Price[\s,]+\$([\d.]+)/i);
-  d.pe_fwd          = num(/P\/E\s*\(Fwd\.?\)\s+([\d.]+)/i) || num(/Forward P\/E\s+([\d.]+)x?/i);
-  d.pe_ltm          = num(/P\/E Ratio\s+([\d.]+)/i);
-  d.peg             = num(/PEG Ratio\s+([\d.]+)/i);
-  d.fcf_yield       = num(/FCF Yield\s+([\d.]+)/i);
-  d.ev_ebitda       = num(/EV\s*\/\s*EBITDA\s+([\d.]+)/i);
-  d.book_per_share  = num(/Book\s*\/\s*Share\s+([\d.]+)/i);
-  d.beta            = num(/Beta\s*\(5[Yy]\)\s+([\d.]+)/i);
-  d.market_cap      = str(/Market Cap\s+\$([\d.]+[BM])/i);
-  d.revenue         = str(/Revenue\s+\$([\d.]+[BM])/i);
-  d.fair_value      = num(/Fair Value\s+\$?([\d,.]+)/i);
-  d.fair_value_upside = num(/Upside\s+([\d.]+)%/i);
-  d.div_yield       = num(/Div(?:idend)?\s+Yield\s+([\d.]+)%/i);
-  d.week52_high     = num(/52[\-–]Week(?:\s+Range)?[^$]*\$([\d.]+)/i);
-  d.eps_actual      = num(/EPS Actual\s+([\d.]+)/i);
-  d.eps_estimate    = num(/EPS Estimate\s+([\d.]+)/i);
-  d.eps_revisions_down = num(/EPS Revisions.*?↓\s*(\d+)/i) || num(/\↓\s*(\d+)/);
-  d.growth_rating   = str(/Growth Rating[\s\n]+([\d.]+\/10)/i);
-  d.profit_rating   = str(/Profitability Rating[\s\n]+([\d.]+\/10)/i);
-  d.cashflow_rating = str(/Cash Flow Rating[\s\n]+([\d.]+\/10)/i);
-  d.revenue_cagr_5y = num(/Revenue CAGR.*?5[Yy][\s)]+([\d.]+)%/i);
-  d.net_income_cagr_5y = num(/Net Income CAGR.*?5[Yy][\s)]+([\d.]+)%/i);
-  d.gross_margin    = num(/Gross Profit Margin\s+([\d.]+)/i);
-  d.roe             = num(/ROE\s+([\d.]+)/i);
-  d.roa             = num(/ROA\s+([\d.]+)/i);
-  d.analyst_upside  = num(/Analyst Upside\s+([\d.]+)%/i);
-  d.analyst_high    = num(/Analyst High\s+\(?([\d.]+)/i);
-  d.analyst_low     = num(/Analyst Low\s+\(?([\d.]+)/i);
-  d.analyst_avg     = num(/Analyst Avg\.?\s+\(?([\d.]+)/i);
-  d.technical_signal= str(/(Strong Sell|Sell|Neutral|Buy|Strong Buy)\s*Moving Averages/i);
-  d.revenue_growth_1y = num(/1[\-–]Year Change\s+([\-\d.]+)%/i);
-  d.price_pct_52w   = num(/Price\s*%\s*of\s*52\s*Week\s*High\s+([\d.]+)%/i);
-
-  // Bull/Bear/SWOT text blocks
-  const bullMatch = text.match(/Bull Case(.*?)Bear Case/is);
-  d.bull_points = bullMatch ? bullMatch[1].replace(/[•·]/g,' ').replace(/\s+/g,' ').trim().substring(0,600) : null;
-  const bearMatch = text.match(/Bear Case(.*?)(?:Additional|SWOT|Strengths)/is);
-  d.bear_points = bearMatch ? bearMatch[1].replace(/[•·]/g,' ').replace(/\s+/g,' ').trim().substring(0,600) : null;
-
-  // Executive summary
-  const execMatch = text.match(/Executive Summary(.*?)(?:Fair Value|Valuation|page 2)/is);
-  d.executive_summary = execMatch ? execMatch[1].replace(/\s+/g,' ').trim().substring(0,800) : null;
-
-  // Recent news
-  const newsMatches = [...text.matchAll(/([A-Z][^\n]+\n(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d+,\s+\d+)/g)];
-  d.recent_news = newsMatches.slice(0,4).map(m => m[1].trim());
-
-  d.source = 'pdf';
-  d.fileName = pdfFileName;
-  return d;
 }
 
 function checkReady() {
@@ -2308,8 +2176,6 @@ function renderResults() {
   // Global score + KPIs (new)
   renderGlobalScore(R);
   renderKPIs(R);
-  // PDF enrichment panel
-  renderPDFPanel();
 
   // Company header
   document.getElementById('tbCompany').textContent = currentTicker;
@@ -2902,293 +2768,131 @@ function renderFinalSection(verdicts, clResult) {
 /* ══════════════════════════════════════════
    SAVE REPORT
 ══════════════════════════════════════════ */
-
-/* ══════════════════════════════════════════
-   PDF PANEL — Muestra datos del Pro Research PDF
-══════════════════════════════════════════ */
-function renderPDFPanel() {
-  const tab = document.getElementById('pdfTab');
-  const area = document.getElementById('pdfPanelContent');
-  if (!pdfData || !area) { if(tab) tab.style.display='none'; return; }
-
-  // Show the tab
-  if (tab) tab.style.display = 'inline-block';
-
-  const R = analysisResult;
-  const d = pdfData;
-  const c = (v, good, warn) => v == null ? 'var(--text3)' : v >= good ? 'var(--buy)' : v >= warn ? 'var(--hold)' : 'var(--risk)';
-  const fmt = v => v != null ? v : '—';
-  const fmtN = (v, dec=1, suffix='') => v != null ? v.toFixed(dec) + suffix : '—';
-  const fmtC = (v, suf='%') => v != null ? (v > 0 ? '+' : '') + v.toFixed(1) + suf : '—';
-
-  let html = '<div class="pdf-panel">';
-
-  // ── HEADER ──
-  html += `<div class="pdf-section">
-    <div class="pdf-section-head">📑 ${d.fileName || 'Pro Research Report'} · Datos extraídos automáticamente</div>
-    <div class="pdf-section-body">
-      <p style="font-size:.76rem;color:var(--text3);font-family:var(--f-m)">
-        Los campos marcados con † proceden del PDF y complementan el CSV de métricas.
-        ${d.executive_summary ? '' : 'La extracción de texto puede ser incompleta dependiendo del formato del PDF.'}
-      </p>
-      ${d.executive_summary ? `<div class="pdf-exec-summary" style="margin-top:10px"><strong style="color:var(--text);font-size:.74rem;letter-spacing:.5px;text-transform:uppercase">Executive Summary</strong><br><br>${d.executive_summary}</div>` : ''}
-    </div>
-  </div>`;
-
-  // ── KEY INDICATORS FROM PDF ──
-  const kpis = [
-    { lbl:'Precio PDF', val: d.price ? '$' + d.price : '—', color: 'var(--text)' },
-    { lbl:'P/E Fwd †', val: fmtN(d.pe_fwd,1,'x'), color: c(d.pe_fwd, 0, 0) === 'var(--text3)' ? 'var(--hold)' : 'var(--text)' },
-    { lbl:'PEG †', val: fmtN(d.peg,2), color: d.peg != null ? (d.peg < 1 ? 'var(--buy)' : d.peg < 2 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-    { lbl:'FCF Yield †', val: fmtN(d.fcf_yield,1,'%'), color: d.fcf_yield != null ? (d.fcf_yield > 6 ? 'var(--buy)' : d.fcf_yield > 3 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-    { lbl:'EV/EBITDA †', val: fmtN(d.ev_ebitda,2,'x'), color: d.ev_ebitda != null ? (d.ev_ebitda < 12 ? 'var(--buy)' : d.ev_ebitda < 18 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-    { lbl:'Beta 5y †', val: fmtN(d.beta,2), color: d.beta != null ? (d.beta < 0.8 ? 'var(--buy)' : d.beta < 1.3 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-    { lbl:'Fair Value †', val: d.fair_value ? '$' + d.fair_value.toFixed(1) : '—', color: 'var(--buy)' },
-    { lbl:'FV Upside †', val: fmtN(d.fair_value_upside,1,'%'), color: d.fair_value_upside != null ? (d.fair_value_upside > 20 ? 'var(--buy)' : d.fair_value_upside > 5 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-    { lbl:'EPS Real †', val: fmtN(d.eps_actual,2), color: 'var(--text)' },
-    { lbl:'EPS Est. †', val: fmtN(d.eps_estimate,2), color: d.eps_estimate != null && d.eps_actual != null ? (d.eps_estimate > d.eps_actual ? 'var(--buy)' : 'var(--hold)') : 'var(--text)' },
-    { lbl:'Rev. EPS ↓ †', val: d.eps_revisions_down != null ? d.eps_revisions_down + ' analistas' : '—', color: d.eps_revisions_down != null ? (d.eps_revisions_down > 5 ? 'var(--risk)' : d.eps_revisions_down > 2 ? 'var(--hold)' : 'var(--buy)') : 'var(--text3)' },
-    { lbl:'1Y Return †', val: fmtC(d.revenue_growth_1y), color: d.revenue_growth_1y != null ? (d.revenue_growth_1y > 5 ? 'var(--buy)' : d.revenue_growth_1y > -5 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-    { lbl:'Señal Técnica †', val: d.technical_signal || (R?.modules?.m9?.detail?.rsi != null ? 'Ver M9' : '—'), color: d.technical_signal ? (d.technical_signal.toLowerCase().includes('buy') ? 'var(--buy)' : d.technical_signal.toLowerCase().includes('sell') ? 'var(--risk)' : 'var(--hold)') : 'var(--text3)' },
-    { lbl:'% 52w High †', val: fmtN(d.price_pct_52w,1,'%'), color: d.price_pct_52w != null ? (d.price_pct_52w > 85 ? 'var(--buy)' : d.price_pct_52w > 65 ? 'var(--hold)' : 'var(--risk)') : 'var(--text3)' },
-  ].filter(k => k.val !== '—');
-
-  if (kpis.length > 0) {
-    html += `<div class="pdf-section">
-      <div class="pdf-section-head">📊 Indicadores Clave del PDF</div>
-      <div class="pdf-section-body">
-        <div class="pdf-kpi-grid">
-          ${kpis.map(k => `<div class="pdf-kpi" style="border-top-color:${k.color}">
-            <div class="pdf-kpi-val" style="color:${k.color}">${k.val}</div>
-            <div class="pdf-kpi-lbl">${k.lbl}</div>
-          </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // ── FINANCIAL HEALTH RATINGS ──
-  if (d.growth_rating || d.profit_rating || d.cashflow_rating) {
-    const toNum = s => s ? parseFloat(s.split('/')[0]) * 10 : null;
-    const gr = toNum(d.growth_rating), pr = toNum(d.profit_rating), cr = toNum(d.cashflow_rating);
-    html += `<div class="pdf-section">
-      <div class="pdf-section-head">💊 Financial Health Ratings (del PDF)</div>
-      <div class="pdf-section-body">
-        <div class="pdf-health-bars">
-          ${gr != null ? `<div class="pdf-hb-row"><div class="pdf-hb-label">Growth</div><div class="pdf-hb-bar"><div class="pdf-hb-fill" style="width:${gr}%;background:${gr>70?'var(--buy)':gr>50?'var(--hold)':'var(--risk)'}"></div></div><div class="pdf-hb-val">${d.growth_rating}</div></div>` : ''}
-          ${pr != null ? `<div class="pdf-hb-row"><div class="pdf-hb-label">Profitability</div><div class="pdf-hb-bar"><div class="pdf-hb-fill" style="width:${pr}%;background:${pr>70?'var(--buy)':pr>50?'var(--hold)':'var(--risk)'}"></div></div><div class="pdf-hb-val">${d.profit_rating}</div></div>` : ''}
-          ${cr != null ? `<div class="pdf-hb-row"><div class="pdf-hb-label">Cash Flow</div><div class="pdf-hb-bar"><div class="pdf-hb-fill" style="width:${cr}%;background:${cr>70?'var(--buy)':cr>50?'var(--hold)':'var(--risk)'}"></div></div><div class="pdf-hb-val">${d.cashflow_rating}</div></div>` : ''}
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // ── BULL / BEAR CASE ──
-  if (d.bull_points || d.bear_points) {
-    html += `<div class="pdf-section">
-      <div class="pdf-section-head">⚔️ Bull Case vs Bear Case (del PDF)</div>
-      <div class="pdf-section-body">
-        <div class="pdf-bull-bear">
-          <div class="pdf-bull">
-            <div class="pdf-bb-title" style="color:var(--buy)">🐂 Bull Case</div>
-            <div class="pdf-bb-text">${d.bull_points || '—'}</div>
-          </div>
-          <div class="pdf-bear">
-            <div class="pdf-bb-title" style="color:var(--risk)">🐻 Bear Case</div>
-            <div class="pdf-bb-text">${d.bear_points || '—'}</div>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  }
-
-  // ── CÓMO ENRIQUECE EL ANÁLISIS ──
-  const enrich = [];
-  if (d.pe_fwd != null)          enrich.push(`PER Forward del PDF: ${d.pe_fwd.toFixed(1)}x`);
-  if (d.peg != null)             enrich.push(`PEG del PDF: ${d.peg.toFixed(2)}`);
-  if (d.fcf_yield != null)       enrich.push(`FCF Yield del PDF: ${d.fcf_yield.toFixed(1)}%`);
-  if (d.fair_value_upside != null) enrich.push(`Upside Fair Value: +${d.fair_value_upside.toFixed(1)}%`);
-  if (d.technical_signal)        enrich.push(`Señal técnica: ${d.technical_signal}`);
-  if (d.eps_revisions_down != null) enrich.push(`${d.eps_revisions_down} analistas bajaron EPS`);
-  if (d.revenue_cagr_5y != null) enrich.push(`Revenue CAGR 5y: ${d.revenue_cagr_5y.toFixed(1)}%`);
-  if (d.analyst_avg != null)     enrich.push(`Precio objetivo medio analistas: $${d.analyst_avg}`);
-
-  if (enrich.length > 0) {
-    html += `<div class="pdf-section">
-      <div class="pdf-section-head">🔗 Cómo enriquece el análisis cuantitativo</div>
-      <div class="pdf-section-body">
-        <div style="display:flex;flex-wrap:wrap;gap:7px">
-          ${enrich.map(e => `<span style="font-family:var(--f-m);font-size:.72rem;padding:4px 10px;background:var(--s4);border-radius:4px;border:1px solid var(--border2);color:var(--accent)">† ${e}</span>`).join('')}
-        </div>
-        <p style="font-size:.76rem;color:var(--text3);margin-top:10px;font-family:var(--f-s);line-height:1.6">
-          Los datos del PDF complementan las métricas del CSV aportando contexto narrativo, bull/bear case estructurado,
-          comparativas con peers, y señales técnicas que el modelo cuantitativo usa para enriquecer el razonamiento.
-        </p>
-      </div>
-    </div>`;
-  }
-
-  html += '</div>';
-  area.innerHTML = html;
-}
-
 function saveReport() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
-  const safeTicker = (currentTicker || 'EMPRESA').replace(/[^a-zA-Z0-9]/g, '_');
-  const folderName = `analisis_${safeTicker}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const fileName = `informe_${currentTicker}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`;
 
-  // Build the HTML report content (same as before)
+  // Snapshot current state
   const profilesHTML  = document.getElementById('profilesGrid')?.innerHTML || '';
   const modulesHTML   = document.getElementById('modulesGrid')?.innerHTML || '';
   const scoreBarsHTML = document.getElementById('scoreBarsBox')?.innerHTML || '';
   const reasonHTML    = document.getElementById('reasoningBody')?.innerHTML || '';
   const finalHTML     = document.getElementById('finalVerdictsGrid')?.innerHTML || '';
   const expertHTML    = document.getElementById('finalReasoningArea')?.innerHTML || '';
-  const globalVerdictHTML = document.getElementById('globalVerdictBox')?.outerHTML || '';
-  const kpisHTML      = document.getElementById('kpisRow')?.innerHTML || '';
-  const pdfPanelHTML  = document.getElementById('pdfPanelContent')?.innerHTML || '';
-  const chartHTML     = chartImageURL
-    ? `<img style="width:100%;max-height:320px;object-fit:contain;border-radius:8px;background:#0d0f1a;display:block" src="${chartImageURL}" alt="Gráfico ingresos">`
-    : '<div style="padding:20px;text-align:center;color:#4a5175">No se adjuntó gráfico</div>';
+  const vetoHTML      = document.getElementById('coVetoAlert')?.outerHTML || '';
+  const m0HTML        = document.getElementById('coM0Status')?.outerHTML || '';
+  const chartHTML     = chartImageURL ? `<img style="width:100%;max-height:320px;object-fit:contain;border-radius:8px;background:#0d0f1a;display:block" src="${chartImageURL}" alt="Gráfico ingresos">` : '<div style="padding:20px;text-align:center;color:#4a5175">No se adjuntó gráfico de ingresos</div>';
   const R = analysisResult;
 
-  const reportHTML = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Informe ${currentTicker} · ${dateStr}</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0c0f;--s1:#111419;--s3:#1e2430;--s4:#252b36;--text:#e8ecf4;--text2:#6b7a8d;--text3:#4a5568;--text4:#2d3748;--border:#1e2430;--buy:#00e5a0;--buy-pale:rgba(0,229,160,.08);--hold:#f5c518;--hold-pale:rgba(245,197,24,.08);--risk:#ff4757;--risk-pale:rgba(255,71,87,.08);--accent:#4a9eff;--f-d:'DM Mono',monospace;--f-s:'DM Mono',monospace;--f-m:'DM Mono',monospace;}
+:root{--bg:#070810;--s1:#0d0f1a;--s3:#191d2b;--s4:#1f2438;--text:#e8eaf2;--text2:#9098b8;--text3:#4a5175;--text4:#2a3050;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--buy:#22d45a;--buy-pale:rgba(34,212,90,.08);--hold:#f0b429;--hold-pale:rgba(240,180,41,.08);--risk:#f0483a;--risk-pale:rgba(240,72,58,.08);--accent:#6a8fff;--gold:#e8c55a;--f-d:'Syne',sans-serif;--f-s:'Fraunces',Georgia,serif;--f-m:'DM Mono',monospace;}
 *{box-sizing:border-box;margin:0;padding:0}html{font-size:14px}body{font-family:var(--f-d);background:var(--bg);color:var(--text)}
 .cover{background:var(--s1);padding:40px 48px;border-bottom:1px solid var(--border)}
-.cover h1{font-family:'Bebas Neue',cursive;font-size:2.5rem;letter-spacing:3px;color:#00e5a0;margin-bottom:6px}
-.cover-meta{font-size:.7rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
-.cover-sub{font-size:.85rem;color:var(--text2)}
+.cover h1{font-family:var(--f-s);font-size:2rem;font-weight:700;color:var(--text);margin-bottom:6px}
+.cover-meta{font-family:var(--f-m);font-size:.7rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
+.cover-sub{font-size:.85rem;color:var(--text2);font-family:var(--f-s)}
 .section{max-width:1280px;margin:0 auto;padding:28px 48px}
 .section-title{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.profiles-grid,.final-verdicts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.profile-card,.fv-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:2px solid}
+.profiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.profile-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:2px solid}
+.pc-icon{font-size:1.1rem}.pc-name{font-size:.8rem;font-weight:700;color:var(--text);margin:6px 0 2px}.pc-phil{font-size:.66rem;color:var(--text3);font-style:italic;font-family:var(--f-s);margin-bottom:8px}
+.pc-verdict{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid;display:inline-block;margin-bottom:8px}
+.pv-buy{background:var(--buy-pale);border-color:rgba(34,212,90,.3);color:var(--buy)}.pv-hold{background:var(--hold-pale);border-color:rgba(240,180,41,.3);color:var(--hold)}.pv-no{background:var(--risk-pale);border-color:rgba(240,72,58,.3);color:var(--risk)}
+.pc-score-num{font-family:var(--f-m);font-size:1.6rem;font-weight:500}
 .modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
 .mod-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.mod-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;justify-content:space-between}
+.mod-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mh-left{display:flex;align-items:center;gap:7px}.mh-icon{font-size:.95rem}.mh-title{font-size:.78rem;font-weight:700;color:var(--text)}.mh-score{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid}
 .mod-body{padding:12px 14px}
 .check-row{display:flex;align-items:flex-start;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.77rem}
-.check-row:last-child{border-bottom:none}
-.cr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.cd-buy{background:#00e5a0}.cd-no{background:#ff4757}.cd-na{background:#2d3748}
-.cr-label{flex:1;color:var(--text2);line-height:1.3}.cr-val{font-family:var(--f-m);font-size:.73rem;color:var(--text)}
-.mod-explanation{margin:0 14px 12px;padding:9px 12px;background:rgba(255,255,255,.025);border-radius:6px;font-size:.75rem;color:var(--text2);line-height:1.5;border-left:2px solid}
-.me-buy{border-color:#00e5a0}.me-hold{border-color:#f5c518}.me-no{border-color:#ff4757}.me-info{border-color:#4a9eff}
-.score-bars-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:18px}
+.check-row:last-child{border-bottom:none}.cr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.cd-buy{background:var(--buy)}.cd-no{background:var(--risk)}.cd-na{background:var(--text4)}
+.cr-label{flex:1;color:var(--text2);line-height:1.3}.cr-val{font-family:var(--f-m);font-size:.73rem;color:var(--text);white-space:nowrap}
+.mod-note{margin:8px 14px 10px;padding:8px 11px;background:var(--s4);border-radius:5px;font-size:.72rem;color:var(--text2);line-height:1.45;border-left:2px solid var(--accent)}
+.score-bars-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.sb-title{font-size:.77rem;font-weight:700;color:var(--text);margin-bottom:14px}
 .score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.sbr-label{font-size:.72rem;color:var(--text2);width:170px;flex-shrink:0}
-.sbr-bar-wrap{flex:1;height:5px;background:var(--s4);border-radius:2px;overflow:hidden}
-.sbr-fill{height:100%;border-radius:2px}.sbr-val{font-family:var(--f-m);font-size:.68rem;color:var(--text);width:40px;text-align:right}
+.sbr-label{font-size:.72rem;color:var(--text2);width:170px;flex-shrink:0}.sbr-bar-wrap{flex:1;height:5px;background:var(--s4);border-radius:2px;overflow:hidden}.sbr-fill{height:100%;border-radius:2px}.sbr-val{font-family:var(--f-m);font-size:.68rem;color:var(--text);width:40px;text-align:right;flex-shrink:0}
 .reasoning-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.rb-body{padding:18px;display:flex;flex-direction:column;gap:14px}
-.reason-block{border-left:2px solid;padding-left:12px}
-.rb-buy{border-color:#00e5a0}.rb-hold{border-color:#f5c518}.rb-risk{border-color:#ff4757}.rb-info{border-color:#4a9eff}
+.rb-head{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.77rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.rb-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.reason-block{border-left:2px solid;padding-left:12px}.rb-buy{border-color:var(--buy)}.rb-hold{border-color:var(--hold)}.rb-risk{border-color:var(--risk)}.rb-info{border-color:var(--accent)}.rb-warn{border-color:var(--gold)}
 .reason-title{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:4px}
-.reason-text{font-size:.8rem;color:var(--text2);line-height:1.6}
+.reason-text{font-size:.8rem;color:var(--text2);line-height:1.6;font-family:var(--f-s)}
 .reason-text strong{color:var(--text)}
-.verdict-box{padding:16px 22px;border-radius:10px;border:2px solid;display:flex;align-items:center;gap:16px;max-width:520px}
-.vb-buy{background:rgba(0,229,160,.08);border-color:#00e5a0}.vb-hold{background:rgba(245,197,24,.08);border-color:#f5c518}.vb-no{background:rgba(255,71,87,.08);border-color:#ff4757}
-.vb-icon{font-size:2rem;flex-shrink:0}.vb-decision{font-size:1.3rem;font-weight:700}
-.vb-buy .vb-decision,.vb-buy .vb-label{color:#00e5a0}.vb-hold .vb-decision,.vb-hold .vb-label{color:#f5c518}.vb-no .vb-decision,.vb-no .vb-label{color:#ff4757}
-.kpis-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:9px}
-.kpi-card{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:13px;text-align:center;border-top:2px solid}
-.kpi-val{font-size:1.1rem;margin-bottom:4px}.kpi-lbl{font-size:.65rem;color:var(--text3);text-transform:uppercase}
-.fvcs{background:var(--s4);border-radius:4px;padding:5px;text-align:center}
-.fvcs-val{font-size:.9rem;font-weight:500}.fvcs-lbl{font-size:.57rem;color:var(--text4);text-transform:uppercase}
+.final-verdicts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.fv-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid}
+.fvc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}.fvc-icon{font-size:1rem}.fvc-verdict-badge{font-family:var(--f-m);font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid}
+.fvc-name{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:1px}.fvc-phil{font-size:.65rem;color:var(--text3);font-style:italic;font-family:var(--f-s);margin-bottom:9px}
+.fvc-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+.fvcs{background:var(--s4);border-radius:4px;padding:5px;text-align:center}.fvcs-val{font-family:var(--f-m);font-size:.9rem;font-weight:500}.fvcs-lbl{font-size:.57rem;color:var(--text4);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
 .expert-verdict-box{background:var(--s3);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.evb-head{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--s4)}
-.evb-body{padding:20px;display:flex;flex-direction:column;gap:14px}
-.pdf-bull-bear{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.pdf-bull{background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.2);border-radius:8px;padding:12px}
-.pdf-bear{background:rgba(255,71,87,.06);border:1px solid rgba(255,71,87,.2);border-radius:8px;padding:12px}
-.pdf-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
-.pdf-kpi{background:var(--s4);border-radius:6px;padding:9px;text-align:center;border-top:2px solid}
-.pdf-section{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
-.pdf-section-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.74rem;font-weight:700}
-.pdf-section-body{padding:14px}
-.footer{max-width:1280px;margin:0 auto;padding:16px 48px 28px;display:flex;justify-content:space-between;border-top:1px solid var(--border);font-size:.7rem;color:var(--text3);flex-wrap:wrap;gap:8px}
-.disclaimer{max-width:1280px;margin:0 auto;padding:0 48px 24px;font-size:.67rem;color:var(--text4);line-height:1.5;font-style:italic}
+.evb-head{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;gap:12px}
+.evb-icon{font-size:1.4rem}.evb-title{font-family:var(--f-s);font-size:1rem;font-weight:700;color:var(--text)}.evb-sub{font-size:.73rem;color:var(--text3);margin-top:2px}
+.evb-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.footer{max-width:1280px;margin:0 auto;padding:16px 48px 28px;display:flex;justify-content:space-between;border-top:1px solid var(--border);font-family:var(--f-m);font-size:.7rem;color:var(--text3);flex-wrap:wrap;gap:8px}
+.disclaimer{max-width:1280px;margin:0 auto;padding:0 48px 24px;font-size:.67rem;color:var(--text4);font-family:var(--f-s);font-style:italic;line-height:1.5}
 @media(max-width:800px){.section,.cover,.footer,.disclaimer{padding-left:18px;padding-right:18px}}
 </style></head><body>
+
 <div class="cover">
-  <div class="cover-meta">Informe Análisis Fundamental Pro · ${dateStr}</div>
-  <h1>${R?.meta?.name || currentTicker}</h1>
-  <div class="cover-sub">Ticker: ${currentTicker} · Sector: ${R?.sectorKey || '—'} · Fair Value: ${R?.meta?.fv || 'N/D'}${R?.meta?.fvUpside ? ' · Upside: +' + R.meta.fvUpside.toFixed(1) + '%' : ''}</div>
+  <div class="cover-meta">Informe de Análisis Fundamental Pro · ${dateStr} · 10 Perfiles</div>
+  <h1>${R.meta.name || currentTicker}</h1>
+  <div class="cover-sub">Ticker: ${currentTicker} · Sector: ${R.sectorKey} · ${R.meta.industry || ''} · Fair Value: ${R.meta.fv || 'N/D'}${R.meta.fvUpside ? ' · Upside: +' + R.meta.fvUpside.toFixed(1) + '%' : ''}</div>
 </div>
-<div class="section"><div class="section-title">⭐ Score Global & Decisión</div>${globalVerdictHTML}</div>
-<div class="section"><div class="section-title">📌 Métricas Clave</div><div class="kpis-row">${kpisHTML}</div></div>
-<div class="section"><div class="section-title">📊 Veredicto por Perfil</div><div class="profiles-grid">${profilesHTML}</div></div>
-<div class="section"><div class="section-title">🔬 Módulos de Análisis</div><div class="modules-grid">${modulesHTML}</div></div>
-<div class="section"><div class="section-title">⚖️ Puntuación por Módulo</div><div class="score-bars-box">${scoreBarsHTML}</div></div>
-<div class="section"><div class="section-title">📈 Gráfico de Ingresos</div>${chartHTML}</div>
-${pdfPanelHTML ? `<div class="section"><div class="section-title">📑 PDF Pro Research</div><div>${pdfPanelHTML}</div></div>` : ''}
-<div class="section"><div class="section-title">🧠 Razonamiento</div><div class="reasoning-box"><div class="rb-body">${reasonHTML}</div></div></div>
-${finalHTML ? `<div class="section"><div class="section-title">🎯 Veredicto Final</div><div class="final-verdicts-grid">${finalHTML}</div></div><div class="section">${expertHTML}</div>` : ''}
-<div class="footer"><span>📊 Análisis Fundamental Pro · ${currentTicker} · ${dateStr}</span><span>10 Perfiles · 9 Módulos</span></div>
-<div class="disclaimer">Este informe es puramente informativo y no constituye asesoramiento de inversión. Las métricas se basan en datos aportados por el usuario. Rentabilidades pasadas no garantizan resultados futuros.</div>
+
+<div class="section">
+  <div class="section-title">📊 Veredicto por Perfil — Análisis Cuantitativo (80%)</div>
+  <div class="profiles-grid">${profilesHTML}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">🔬 Análisis por Módulo</div>
+  <div class="modules-grid">${modulesHTML}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">⚖️ Puntuación por Módulo</div>
+  <div class="score-bars-box">${scoreBarsHTML}</div>
+</div>
+
+<div class="section">
+  <div class="section-title">📈 Gráfico de Ingresos</div>
+  ${chartHTML}
+</div>
+
+<div class="section">
+  <div class="section-title">🧠 Razonamiento Cuantitativo</div>
+  <div class="reasoning-box"><div class="rb-head">🧠 Razonamiento por Módulos</div><div class="rb-body">${reasonHTML}</div></div>
+</div>
+
+${finalHTML ? `
+<div class="section">
+  <div class="section-title">🎯 Veredicto Final Combinado (80% cuant. + 20% cual.)</div>
+  <div class="final-verdicts-grid">${finalHTML}</div>
+</div>
+<div class="section">${expertHTML}</div>` : ''}
+
+<div class="footer">
+  <span>📊 Análisis Fundamental Pro · ${currentTicker} · ${dateStr}</span>
+  <span>Sistema: 10 Perfiles · 9 Módulos · 53 Preguntas Cualitativas</span>
+</div>
+<div class="disclaimer">Este informe es puramente informativo y no constituye asesoramiento financiero ni recomendación de inversión. Las métricas y valoraciones se basan en datos proporcionados por el usuario. Toda decisión de inversión debe tomarse con criterio propio y con el apoyo de un asesor financiero certificado. Rentabilidades pasadas no garantizan resultados futuros.</div>
+
 </body></html>`;
 
-  // ── BUILD ZIP with all files ──
-  const JSZip = window.JSZip;
-  if (!JSZip) {
-    // Fallback: just download HTML
-    downloadBlob(reportHTML, 'text/html;charset=utf-8', folderName + '/informe_' + safeTicker + '.html');
-    showToast('Informe HTML descargado (JSZip no disponible)');
-    return;
-  }
-
-  const zip = new JSZip();
-  const folder = zip.folder(folderName);
-
-  // 1. HTML report
-  folder.file(`informe_${safeTicker}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`, reportHTML);
-
-  // 2. CSV (original metrics file)
-  if (window._csvRaw) {
-    folder.file(`metricas_${safeTicker}.csv`, window._csvRaw);
-  }
-
-  // 3. Excel sector comparison
-  if (window._excelRaw) {
-    folder.file(`sector_${safeTicker}.xlsx`, window._excelRaw, { binary: true });
-  }
-
-  // 4. Chart image
-  if (chartImageURL) {
-    const imgData = chartImageURL.split(',')[1];
-    const ext = chartImageURL.includes('png') ? 'png' : 'jpg';
-    folder.file(`grafico_${safeTicker}.${ext}`, imgData, { base64: true });
-  }
-
-  // 5. PDF Pro Research
-  if (pdfRawBase64) {
-    const pdfB64 = pdfRawBase64.split(',')[1];
-    folder.file(pdfFileName || `research_${safeTicker}.pdf`, pdfB64, { base64: true });
-  }
-
-  // Generate and download ZIP
-  folder.file('README.txt',
-    `Análisis Fundamental: ${currentTicker}\nFecha: ${dateStr}\nContenido:\n- informe_*.html → Informe completo\n- metricas_*.csv → CSV de métricas\n- sector_*.xlsx → Comparativa sectorial\n- grafico_*.jpg/png → Gráfico de ingresos\n- research_*.pdf → Pro Research Report\n`);
-
-  zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } })
-    .then(blob => {
-      downloadBlob(blob, 'application/zip', folderName + '.zip');
-      showToast(`📦 Carpeta descargada: ${folderName}.zip`);
-    });
-}
-
-function downloadBlob(content, type, filename) {
-  const blob = content instanceof Blob ? content : new Blob([content], { type });
+  const blob = new Blob([html], { type:'text/html;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = filename;
+  a.href = url; a.download = fileName;
   document.body.appendChild(a); a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+
+  showToast(`Informe guardado: ${fileName}`);
 }
 
 /* ══════════════════════════════════════════
@@ -3208,15 +2912,13 @@ function openTool(name) {
 
 function resetAnalysis() {
   parsedMetrics = {}; sectorData = null; chartImageURL = null;
-  pdfData = null; pdfRawBase64 = null; pdfFileName = '';
-  window._csvRaw = null; window._excelRaw = null;
   analysisResult = null; currentTicker = ''; checklistAnswers = {};
   document.getElementById('resultsSection').classList.remove('show');
   document.getElementById('checklistSection').classList.remove('show');
   document.getElementById('finalSection').classList.remove('show');
   document.getElementById('heroSection').style.display = '';
   document.getElementById('tbCompany').classList.remove('show');
-  ['fo1','fo2','fo3','fo4'].forEach(id => document.getElementById(id).classList.remove('show'));
+  ['fo1','fo2','fo3'].forEach(id => document.getElementById(id).classList.remove('show'));
   document.getElementById('tickerInp').value = '';
   document.getElementById('analyzeBtn').disabled = true;
   document.getElementById('coVetoAlert').classList.remove('show');
