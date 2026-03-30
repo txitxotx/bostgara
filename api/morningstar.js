@@ -26,6 +26,7 @@ const FUNDS = {
   'LU0625737910': { pid: '0P0000TOUY', sfx: 'FOLUX$$ALL' }, // Pictet China Index P EUR
   'IE00BYX5MX67': { pid: '0P0001CLDM', sfx: 'FOIRL$$ALL' }, // Fidelity S&P 500 P-EUR
   'IE00BYX5NX33': { pid: '0P0001CLDK', sfx: 'FOIRL$$ALL' }, // Fidelity MSCI World P-EUR
+  'ES0119199018': { pid: 'F000016A7V', sfx: 'FOESP$$ALL' }, // Cobas Internacional FI Clase D
   '0P0001L8Z8':   { pid: '0P0001L8Z8', sfx: 'FOESP$$ALL' }, // Baskepensiones RF Corto
   '0P0001L8YS':   { pid: '0P0001L8YS', sfx: 'FOESP$$ALL' }, // Baskepensiones Bolsa Euro
 };
