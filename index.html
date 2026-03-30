@@ -420,6 +420,36 @@ body.privacy #trPosTable{
     background:var(--acc);
     border-radius:0 0 2px 2px;
   }
+  /* Acciones panel — mobile layout */
+  .stocks-hero{
+    flex-direction:column;
+    padding:18px 16px;
+    gap:14px;
+  }
+  .stocks-hero-right{
+    align-items:stretch;
+    width:100%;
+  }
+  .btn-analyze{
+    justify-content:center;
+    font-size:.8rem;
+    padding:12px 16px;
+  }
+  .btn-analyze-ghost{
+    justify-content:center;
+    font-size:.74rem;
+    padding:9px 14px;
+  }
+  .stocks-stats{
+    gap:8px;
+  }
+  .ss-card{
+    padding:10px 12px;
+    min-width:70px;
+  }
+  .ss-val{
+    font-size:1.4rem;
+  }
 }
 
 /* ── STOCKS TAB ── */
@@ -1308,6 +1338,7 @@ const ASSETS_BASE = [
   {id:'p300',       name:'300 Places Worldwide',        isin:'ES0157638000', cat:'RV', titles:384.677,      costPrice:13.26,  costeReal:5100.00,   src:'ms'},
   {id:'fsp500',     name:'Fidelity S&P 500 Index',      isin:'IE00BYX5MX67', cat:'RV', titles:88.391,       costPrice:13.58,  costeReal:1199.98,   src:'ms'},
   {id:'fworld',     name:'Fidelity MSCI World',         isin:'IE00BYX5NX33', cat:'RV', titles:102.127,      costPrice:11.75,  costeReal:1200.00,   src:'ms'},
+  {id:'cobas',      name:'Cobas Internacional FI Clase D', isin:'ES0119199018', cat:'RV', titles:0.353680,     costPrice:282.7417,costeReal:100.00,    src:'ms'},
   // CRIPTOMONEDAS
   {id:'xrp',        name:'XRP',                         isin:'XRP',   cat:'CR', titles:40.816,       costPrice:2.12,    costeReal:86.44,     src:'cg', cgId:'ripple'},
   {id:'sui',        name:'Sui',                         isin:'SUI',   cat:'CR', titles:129.430,      costPrice:2.65,    costeReal:342.91,    src:'cg', cgId:'sui'},
@@ -1584,6 +1615,8 @@ const CSV_NAME_MAP = [
   ['fidelity s&p 500 index fund eur',          'fsp500'],
   ['fidelity s&p 500 index fund',              'fsp500'],
   ['fidelity msci world index fund',           'fworld'],
+  ['cobas internacional fi clase d',            'cobas'],
+  ['cobas internacional',                       'cobas'],
   // ── CR ──────────────────────────────────────────────────────────────────
   ['bitcoin',          'btc'],
   ['solana',           'sol'],
@@ -2612,6 +2645,7 @@ function showTab(id,btn){
   if(id==='analysis'&&S.computed.length)renderAnalysis();
   if(id==='trading'){renderTrading();initWatchlist();}
   if(id==='gestion')initGestion();
+  if(id==='stocks')loadStocksFromServer();
 }
 
 // Navegación móvil — barra inferior
@@ -3012,7 +3046,12 @@ function mgRender(){
       const src=a.src==='ms'?'Morningstar':a.src==='yf'?'Yahoo Finance':a.src==='cg'?'CoinGecko':'Manual';
       const isinD=a.ticker?a.ticker:(a.isin&&a.isin.length>4?a.isin:(a.cgId||'—'));
       const safeName=a.name.replace(/'/g,"\\'");
-      html+=`<div class="mg-card"><div class="mg-cat-bar" style="background:${CC[cat]}"></div><div class="mg-info"><div class="mg-name">${a.name}${isC?' <span style="color:var(--acc3);font-size:.57rem">CUSTOM</span>':''}</div><div class="mg-sub">${src} · <span style="color:${CC[cat]}">${isinD}</span></div><div class="mg-nums"><div class="mg-n"><span class="mg-nl">Títulos</span><span class="mg-nv">${(a.titles||0).toLocaleString('es-ES',{maximumFractionDigits:6})}</span></div><div class="mg-n"><span class="mg-nl">Compra</span><span class="mg-nv">${fp(a.costPrice)}</span></div><div class="mg-n"><span class="mg-nl">Invertido</span><span class="mg-nv">${f(a.costeReal)}</span></div></div></div><div class="mg-actions"><button class="mg-btn edit" onclick="mgEdit('${a.id}')" title="Editar">✏️</button><button class="mg-btn del" onclick="mgAskDel('${a.id}','${safeName}')" title="Eliminar">🗑️</button></div></div>`;
+      html+=`<div class="mg-card"><div class="mg-cat-bar" style="background:${CC[cat]}"></div><div class="mg-info"><div class="mg-name">${a.name}${isC?' <span style="color:var(--acc3);font-size:.57rem">CUSTOM</span>':''}</div><div class="mg-sub">${src} · <span style="color:${CC[cat]}">${isinD}</span></div><div class="mg-nums">
+<div class="mg-n"><span class="mg-nl">Títulos</span><span class="mg-nv">${(a.titles||0).toLocaleString('es-ES',{maximumFractionDigits:6})}</span></div>
+<div class="mg-n"><span class="mg-nl">Precio compra</span><span class="mg-nv">${fp(a.costPrice)}</span></div>
+<div class="mg-n"><span class="mg-nl">Invertido</span><span class="mg-nv">${f(a.costeReal)}</span></div>
+${(()=>{const pr=S.prices[a.id];if(!pr||!pr.ok)return'';const nav=pr.nav;const val=(a.titles||0)*nav;const pnl=val-(a.costeReal||0);const pct=a.costeReal>0?((val-a.costeReal)/a.costeReal*100):0;const col=pnl>=0?'var(--acc)':'var(--red)';return`<div class="mg-n"><span class="mg-nl">NAV actual</span><span class="mg-nv">${fp(nav)}</span></div><div class="mg-n"><span class="mg-nl">Valor actual</span><span class="mg-nv">${f(val)}</span></div><div class="mg-n"><span class="mg-nl">Plusvalía</span><span class="mg-nv" style="color:${col}">${pnl>=0?'+':''}${f(pnl)} (${pct>=0?'+':''}${pct.toFixed(1)}%)</span></div>`;})()}
+</div></div><div class="mg-actions"><button class="mg-btn edit" onclick="mgEdit('${a.id}')" title="Editar">✏️</button><button class="mg-btn del" onclick="mgAskDel('${a.id}','${safeName}')" title="Eliminar">🗑️</button></div></div>`;
     }
     html+='</div></div>';
   }
@@ -3103,7 +3142,31 @@ function mgConfirmDelete(){
   computeAndRender();mgRender();
 }
 function mgRestoreDefaults(){if(!confirm('¿Restaurar todos los activos originales?'))return;MG.customAssets=[];MG.deletedIds=new Set();mgAddLog('edit','Restaurados originales');mgSave_storage();mgApplyToAssets();computeAndRender();mgRender();}
-function initGestion(){mgLoad_storage();mgApplyToAssets();mgRender();}
+function initGestion(){
+  mgLoad_storage();
+  // Only rebuild ASSETS from base if no live data is loaded yet
+  // If S.computed has values, ASSETS already reflects CSV imports - don't overwrite
+  if(!S.computed || !S.computed.length){
+    mgApplyToAssets();
+  }
+  mgRender();
+}
+function mgSyncFromAssets(){
+  // Update titles/costPrice/costeReal in ASSETS_BASE-backed items from current ASSETS
+  // This ensures CSV imports are reflected in Gestión view
+  for(const a of ASSETS){
+    // Only sync if the asset has been CSV-updated (titles would differ from base)
+    const base = ASSETS_BASE.find(x=>x.id===a.id);
+    if(base && (
+      Math.abs((a.titles||0)-(base.titles||0)) > 0.000001 ||
+      Math.abs((a.costPrice||0)-(base.costPrice||0)) > 0.000001 ||
+      Math.abs((a.costeReal||0)-(base.costeReal||0)) > 0.01
+    )){
+      // Values differ from base — CSV has updated them. Reflect in view.
+      // We don't save to localStorage since CSV is the source of truth
+    }
+  }
+}
 
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
@@ -3425,7 +3488,7 @@ function fiscalPreview() {
   prev.style.display = 'block';
 }
 
-function generateFiscalPDF() {
+async function generateFiscalPDF() {
   const { jsPDF } = window.jspdf;
   const data = fiscalCalcYear(FISCAL_YEAR);
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
@@ -3687,7 +3750,25 @@ function generateFiscalPDF() {
     text('P\u00e1gina ' + p + ' de ' + totalPages, W - M, 294, { size: 6, color: C.mut, align: 'right' });
   }
 
-  doc.save('Informe_Fiscal_IRPF_' + FISCAL_YEAR + '.pdf');
+  // Intentar diálogo nativo de guardado (navegadores modernos)
+  const fileName = 'Informe_Fiscal_IRPF_' + FISCAL_YEAR + '.pdf';
+  try {
+    if (window.showSaveFilePicker) {
+      const blob = doc.output('blob');
+      const handle = await window.showSaveFilePicker({
+        suggestedName: fileName,
+        types: [{ description: 'Documento PDF', accept: { 'application/pdf': ['.pdf'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } else {
+      doc.save(fileName);
+    }
+  } catch(e) {
+    // Usuario canceló el diálogo o no soportado — usar descarga directa
+    if (e.name !== 'AbortError') doc.save(fileName);
+  }
   closeFiscalModal();
 }
 
@@ -3713,6 +3794,7 @@ const TXN_PID_MAP = {
   '0P0000TOUY': 'pictet',
   '0P0001CLDM': 'fsp500',
   '0P0001CLDK': 'fworld',
+  'F000016A7V': 'cobas',       // Cobas Internacional FI Clase D
   '0P00000DQZ': null,          // Bolsalíder — vendido, ignorar en TXS activos
   // EPSV
   '0P0001L8YS': 'bskbl',
