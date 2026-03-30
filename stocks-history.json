@@ -117,5 +117,44 @@
       "Beneish M-Score 3.08 > -1.78"
     ],
     "savedAt": "2026-03-30T18:01:27.310Z"
+  },
+  {
+    "ticker": "FINVOLUTION",
+    "name": "FINVOLUTION",
+    "sector": "general",
+    "sectorKey": "general",
+    "globalScore": 80,
+    "globalVerdict": "COMPRAR",
+    "profileScores": {
+      "value": 81,
+      "quality": 78,
+      "garp": 78,
+      "growth": 77,
+      "smallcap": 77,
+      "income": 83,
+      "dgi": 81,
+      "deepvalue": 85,
+      "defensive": 84,
+      "incgrowth": 80
+    },
+    "modules": {
+      "m1": 0.8,
+      "m2": 0.631578947368421,
+      "m3": 0.47368421052631576,
+      "m4": 1,
+      "m5": 1,
+      "m6": 0.9428571428571428,
+      "m7": 1,
+      "m8": 0.8571428571428571,
+      "m9": 0.5
+    },
+    "fv": "5,80 USD",
+    "fvUpside": 25.1,
+    "fvConf": "MED",
+    "price": "4.64$",
+    "reasoning": "Score global: 80% → COMPRAR. Sector: general. Riesgo: 100% · Liquidez: 100% · Val.Intrínseca: 100%. Sin vetos.",
+    "m0Passes": true,
+    "vetos": [],
+    "savedAt": "2026-03-30T18:23:26.085Z"
   }
 ]
