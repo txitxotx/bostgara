@@ -1767,8 +1767,11 @@ async function loadCsvFromServer(){
   try{
     const r=await fetch('/api/get-csv',{cache:'no-store'});
     if(!r.ok)return false;
+    // Detectar respuesta de error JSON (no CSV)
+    const ct=r.headers.get('content-type')||'';
+    if(ct.includes('application/json'))return false;
     const text=await r.text();
-    if(!text||text.startsWith('{'))return false; // error JSON
+    if(!text||!text.trim())return false;
     const parsed=parseCsvPortfolio(text);
     if(!parsed.length)return false;
     for(const row of parsed){
@@ -1778,7 +1781,7 @@ async function loadCsvFromServer(){
     console.log('[csv] '+parsed.length+' activos cargados desde GitHub');
     return true;
   }catch(e){
-    console.log('[csv] No se pudo cargar portfolio.csv desde GitHub');
+    console.warn('[csv] No se pudo cargar portfolio.csv desde GitHub:',e.message);
     return false;
   }
 }
@@ -2433,17 +2436,25 @@ function setProgress(p){const el=document.getElementById('progBar');if(el)el.sty
 
 function calcRealVols(){
   S.volC={};
+  // Fallbacks por categoría (consistentes)
+  const VOL_FB={RF:.015,RV:.12,CR:.70,EP:.02,AC:.10};
+  const DD_FB ={RF:.01, RV:.08,CR:.35,EP:.01,AC:.08};
+  // Fechas dinámicas — no hardcodeadas al año
+  const now=new Date();
+  const ytdCut=`${now.getFullYear()}-01-01`;
+  const mtdCut=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
   for(const a of ASSETS){
     const hist=S.hist[a.id];
-    if(!hist||hist.length<15){S.volC[a.id]={vol:a.cat==='RF'?.015:a.cat==='RV'?.12:a.cat==='CR'?.7:.02,maxDD:.03,ytd:0,mtd:0};continue;}
+    const fVol=VOL_FB[a.cat]??0.10, fDD=DD_FB[a.cat]??0.05;
+    if(!hist||hist.length<15){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0};continue;}
     const prices=hist.map(h=>h.nav);
     const rets=[];for(let i=1;i<prices.length;i++){if(prices[i-1]>0&&prices[i]>0)rets.push(Math.log(prices[i]/prices[i-1]));}
-    if(rets.length<10){S.volC[a.id]={vol:.1,maxDD:.05,ytd:0,mtd:0};continue;}
+    if(rets.length<10){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0};continue;}
     const mean=rets.reduce((s,v)=>s+v,0)/rets.length;
     const vol=Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/(rets.length-1)*252);
     let peak=prices[0],maxDD=0;for(const p of prices){if(p>peak)peak=p;const dd=(peak-p)/peak;if(dd>maxDD)maxDD=dd;}
-    const ytdS=hist.find(h=>h.date>='2026-01-01');const ytd=ytdS?(hist[hist.length-1].nav-ytdS.nav)/ytdS.nav:0;
-    const mtdS=hist.find(h=>h.date>='2026-02-01');const mtd=mtdS?(hist[hist.length-1].nav-mtdS.nav)/mtdS.nav:0;
+    const ytdS=hist.find(h=>h.date>=ytdCut);const ytd=ytdS?(hist[hist.length-1].nav-ytdS.nav)/ytdS.nav:0;
+    const mtdS=hist.find(h=>h.date>=mtdCut);const mtd=mtdS?(hist[hist.length-1].nav-mtdS.nav)/mtdS.nav:0;
     S.volC[a.id]={vol,maxDD,ytd,mtd};
   }
 }
@@ -2704,7 +2715,7 @@ function trCalcPositions(){
 }
 
 function trCalcSummary(positions){
-  let totalCost=0, totalVal=0, totalRealized=0;
+  let totalCost=0, totalVal=0;
   for(const p of positions){
     const pr = S.prices['ac_'+p.ticker.toLowerCase()];
     const nav = pr?.nav || (p.shares > 0 ? p.cost/p.shares : 0);
@@ -2717,13 +2728,8 @@ function trCalcSummary(positions){
     totalCost += p.cost;
     totalVal += p.valor;
   }
-  totalRealized = TR_TRADES.reduce((s,t)=>{
-    if(t.type!=='sell') return s;
-    // buscar coste promedio al momento de la venta
-    return s; // simplificado: se acumula en trCalcPositions
-  }, TR_TRADES.filter(t=>t.type==='sell').reduce((s,t)=>s,0));
-  // recalcular realizado sumando desde positions (ya calculado)
-  totalRealized = Object.values(trCalcPositionsAll()).reduce((s,p)=>s+p.realizedPnl,0);
+  // PnL realizado — calculado una única vez desde trCalcPositionsAll
+  const totalRealized = Object.values(trCalcPositionsAll()).reduce((s,p)=>s+p.realizedPnl,0);
   return {totalCost, totalVal, totalPnl: totalVal-totalCost, totalRealized};
 }
 
@@ -4224,7 +4230,18 @@ Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(() => {
   for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
   loadAll(); // loadAll ya llama a computeAndRender internamente
 });
-setInterval(loadAll, 4*60*60*1000);
+// Auto-refresh cada 4h, pausado cuando la pestaña está en background
+(function setupAutoRefresh(){
+  const INTERVAL=4*60*60*1000;
+  let timer=null;
+  function start(){if(timer)return;timer=setInterval(()=>{if(!document.hidden)loadAll();},INTERVAL);}
+  function stop(){if(timer){clearInterval(timer);timer=null;}}
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){stop();}
+    else{start();const elapsed=Date.now()-(S.lastUpdate?.getTime()||0);if(elapsed>INTERVAL)loadAll();}
+  });
+  start();
+})();
 
 
 /* ══════════════════════════════════════════════════════════════
