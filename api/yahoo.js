@@ -1,17 +1,34 @@
 // api/yahoo.js — Vercel Serverless Function
 // Proxy para Yahoo Finance con autenticación crumb
+// Fixes: AbortController timeout, crumb más robusto, sin Cache Map en memoria serverless
+
 export const config = { maxDuration: 20 };
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+const TIMEOUT_MS = 9000;
 
-const CACHE     = new Map();
-const CACHE_TTL = 15 * 60 * 1000;
-let crumbCache  = null;
+// crumbCache sobrevive entre warm invocations de la misma instancia (best-effort)
+let crumbCache = null;
 const CRUMB_TTL = 55 * 60 * 1000;
 
+async function fetchWithTimeout(url, options = {}) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigin = process.env.ALLOWED_HOST
+    ? `https://${process.env.ALLOWED_HOST}`
+    : '*';
+
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  // Cache de borde de Vercel CDN (15 min)
   res.setHeader('Cache-Control', 's-maxage=900, stale-while-revalidate=1800');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -20,37 +37,34 @@ export default async function handler(req, res) {
 
   const sym = ticker.toUpperCase().trim();
   const act = action || 'summary';
-  const cKey = `${act}:${sym}`;
-  if (CACHE.has(cKey)) {
-    const c = CACHE.get(cKey);
-    if (Date.now() - c.ts < CACHE_TTL) return res.json(c.data);
-  }
 
   try {
     let result;
     if      (act === 'chart')   result = await fetchChart(sym);
     else if (act === 'history') result = await fetchHistory(sym);
     else                        result = await fetchSummary(sym);
-    CACHE.set(cKey, { ts: Date.now(), data: result });
     return res.json(result);
   } catch (err) {
     console.error('[yahoo]', sym, err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Error al obtener datos de Yahoo Finance' });
   }
 }
 
 async function getCrumb() {
   if (crumbCache && Date.now() - crumbCache.ts < CRUMB_TTL) return crumbCache;
-  const pageRes = await fetch('https://finance.yahoo.com/', {
+
+  const pageRes = await fetchWithTimeout('https://finance.yahoo.com/', {
     headers: { 'User-Agent': UA, 'Accept-Language': 'en-US,en;q=0.9' },
     redirect: 'follow',
   });
   const cookie = pageRes.headers.get('set-cookie') || '';
-  const crumbRes = await fetch('https://query1.finance.yahoo.com/v1/test/getcrumb', {
+
+  const crumbRes = await fetchWithTimeout('https://query1.finance.yahoo.com/v1/test/getcrumb', {
     headers: { 'User-Agent': UA, 'Accept': '*/*', 'Cookie': cookie },
   });
   const crumb = await crumbRes.text();
-  if (!crumb || crumb.length > 20) throw new Error('crumb inválido');
+  if (!crumb || crumb.includes('<') || crumb.length > 30) throw new Error('crumb inválido');
+
   crumbCache = { crumb: crumb.trim(), cookie, ts: Date.now() };
   return crumbCache;
 }
@@ -58,7 +72,7 @@ async function getCrumb() {
 // ── Precio actual (últimos 5 días) ──────────────────────────────
 async function fetchChart(sym) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5d`;
-  const r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept': '*/*' } });
+  const r = await fetchWithTimeout(url, { headers: { 'User-Agent': UA, 'Accept': '*/*' } });
   if (!r.ok) throw new Error(`chart HTTP ${r.status}`);
   const d = await r.json();
   const q = d?.chart?.result?.[0];
@@ -73,7 +87,7 @@ async function fetchChart(sym) {
 // ── Histórico de precios (5 años, intervalo diario) ─────────────
 async function fetchHistory(sym) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=5y`;
-  const r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept': '*/*' } });
+  const r = await fetchWithTimeout(url, { headers: { 'User-Agent': UA, 'Accept': '*/*' } });
   if (!r.ok) throw new Error(`history HTTP ${r.status}`);
   const d = await r.json();
   const q = d?.chart?.result?.[0];
@@ -99,7 +113,7 @@ async function fetchSummary(sym) {
   try {
     const { crumb, cookie } = await getCrumb();
     const url = `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${sym}?modules=${modules}&crumb=${encodeURIComponent(crumb)}`;
-    const r = await fetch(url, {
+    const r = await fetchWithTimeout(url, {
       headers: { 'User-Agent': UA, 'Accept': 'application/json', 'Cookie': cookie },
     });
     if (r.ok) {
@@ -114,7 +128,7 @@ async function fetchSummary(sym) {
   // Intento 2: v11 sin crumb
   if (!root) {
     const url = `https://query2.finance.yahoo.com/v11/finance/quoteSummary/${sym}?modules=${modules}`;
-    const r = await fetch(url, { headers: { 'User-Agent': UA, 'Accept': 'application/json' } });
+    const r = await fetchWithTimeout(url, { headers: { 'User-Agent': UA, 'Accept': 'application/json' } });
     if (!r.ok) throw new Error(`summary HTTP ${r.status}`);
     const json = await r.json();
     root = json?.quoteSummary?.result?.[0];
@@ -130,7 +144,7 @@ async function fetchSummary(sym) {
   const price = pr.regularMarketPrice?.raw ?? sd.previousClose?.raw ?? null;
   const d1    = pr.regularMarketChangePercent?.raw != null ? pr.regularMarketChangePercent.raw * 100 : 0;
   const trailingEps = ks.trailingEps?.raw;
-  const per = sd.trailingPE?.raw ?? (price && trailingEps > 0 ? +(price/trailingEps).toFixed(2) : null);
+  const per = sd.trailingPE?.raw ?? (price && trailingEps > 0 ? +(price / trailingEps).toFixed(2) : null);
 
   return {
     price, d1,
@@ -141,10 +155,10 @@ async function fetchSummary(sym) {
     pb:           ks.priceToBook?.raw ?? null,
     ps:           ks.priceToSalesTrailing12Months?.raw ?? null,
     evEbitda:     ks.enterpriseToEbitda?.raw ?? null,
-    divYield:     sd.dividendYield?.raw != null ? +(sd.dividendYield.raw*100).toFixed(2) : null,
-    profitMargin: fd.profitMargins?.raw != null ? +(fd.profitMargins.raw*100).toFixed(2) : null,
-    roe:          fd.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw*100).toFixed(2) : null,
-    debtEq:       fd.debtToEquity?.raw != null ? +(fd.debtToEquity.raw/100).toFixed(2) : null,
+    divYield:     sd.dividendYield?.raw != null ? +(sd.dividendYield.raw * 100).toFixed(2) : null,
+    profitMargin: fd.profitMargins?.raw != null ? +(fd.profitMargins.raw * 100).toFixed(2) : null,
+    roe:          fd.returnOnEquity?.raw != null ? +(fd.returnOnEquity.raw * 100).toFixed(2) : null,
+    debtEq:       fd.debtToEquity?.raw != null ? +(fd.debtToEquity.raw / 100).toFixed(2) : null,
     low52:        sd.fiftyTwoWeekLow?.raw ?? null,
     high52:       sd.fiftyTwoWeekHigh?.raw ?? null,
     mktCap:       pr.marketCap?.raw ?? ks.marketCap?.raw ?? null,

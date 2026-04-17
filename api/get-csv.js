@@ -1,8 +1,16 @@
 // api/get-csv.js — Lee portfolio.csv directamente desde GitHub (siempre fresco)
+// Fixes: usa lib/github (timeout, retry), detecta errores por Content-Type
+
 export const config = { maxDuration: 15 };
 
+import { getFile } from '../lib/github.js';
+
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const allowedOrigin = process.env.ALLOWED_HOST
+    ? `https://${process.env.ALLOWED_HOST}`
+    : '*';
+
+  res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -13,26 +21,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/portfolio.csv?ref=${GITHUB_BRANCH}`;
-    const r = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    });
+    const file = await getFile(GITHUB_TOKEN, GITHUB_REPO, 'portfolio.csv', GITHUB_BRANCH);
 
-    if (!r.ok) {
-      if (r.status === 404) return res.status(404).json({ error: 'portfolio.csv no encontrado' });
-      throw new Error(`GitHub API ${r.status}`);
+    if (!file) {
+      return res.status(404).json({ error: 'portfolio.csv no encontrado en el repo' });
     }
 
-    const data = await r.json();
-    const content = Buffer.from(data.content, 'base64').toString('utf-8');
-    return res.status(200).send(content);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    return res.status(200).send(file.content);
 
-  } catch(err) {
+  } catch (err) {
     console.error('[get-csv]', err.message);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: 'Error al leer portfolio.csv' });
   }
 }
