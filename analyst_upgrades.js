@@ -380,53 +380,27 @@
     const existing = document.getElementById('analystDiagnosticPanel');
     if (existing) existing.remove();
 
-    // Buscar contenedor con múltiples estrategias
-    let container = null;
-    const selectors = [
-      '.tab-container',
-      '.reasoning-box',
-      '#tab-reasoning',
-      '.results-container',
-      '#resultsSection',
-      'main',
-      'body'
-    ];
-
-    for (const sel of selectors) {
-      const el = document.querySelector(sel);
-      if (el) {
-        container = sel === 'body' ? el : (el.parentElement || el);
-        console.log('[AnalystUpgrades] Container encontrado:', sel);
-        break;
-      }
-    }
-
-    if (!container) {
-      console.warn('[AnalystUpgrades] No se encontró contenedor — añadiendo a body');
-      container = document.body;
-    }
+    // ESTRATEGIA: insertar SIEMPRE al final del <body>, nunca dentro de un tab.
+    // Los tabs suelen tener display:none cuando no están activos, y dentro de
+    // ellos el panel quedaría oculto. Al final del body es visible siempre.
+    const container = document.body;
 
     const panel = document.createElement('div');
     panel.id = 'analystDiagnosticPanel';
     panel.style.cssText = `
       max-width: 1280px;
-      margin: 32px auto;
-      padding: 0 24px;
+      margin: 40px auto 80px;
+      padding: 0 48px;
       font-family: system-ui, -apple-system, sans-serif;
       color: #c9d1d9;
       position: relative;
       z-index: 1;
+      display: block !important;
     `;
     panel.innerHTML = buildPanelHTML(R);
     container.appendChild(panel);
 
-    console.log('[AnalystUpgrades] Panel renderizado ✓');
-
-    // Scroll suave al panel si el usuario quiere verlo
-    setTimeout(() => {
-      const btn = document.createElement('div');
-      btn.style.cssText = 'display:none'; // por ahora no auto-scroll
-    }, 100);
+    console.log('[AnalystUpgrades] Panel renderizado ✓ (al final del body)');
   }
 
   // Re-enganche del hook original por si el usuario llama renderResults manualmente
