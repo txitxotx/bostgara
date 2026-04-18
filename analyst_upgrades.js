@@ -380,11 +380,9 @@
     const existing = document.getElementById('analystDiagnosticPanel');
     if (existing) existing.remove();
 
-    // ESTRATEGIA: insertar SIEMPRE al final del <body>, nunca dentro de un tab.
-    // Los tabs suelen tener display:none cuando no están activos, y dentro de
-    // ellos el panel quedaría oculto. Al final del body es visible siempre.
-    const container = document.body;
-
+    // ESTRATEGIA: insertar el panel DESPUÉS de #tab-reasoning como hermano,
+    // no dentro de él. insertAdjacentElement('afterend') lo coloca fuera del tab.
+    const tabReasoning = document.getElementById('tab-reasoning');
     const panel = document.createElement('div');
     panel.id = 'analystDiagnosticPanel';
     panel.style.cssText = `
@@ -398,9 +396,14 @@
       display: block !important;
     `;
     panel.innerHTML = buildPanelHTML(R);
-    container.appendChild(panel);
 
-    console.log('[AnalystUpgrades] Panel renderizado ✓ (al final del body)');
+    if (tabReasoning) {
+      tabReasoning.insertAdjacentElement('afterend', panel);
+      console.log('[AnalystUpgrades] Panel renderizado ✓ (después de #tab-reasoning)');
+    } else {
+      document.body.appendChild(panel);
+      console.log('[AnalystUpgrades] Panel renderizado ✓ (fallback: body)');
+    }
   }
 
   // Re-enganche del hook original por si el usuario llama renderResults manualmente
