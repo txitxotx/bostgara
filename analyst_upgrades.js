@@ -1,6 +1,6 @@
-/* ═══════════════════════════════════════════════════════════════════════
+/* =
    ANALYST UPGRADES v2.0 — Mejoras de nivel profesional avanzado
-   ─────────────────────────────────────────────────────────────────────
+   -
    Este parche INCLUYE las 8 mejoras de v1.x y AÑADE 6 nuevas:
 
    v1.x (recapitulación):
@@ -21,7 +21,7 @@
      #13 Ajustes IFRS/mercado europeo — reconocimiento y tolerancias
      #14 Análisis temporal — deterioro reciente vs tendencia larga
 
-   ═══════════════════════════════════════════════════════════════════════ */
+   = */
 
 (function () {
   'use strict';
@@ -31,9 +31,9 @@
     return;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 — PESOS DEL MANUAL
-  // ════════════════════════════════════════════════════════════════
+  // =
   const MANUAL_WEIGHTS = {
     m1: 20, m2: 15, m3: 20, m4: 10, m5: 10,
     m6: 10, m7: 10, m8: 3, m9: 2,
@@ -54,9 +54,9 @@
     return pct;
   };
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // UTILIDADES COMPARTIDAS
-  // ════════════════════════════════════════════════════════════════
+  // =
   function num(metrics, k) {
     const v = metrics[k];
     const raw = v && typeof v === 'object' && 'value' in v ? v.value : v;
@@ -69,9 +69,9 @@
     return v && typeof v === 'object' && 'value' in v ? v.value : v;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 #2 — DATA SANITY
-  // ════════════════════════════════════════════════════════════════
+  // =
   function runDataSanity(metrics) {
     const alerts = [];
     const roic = num(metrics, 'roic');
@@ -107,9 +107,9 @@
     return alerts;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v2 #10 — CROSS-VALIDATION DE MÉTRICAS
-  // ════════════════════════════════════════════════════════════════
+  // =
   // Detecta inconsistencias lógicas entre métricas que deberían concordar.
   // Si hay discrepancias, el input del proveedor tiene problemas.
   function runCrossValidation(metrics) {
@@ -196,9 +196,9 @@
     return alerts;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v2 #11 — DETECCIÓN DE CICLICIDAD
-  // ════════════════════════════════════════════════════════════════
+  // =
   // Compara CAGR 3y/5y/10y. Si 3y >> 10y, los beneficios actuales están
   // probablemente en pico de ciclo y no son extrapolables.
   function detectCyclicality(metrics, sectorKey) {
@@ -304,9 +304,9 @@
     return result;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v2 #12 — SENSIBILIDAD DEL DCF
-  // ════════════════════════════════════════════════════════════════
+  // =
   // Recalcula el upside del DCF con shocks razonables en WACC y g.
   // Si el upside desaparece con WACC+1% y g-1%, el modelo no es robusto.
   function dcfSensitivity(metrics) {
@@ -406,9 +406,9 @@
     return result;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v2 #13 — AJUSTES IFRS / MERCADO EUROPEO
-  // ════════════════════════════════════════════════════════════════
+  // =
   // Detecta empresa europea y aplica ajustes:
   // - SOCIMIs se tratan como REIT con umbrales EU
   // - Dual-class alertada (común en FR, NL, SE)
@@ -507,9 +507,9 @@
     return result;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v2 #14 — ANÁLISIS TEMPORAL (DETERIORO RECIENTE)
-  // ════════════════════════════════════════════════════════════════
+  // =
   // El sistema actual toma CAGR 5y/10y como señal positiva. Pero si el
   // último trimestre está deteriorándose, el CAGR histórico oculta el problema.
   function runTemporalAnalysis(metrics) {
@@ -593,9 +593,9 @@
     return { signals, verdict, warnCount };
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 #6 — STRESS TEST
-  // ════════════════════════════════════════════════════════════════
+  // =
   function runStressTest(metrics) {
     const ebitdaM = num(metrics, 'ebitda_margin');
     const ic = num(metrics, 'interest_coverage');
@@ -649,9 +649,9 @@
     return result;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 #7 — CONVICCIÓN
-  // ════════════════════════════════════════════════════════════════
+  // =
   function computeConviction(R) {
     const m = R.modules;
     const scores = ['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7', 'm9']
@@ -675,9 +675,9 @@
     return { conviction, label, color, strong, borderline, weak, total };
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 #1+#3 — VEREDICTO CONDICIONAL
-  // ════════════════════════════════════════════════════════════════
+  // =
   function conditionalVerdict(R, profileId) {
     const m = R.modules;
     const ps = R.profileScores[profileId];
@@ -755,9 +755,9 @@
     }[key] || key;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 #5 — CHECKLIST "NO SÉ" NEUTRAL
-  // ════════════════════════════════════════════════════════════════
+  // =
   window.scoreChecklist = function (answers) {
     const sectionScores = {};
     const CHECKLIST = window.CHECKLIST;
@@ -813,9 +813,9 @@
     };
   };
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v1 #8 — SECTOR GENERAL
-  // ════════════════════════════════════════════════════════════════
+  // =
   function sectorFallbackWarning(R) {
     if (R.sectorKey === 'general') {
       return { severity: 'warn',
@@ -824,9 +824,9 @@
     return null;
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // WRAPPER de runFullAnalysis
-  // ════════════════════════════════════════════════════════════════
+  // =
   const _origRunFullAnalysis = window.runFullAnalysis;
   window.runFullAnalysis = function (metrics, sectorData) {
     const R = _origRunFullAnalysis(metrics, sectorData);
@@ -870,9 +870,9 @@
     return R;
   };
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // v2 #9 — DEVIL'S ADVOCATE SOBRE EL CHECKLIST
-  // ════════════════════════════════════════════════════════════════
+  // =
   // Cuando el usuario responde "Sí" a una pregunta crítica, abre un prompt
   // discreto pidiendo justificación breve. Combate el sesgo de confirmación.
   let devilsAdvocateSetup = false;
@@ -988,9 +988,9 @@
     };
   }
 
-  // ════════════════════════════════════════════════════════════════
+  // =
   // RENDER DEL PANEL
-  // ════════════════════════════════════════════════════════════════
+  // =
   function tryRenderAnalystPanel(R) {
     if (!R || !R.analystUpgrades) return;
     const existing = document.getElementById('analystDiagnosticPanel');
