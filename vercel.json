@@ -1,96 +1,57 @@
 {
   "functions": {
-    "api/morningstar.js": {
-      "maxDuration": 30
-    },
-    "api/yahoo.js": {
-      "maxDuration": 20
-    },
-    "api/save-txn.js": {
-      "maxDuration": 20
-    },
-    "api/get-txn.js": {
-      "maxDuration": 15
-    },
-    "api/save-csv.js": {
-      "maxDuration": 20
-    },
-    "api/get-csv.js": {
-      "maxDuration": 15
-    },
-    "api/crypto-history.js": {
-      "maxDuration": 20
-    },
-    "api/save-stocks.js": {
-      "maxDuration": 20
-    },
-    "api/get-stocks.js": {
-      "maxDuration": 15
-    },
-    "api/login.js": {
-      "maxDuration": 5
-    }
+    "api/morningstar.js":    { "maxDuration": 30 },
+    "api/yahoo.js":          { "maxDuration": 20 },
+    "api/save-txn.js":       { "maxDuration": 20 },
+    "api/get-txn.js":        { "maxDuration": 15 },
+    "api/save-csv.js":       { "maxDuration": 20 },
+    "api/get-csv.js":        { "maxDuration": 15 },
+    "api/crypto-history.js": { "maxDuration": 20 },
+    "api/save-stocks.js":    { "maxDuration": 20 },
+    "api/get-stocks.js":     { "maxDuration": 15 },
+    "api/login.js":          { "maxDuration": 5 },
+    "api/cron-snapshot.js":  { "maxDuration": 300 },
+    "api/get-snapshot.js":   { "maxDuration": 15 }
   },
+  "crons": [
+    {
+      "path": "/api/cron-snapshot",
+      "schedule": "0 22 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Pragma", "value": "no-cache" },
+        { "key": "Expires", "value": "0" }
       ]
     },
     {
       "source": "/index.html",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "Pragma", "value": "no-cache" },
+        { "key": "Expires", "value": "0" }
       ]
     },
     {
       "source": "/transacciones.json",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     },
     {
       "source": "/stocks-history.json",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     },
     {
       "source": "/login.html",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
       ]
     }
   ]
