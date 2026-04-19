@@ -246,6 +246,42 @@ td{padding:9px 10px;white-space:nowrap}
 .kpis-5{grid-template-columns:repeat(5,1fr)!important}
 @media(max-width:1100px){.kpis-6{grid-template-columns:repeat(3,1fr)!important}.kpis-5{grid-template-columns:repeat(3,1fr)!important}}
 @media(max-width:640px){.kpis-6{grid-template-columns:repeat(2,1fr)!important}.kpis-5{grid-template-columns:repeat(2,1fr)!important}}
+
+/* ═══ PANEL ANÁLISIS — sub-tabs profesionales ═══ */
+.an-tabs{display:flex;gap:4px;margin:16px 0 14px;border-bottom:1px solid var(--bd);padding-bottom:0;overflow-x:auto;flex-wrap:wrap}
+.an-tab{padding:9px 18px;font:600 .73rem 'Syne',sans-serif;letter-spacing:.05em;color:var(--mut);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.an-tab:hover{color:var(--txt);background:rgba(255,255,255,.03)}
+.an-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.an-panel{display:none;animation:fadeIn .25s}
+.an-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* Tabla profesional de métricas */
+.an-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.71rem}
+.an-table thead th{font:600 .62rem 'Syne',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);padding:10px 12px;text-align:right;border-bottom:1px solid var(--bd);background:var(--s2);white-space:nowrap}
+.an-table thead th:first-child{text-align:left}
+.an-table tbody td{padding:10px 12px;text-align:right;border-bottom:1px solid rgba(255,255,255,.04);font-family:'DM Mono',monospace;font-size:.72rem;color:var(--txt)}
+.an-table tbody td:first-child{text-align:left;font-family:'Syne',sans-serif;font-weight:600;font-size:.73rem}
+.an-table tbody tr:hover{background:var(--s2)}
+.an-table tbody tr.total-row{background:var(--s2);font-weight:700}
+.an-table tbody tr.total-row td{border-top:1px solid var(--bd);padding-top:12px;padding-bottom:12px}
+.an-cat-tag{display:inline-block;padding:2px 7px;border-radius:4px;font:700 .58rem 'Syne',sans-serif;letter-spacing:.07em;margin-right:8px}
+.an-cat-tag.RF{background:rgba(0,229,160,.14);color:var(--acc)}
+.an-cat-tag.RV{background:rgba(74,158,255,.14);color:var(--acc3)}
+.an-cat-tag.CR{background:rgba(245,197,24,.14);color:var(--yel)}
+.an-cat-tag.EP{background:rgba(167,139,250,.14);color:var(--pur)}
+.an-cat-tag.AC{background:rgba(255,107,53,.15);color:#ff6b35}
+.an-val-good{color:var(--acc)!important}
+.an-val-bad{color:var(--red)!important}
+.an-val-neutral{color:var(--yel)!important}
+.an-bench-cell{font-size:.63rem;color:var(--mut);display:block;margin-top:2px}
+
+/* Insight cards mejoradas */
+.ins-item.ins-crit{border-left:3px solid var(--red);padding-left:10px;margin-left:-3px}
+.ins-meta{display:inline-block;font-size:.58rem;padding:2px 7px;border-radius:4px;margin-left:8px;background:var(--s3);color:var(--mut);letter-spacing:.05em;text-transform:uppercase}
+.rec.sell{border-left:3px solid var(--red)}
+.rtag.sell{background:rgba(255,71,87,.14);color:var(--red)}
+@media(max-width:640px){.an-tab{padding:7px 11px;font-size:.65rem}.an-table{font-size:.64rem}.an-table thead th,.an-table tbody td{padding:7px 6px}}
 /* WATCHLIST */
 .wl-card{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;transition:border-color .2s}
 .wl-card:hover{border-color:rgba(255,255,255,.12)}
@@ -833,7 +869,10 @@ body.privacy #trPosTable{
       </div>
     </div>
     <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
-    <div id="pnlStatus" style="font-size:.7rem;color:var(--mut);margin-bottom:10px;min-height:18px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div id="pnlStatus" style="font-size:.7rem;color:var(--mut);min-height:18px;flex:1"></div>
+      <button id="pnlForceReload" onclick="forceLiveReload()" style="font-size:.62rem;padding:4px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;color:var(--mut);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em;display:none" title="Descargar histórico en vivo ignorando el snapshot del día">↻ Recarga en vivo</button>
+    </div>
     <div class="cv cv-320"><canvas id="pnlChart"></canvas></div>
   </div>
   <div class="g2">
@@ -932,18 +971,118 @@ body.privacy #trPosTable{
 
 <!-- ════ ANÁLISIS ════ -->
 <div class="panel" id="panel-analysis">
-  <div class="kpis">
-    <div class="kpi b"><div class="kpi-lbl">Capital Invertido</div><div class="kpi-v" id="aKinv">—</div><div class="kpi-s">Sin EPSV</div></div>
-    <div class="kpi g"><div class="kpi-lbl">Valor Total</div><div class="kpi-v" id="aKval">—</div><div class="kpi-s" id="aKvalS">—</div></div>
-    <div class="kpi g"><div class="kpi-lbl">Mejor categoría</div><div class="kpi-v" id="aKbestCat">—</div><div class="kpi-s" id="aKbestCatN">—</div></div>
-    <div class="kpi y"><div class="kpi-lbl">Nº operaciones</div><div class="kpi-v" id="aKops">—</div><div class="kpi-s">desde dic 2021</div></div>
+  <!-- Cabecera con KPIs globales profesionales -->
+  <div class="kpis kpis-6">
+    <div class="kpi b"><div class="kpi-lbl">Capital Invertido</div><div class="kpi-v" id="aKinv">—</div><div class="kpi-s">Total aportado</div></div>
+    <div class="kpi g"><div class="kpi-lbl">Valor Actual</div><div class="kpi-v" id="aKval">—</div><div class="kpi-s" id="aKvalS">—</div></div>
+    <div class="kpi g"><div class="kpi-lbl">TWR Anualizado</div><div class="kpi-v" id="aKtwr">—</div><div class="kpi-s" id="aKtwrS">Tiempo ponderado</div></div>
+    <div class="kpi y"><div class="kpi-lbl">Sharpe Cartera</div><div class="kpi-v" id="aKsharpe">—</div><div class="kpi-s" id="aKsharpeS">Rf = 3%</div></div>
+    <div class="kpi p"><div class="kpi-lbl">Volatilidad</div><div class="kpi-v" id="aKvol">—</div><div class="kpi-s">Anualizada real</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Max Drawdown</div><div class="kpi-v" id="aKmdd">—</div><div class="kpi-s" id="aKmddS">Cartera histórica</div></div>
   </div>
-  <div class="g2">
-    <div class="card" style="margin:0"><div class="ch"><span class="ct">🔍 Hallazgos clave</span></div><div id="insights"></div></div>
-    <div class="card" style="margin:0"><div class="ch"><span class="ct">💡 Recomendaciones</span></div><div id="recs"></div></div>
+
+  <!-- Sub-tabs profesionales -->
+  <div class="an-tabs">
+    <button class="an-tab active" onclick="anTab('perf',this)">🎯 Rendimiento</button>
+    <button class="an-tab" onclick="anTab('risk',this)">⚖️ Riesgo</button>
+    <button class="an-tab" onclick="anTab('conc',this)">📊 Concentración</button>
+    <button class="an-tab" onclick="anTab('bench',this)">🏆 Benchmarks</button>
+    <button class="an-tab" onclick="anTab('insig',this)">🧠 Hallazgos</button>
   </div>
-  <div style="margin-bottom:16px"></div>
-  <div class="card"><div class="ch"><span class="ct">Cartera Actual vs Distribución Óptima</span><span class="cbadge">% del capital total</span></div><div class="cv cv-260"><canvas id="optChart"></canvas></div></div>
+
+  <!-- ═══ SUB-PANEL RENDIMIENTO ═══ -->
+  <div class="an-panel active" id="an-perf">
+    <div class="g2">
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Retornos Anualizados (CAGR)</span><span class="cbadge">TWR por categoría</span></div>
+        <div id="anCagrTable"></div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Rentabilidad por periodo</span></div>
+        <div class="cv cv-260"><canvas id="anPeriodChart"></canvas></div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="card">
+      <div class="ch"><span class="ct">Distribución de retornos diarios</span><span class="cbadge">histograma normal vs real</span></div>
+      <div class="cv cv-260"><canvas id="anHistChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ═══ SUB-PANEL RIESGO ═══ -->
+  <div class="an-panel" id="an-risk">
+    <div class="card">
+      <div class="ch"><span class="ct">Métricas de Riesgo Ajustado</span><span class="cbadge">por categoría · histórico real</span></div>
+      <div id="anRiskTable"></div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="g2">
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Frontera Eficiente — Activos</span><span class="cbadge">Burbuja = peso</span></div>
+        <div class="cv cv-280"><canvas id="anFrontierChart"></canvas></div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Radar por Categoría</span><span class="cbadge">5 dimensiones · datos reales</span></div>
+        <div class="cv cv-280"><canvas id="anRadarReal"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SUB-PANEL CONCENTRACIÓN ═══ -->
+  <div class="an-panel" id="an-conc">
+    <div class="kpis" style="grid-template-columns:repeat(4,1fr)">
+      <div class="kpi b"><div class="kpi-lbl">HHI Cartera</div><div class="kpi-v" id="aKhhi">—</div><div class="kpi-s" id="aKhhiS">Herfindahl</div></div>
+      <div class="kpi g"><div class="kpi-lbl">Top 3 activos</div><div class="kpi-v" id="aKtop3">—</div><div class="kpi-s">del total</div></div>
+      <div class="kpi y"><div class="kpi-lbl">Top 5 activos</div><div class="kpi-v" id="aKtop5">—</div><div class="kpi-s">del total</div></div>
+      <div class="kpi p"><div class="kpi-lbl">Nº efectivo</div><div class="kpi-v" id="aKneff">—</div><div class="kpi-s">activos equivalentes</div></div>
+    </div>
+    <div class="g2">
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Contribución al Riesgo Total</span><span class="cbadge">risk contribution %</span></div>
+        <div class="cv cv-300"><canvas id="anRiskContrib"></canvas></div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Cartera Actual vs Óptima</span><span class="cbadge">% capital</span></div>
+        <div class="cv cv-300"><canvas id="optChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SUB-PANEL BENCHMARKS ═══ -->
+  <div class="an-panel" id="an-bench">
+    <div class="card">
+      <div class="ch">
+        <span class="ct">Comparativa vs Benchmark por Categoría</span>
+        <span class="cbadge" id="anBenchStatus">Cargando benchmarks...</span>
+      </div>
+      <div style="font-size:.65rem;color:var(--mut);margin-bottom:12px;line-height:1.5">
+        <strong>RF</strong> → Bloomberg Euro Aggregate Bond (AGGH.DE)&nbsp;·&nbsp;
+        <strong>RV / AC</strong> → MSCI World (IWDA.L)&nbsp;·&nbsp;
+        <strong>CR</strong> → Bitcoin (BTC)&nbsp;·&nbsp;
+        <strong>EPSV</strong> → mix 50/50 MSCI World + Euro Agg
+      </div>
+      <div id="anBenchTable"></div>
+    </div>
+    <div style="height:16px"></div>
+    <div class="g2">
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Retorno Cartera vs Benchmark Ponderado</span></div>
+        <div class="cv cv-300"><canvas id="anBenchEvo"></canvas></div>
+      </div>
+      <div class="card" style="margin:0">
+        <div class="ch"><span class="ct">Alpha generado (CAGR vs benchmark)</span></div>
+        <div class="cv cv-300"><canvas id="anAlphaChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SUB-PANEL HALLAZGOS ═══ -->
+  <div class="an-panel" id="an-insig">
+    <div class="g2">
+      <div class="card" style="margin:0"><div class="ch"><span class="ct">🔍 Hallazgos clave</span><span class="cbadge">generados automáticamente</span></div><div id="insights"></div></div>
+      <div class="card" style="margin:0"><div class="ch"><span class="ct">💡 Recomendaciones accionables</span></div><div id="recs"></div></div>
+    </div>
+  </div>
 </div>
 
 <!-- ════ TRADING ════ -->
@@ -2470,9 +2609,100 @@ function rankSet(btn,f2){actTf('rankTf',btn);S.rankFlt=f2;renderRankBar();}
 //  HISTÓRICO P&L — construye serie día a día desde TXS
 //  Para fondos CONJUNTA: usa el mismo histórico de precios que el fondo normal (mismo ISIN)
 // ══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  SNAPSHOT — carga datos pre-calculados por el cron diario
+//  Si existe y es reciente, evita re-descargar todo el histórico
+// ══════════════════════════════════════════════════════════
+async function loadSnapshot(){
+  // Si ya se cargó un snapshot en esta sesión, no volver a intentar
+  if(S.snapshotTried)return S.snapshotOk;
+  S.snapshotTried=true;
+  try{
+    const r=await fetch('/api/get-snapshot',{cache:'no-store'});
+    if(!r.ok){S.snapshotOk=false;return false;}
+    const snap=await r.json();
+    if(!snap||!snap.histories){S.snapshotOk=false;return false;}
+
+    // Edad del snapshot en horas
+    const genAt=snap.generatedAt?new Date(snap.generatedAt):null;
+    const ageH=genAt?(Date.now()-genAt.getTime())/3600000:999;
+    S.snapshotAge=ageH;
+    console.log(`[snapshot] cargado, generado hace ${ageH.toFixed(1)}h`);
+
+    // Si el snapshot tiene más de 36h, no es fiable — cargamos en vivo
+    if(ageH>36){console.warn('[snapshot] demasiado viejo, cargando en vivo');S.snapshotOk=false;return false;}
+
+    // ── Aplicar histories a S.hist ──────────────────────────────
+    // Los fondos se indexan por ISIN en el snapshot; nosotros por asset.id en S.hist
+    for(const a of ASSETS){
+      let key=null;
+      if(a.src==='ms'&&a.isin)key=a.isin;
+      else if(a.src==='cg'&&a.cgId)key=a.cgId;
+      else if(a.src==='yf'&&a.ticker)key=a.ticker;
+      if(key&&snap.histories[key]){
+        S.hist[a.id]=snap.histories[key];
+      }
+    }
+
+    // ── Aplicar métricas pre-calculadas a S.volC (con misma estructura) ──
+    S.volC={};
+    const VOL_FB={RF:.015,RV:.12,CR:.70,EP:.02,AC:.10};
+    const DD_FB ={RF:.01, RV:.08,CR:.35,EP:.01,AC:.08};
+    for(const a of ASSETS){
+      let key=null;
+      if(a.src==='ms'&&a.isin)key=a.isin;
+      else if(a.src==='cg'&&a.cgId)key=a.cgId;
+      else if(a.src==='yf'&&a.ticker)key=a.ticker;
+      const m=key?snap.metrics[key]:null;
+      if(m){
+        S.volC[a.id]={
+          vol:m.vol, maxDD:m.maxDD, ytd:m.ytd, mtd:m.mtd,
+          cagr:m.cagr, sharpe:m.sharpe, sortino:m.sortino, calmar:m.calmar,
+          downVol:m.downVol, retDaily:m.retDaily, nDays:m.nDays,
+        };
+      } else {
+        S.volC[a.id]={vol:VOL_FB[a.cat]??0.1,maxDD:DD_FB[a.cat]??0.05,ytd:0,mtd:0,cagr:0,sharpe:0,sortino:0,calmar:0};
+      }
+    }
+
+    // ── Benchmarks ─────────────────────────────────────────────
+    if(snap.benchmarks){
+      S.benchHist={};S.benchMetrics={};
+      for(const[k,b]of Object.entries(snap.benchmarks)){
+        if(b.history)S.benchHist[k]=b.history;
+        if(b.metrics)S.benchMetrics[k]={...b.metrics,hist:b.history};
+      }
+    }
+
+    S.histLoaded=true;
+    S.snapshotOk=true;
+    return true;
+  }catch(e){
+    console.warn('[snapshot] error:',e.message);
+    S.snapshotOk=false;
+    return false;
+  }
+}
+
 async function loadHistory(){
   if(S.histLoaded){buildPnlSeries();renderPnl();renderContrib();renderMonthly();return;}
-  sk('pnlStatus','Cargando histórico de precios...');setProgress(5);
+
+  // ── Intento 1: cargar snapshot pre-calculado (rápido, 1 sola request) ──
+  sk('pnlStatus','Cargando snapshot diario...');setProgress(15);
+  const snapOk=await loadSnapshot();
+  if(snapOk){
+    setProgress(95);
+    sk('pnlStatus',`✓ Snapshot cargado · generado ${S.snapshotAge<1?'hace menos de 1h':'hace '+Math.round(S.snapshotAge)+'h'}`);
+    const btn=document.getElementById('pnlForceReload');
+    if(btn)btn.style.display='inline-block';
+    buildPnlSeries();renderPnl();renderContrib();renderMonthly();computeAndRender();
+    setProgress(100);setTimeout(()=>setProgress(0),2000);
+    if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
+    return;
+  }
+
+  // ── Intento 2 (fallback): carga en vivo como antes ────────────
+  sk('pnlStatus','Cargando histórico en vivo...');setProgress(5);
   // Deduplicar por ISIN para la carga, luego compartir precios
   const isins=new Map();
   for(const a of ASSETS){if(a.src==='ms'){if(!isins.has(a.isin))isins.set(a.isin,a);}}
@@ -2513,8 +2743,30 @@ async function loadHistory(){
 
   setProgress(100);S.histLoaded=true;sk('pnlStatus','');setTimeout(()=>setProgress(0),600);
   calcRealVols();buildPnlSeries();renderPnl();renderContrib();renderMonthly();computeAndRender();
+  // Cargar benchmarks en segundo plano (no bloquea UI)
+  loadBenchmarks().then(()=>{
+    if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
+  });
 }
 function setProgress(p){const el=document.getElementById('progBar');if(el)el.style.width=p+'%';}
+
+// Fuerza recarga en vivo ignorando el snapshot (útil si hay nuevas operaciones en el día)
+async function forceLiveReload(){
+  S.histLoaded=false;S.snapshotTried=false;S.snapshotOk=false;
+  S.hist={};S.volC={};S.benchHist=null;S.benchMetrics=null;
+  const btn=document.getElementById('pnlForceReload');
+  if(btn)btn.style.display='none';
+  sk('pnlStatus','Forzando recarga en vivo...');
+  // Saltarse el snapshot y forzar las llamadas en vivo — marcamos snapshotTried como true
+  // con snapshotOk=false para que loadHistory vaya directo al fallback
+  S.snapshotTried=true;S.snapshotOk=false;
+  await loadHistory();
+  // Cargar benchmarks en vivo también
+  S.benchHist=null;S.benchMetrics=null;
+  await loadBenchmarks();
+  if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
+  if(document.getElementById('panel-risk').classList.contains('active'))renderRisk();
+}
 
 function calcRealVols(){
   S.volC={};
@@ -2528,16 +2780,87 @@ function calcRealVols(){
   for(const a of ASSETS){
     const hist=S.hist[a.id];
     const fVol=VOL_FB[a.cat]??0.10, fDD=DD_FB[a.cat]??0.05;
-    if(!hist||hist.length<15){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0};continue;}
+    if(!hist||hist.length<15){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0,cagr:0,sortino:0,calmar:0,retDaily:0,nDays:0};continue;}
     const prices=hist.map(h=>h.nav);
     const rets=[];for(let i=1;i<prices.length;i++){if(prices[i-1]>0&&prices[i]>0)rets.push(Math.log(prices[i]/prices[i-1]));}
-    if(rets.length<10){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0};continue;}
+    if(rets.length<10){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0,cagr:0,sortino:0,calmar:0,retDaily:0,nDays:0};continue;}
     const mean=rets.reduce((s,v)=>s+v,0)/rets.length;
     const vol=Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/(rets.length-1)*252);
+    // Downside deviation (para Sortino) — solo retornos negativos
+    const neg=rets.filter(r=>r<0);
+    const downVol=neg.length>1?Math.sqrt(neg.reduce((s,v)=>s+v*v,0)/(neg.length-1)*252):vol*0.7;
     let peak=prices[0],maxDD=0;for(const p of prices){if(p>peak)peak=p;const dd=(peak-p)/peak;if(dd>maxDD)maxDD=dd;}
     const ytdS=hist.find(h=>h.date>=ytdCut);const ytd=ytdS?(hist[hist.length-1].nav-ytdS.nav)/ytdS.nav:0;
     const mtdS=hist.find(h=>h.date>=mtdCut);const mtd=mtdS?(hist[hist.length-1].nav-mtdS.nav)/mtdS.nav:0;
-    S.volC[a.id]={vol,maxDD,ytd,mtd};
+    // CAGR anualizado desde el histórico completo
+    const nDays=(new Date(hist[hist.length-1].date)-new Date(hist[0].date))/(1000*60*60*24);
+    const years=Math.max(nDays/365.25,0.1);
+    const totalRet=prices[prices.length-1]/prices[0];
+    const cagr=Math.pow(totalRet,1/years)-1;
+    // Sharpe (Rf=3%) y Sortino y Calmar
+    const Rf=0.03;
+    const sharpe=vol>0?(cagr-Rf)/vol:0;
+    const sortino=downVol>0?(cagr-Rf)/downVol:0;
+    const calmar=maxDD>0?cagr/maxDD:0;
+    S.volC[a.id]={vol,maxDD,ytd,mtd,cagr,sharpe,sortino,calmar,downVol,retDaily:mean*252,nDays};
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  BENCHMARKS — carga histórica y cálculo de métricas
+//  MSCI World (IWDA.L) · Euro Agg (AGGH.DE) · BTC (ya en S.hist.btc)
+// ══════════════════════════════════════════════════════════
+const BENCHMARKS={
+  MSCIW:{ticker:'IWDA.L',name:'MSCI World',color:'#4a9eff'},
+  EAGG: {ticker:'AGGH.DE',name:'Euro Agg Bond',color:'#00e5a0'},
+  BTC:  {internal:'btc',name:'Bitcoin',color:'#f5c518'},
+};
+const CAT_BENCHMARK={RF:'EAGG',RV:'MSCIW',AC:'MSCIW',CR:'BTC',EP:'MIX50'};
+// MIX50 = 50% MSCIW + 50% EAGG (calculado dinámicamente)
+
+async function loadBenchmarks(){
+  if(S.benchHist)return;  // ya cargados
+  S.benchHist={};
+  // MSCI World vía Yahoo
+  try{
+    const r=await fetch(`/api/yahoo?ticker=${encodeURIComponent(BENCHMARKS.MSCIW.ticker)}&action=history`);
+    if(r.ok){const d=await r.json();if(d.history?.length)S.benchHist.MSCIW=d.history;}
+  }catch(e){console.warn('[bench MSCIW]',e.message);}
+  // Euro Agg vía Yahoo
+  try{
+    const r=await fetch(`/api/yahoo?ticker=${encodeURIComponent(BENCHMARKS.EAGG.ticker)}&action=history`);
+    if(r.ok){const d=await r.json();if(d.history?.length)S.benchHist.EAGG=d.history;}
+  }catch(e){console.warn('[bench EAGG]',e.message);}
+  // BTC — reutilizar histórico ya cargado
+  if(S.hist.btc?.length)S.benchHist.BTC=S.hist.btc;
+  // MIX50 sintético
+  if(S.benchHist.MSCIW&&S.benchHist.EAGG){
+    const map1={},map2={};
+    for(const{date,nav}of S.benchHist.MSCIW)map1[date]=nav;
+    for(const{date,nav}of S.benchHist.EAGG)map2[date]=nav;
+    const commonDates=Object.keys(map1).filter(d=>d in map2).sort();
+    if(commonDates.length>10){
+      const base1=map1[commonDates[0]],base2=map2[commonDates[0]];
+      S.benchHist.MIX50=commonDates.map(d=>({date:d,nav:(map1[d]/base1*0.5+map2[d]/base2*0.5)*100}));
+    }
+  }
+  // Calcular métricas de cada benchmark
+  S.benchMetrics={};
+  for(const[key,hist] of Object.entries(S.benchHist)){
+    if(!hist||hist.length<15){continue;}
+    const prices=hist.map(h=>h.nav);
+    const rets=[];for(let i=1;i<prices.length;i++){if(prices[i-1]>0&&prices[i]>0)rets.push(Math.log(prices[i]/prices[i-1]));}
+    if(rets.length<10)continue;
+    const mean=rets.reduce((s,v)=>s+v,0)/rets.length;
+    const vol=Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/(rets.length-1)*252);
+    const neg=rets.filter(r=>r<0);
+    const downVol=neg.length>1?Math.sqrt(neg.reduce((s,v)=>s+v*v,0)/(neg.length-1)*252):vol*0.7;
+    let peak=prices[0],maxDD=0;for(const p of prices){if(p>peak)peak=p;const dd=(peak-p)/peak;if(dd>maxDD)maxDD=dd;}
+    const nDays=(new Date(hist[hist.length-1].date)-new Date(hist[0].date))/(1000*60*60*24);
+    const years=Math.max(nDays/365.25,0.1);
+    const cagr=Math.pow(prices[prices.length-1]/prices[0],1/years)-1;
+    const Rf=0.03;
+    S.benchMetrics[key]={vol,maxDD,cagr,sharpe:vol>0?(cagr-Rf)/vol:0,sortino:downVol>0?(cagr-Rf)/downVol:0,calmar:maxDD>0?cagr/maxDD:0,hist};
   }
 }
 
@@ -2637,14 +2960,37 @@ function renderRisk(){
   sk('kBeta',(0.3+rvW*.6+crW*1.4).toFixed(2));
   sk('kExpRet',(computed.reduce((s,a)=>s+(a.cat==='RF'?.04:a.cat==='RV'?.10:a.cat==='CR'?.25:.03)*(a.peso/100),0)*100).toFixed(1)+'%');
   renderScatter(S.scMode);
-  const rfRet=bycat.RF.coste>0?(bycat.RF.valor-bycat.RF.coste)/bycat.RF.coste*100:0;
-  const rvRet=bycat.RV.coste>0?(bycat.RV.valor-bycat.RV.coste)/bycat.RV.coste*100:0;
-  const crRet=bycat.CR.coste>0?(bycat.CR.valor-bycat.CR.coste)/bycat.CR.coste*100:0;
-  mkC('radarChart',{type:'radar',data:{labels:['Rentabilidad','Estabilidad','Diversificación','Liquidez','Momentum'],datasets:[
-    {label:'RF',data:[Math.min(rfRet*2,100),90,55,65,55],fill:true,backgroundColor:'rgba(0,229,160,.1)',borderColor:'#00e5a0',pointBackgroundColor:'#00e5a0'},
-    {label:'RV',data:[Math.min(rvRet*2,100),55,82,75,65],fill:true,backgroundColor:'rgba(74,158,255,.1)',borderColor:'#4a9eff',pointBackgroundColor:'#4a9eff'},
-    {label:'CR',data:[Math.min(Math.abs(crRet)*.5,100),10,30,80,50],fill:true,backgroundColor:'rgba(245,197,24,.08)',borderColor:'#f5c518',pointBackgroundColor:'#f5c518'},
-  ]},options:{scales:{r:{grid:{color:'#1e2430'},pointLabels:{font:{size:10},color:'#6b7a8d'},ticks:{display:false},suggestedMin:0,suggestedMax:100}},plugins:{legend:{position:'bottom',labels:{padding:12,boxWidth:8,font:{size:10}}}}}});
+  // Radar con DATOS REALES — 5 ejes calculados desde histórico
+  function radarMetricsR(cat){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)return[0,0,0,0,0];
+    const w=Math.max(sub.reduce((s,a)=>s+a.valor,0),1);
+    const cagr=sub.reduce((s,a)=>s+(S.volC[a.id]?.cagr||0)*(a.valor/w),0)*100;
+    const retScore=Math.max(0,Math.min(100,(cagr+15)*100/45));
+    const volR=sub.reduce((s,a)=>s+(a.vol||0)*(a.valor/w),0)*100;
+    const stabScore=Math.max(0,Math.min(100,100-volR*1.25));
+    const sumSq=sub.reduce((s,a)=>s+Math.pow(a.valor/w,2),0);
+    const divScore=(1-sumSq)*100/Math.max(1-1/Math.max(sub.length,2),0.01);
+    const mdd=sub.reduce((s,a)=>s+(S.volC[a.id]?.maxDD||0)*(a.valor/w),0)*100;
+    const presScore=Math.max(0,Math.min(100,100-mdd*2));
+    const ytd=sub.reduce((s,a)=>s+(S.volC[a.id]?.ytd||0)*(a.valor/w),0)*100;
+    const momScore=Math.max(0,Math.min(100,(ytd+20)*100/50));
+    return[retScore,stabScore,divScore,presScore,momScore].map(x=>+x.toFixed(0));
+  }
+  const radarDatasets=[];
+  for(const cat of ['RF','RV','CR','EP','AC']){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)continue;
+    const col=CC[cat];
+    radarDatasets.push({label:CL[cat],data:radarMetricsR(cat),fill:true,
+      backgroundColor:col+'1a',borderColor:col,pointBackgroundColor:col,pointRadius:3});
+  }
+  mkC('radarChart',{type:'radar',data:{
+    labels:['Rentabilidad','Estabilidad','Diversificación','Preservación','Momentum YTD'],
+    datasets:radarDatasets},
+    options:{scales:{r:{grid:{color:'#1e2430'},angleLines:{color:'#1e2430'},pointLabels:{font:{size:10},color:'#8a9ab0'},ticks:{display:false,beginAtZero:true},suggestedMin:0,suggestedMax:100}},
+    plugins:{legend:{position:'bottom',labels:{padding:12,boxWidth:8,font:{size:10}}},
+    tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}/100`}}}}});
   const sorted=[...computed].filter(a=>a.cat!=='EP').sort((a,b)=>(b.vol||0)-(a.vol||0));
   mkC('volBar',{type:'bar',data:{labels:sorted.map(a=>a.name.length>18?a.name.slice(0,16)+'…':a.name),datasets:[{label:'Vol. real anual.',data:sorted.map(a=>+((a.vol||0)*100).toFixed(1)),backgroundColor:sorted.map(a=>({RF:'rgba(0,229,160,.4)',RV:'rgba(74,158,255,.4)',CR:'rgba(245,197,24,.4)',EP:'rgba(167,139,250,.4)'})[a.cat]),borderColor:sorted.map(a=>CC[a.cat]),borderWidth:1,borderRadius:4}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`±${c.raw.toFixed(1)}%`}}},scales:{x:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%'}},y:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:9}}}}}});
@@ -2664,35 +3010,560 @@ function renderScatter(mode){
 function scatterSwitch(btn,mode){actTf(null,btn);renderScatter(mode);}
 
 // ══════════════════════════════════════════════════════════
-//  ANÁLISIS
+//  ANÁLISIS — Motor profesional
 // ══════════════════════════════════════════════════════════
+
+// Estado de sub-pestañas
+S.anTab='perf';
+
+function anTab(id,btn){
+  S.anTab=id;
+  document.querySelectorAll('.an-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.an-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('an-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  renderAnSubTab(id);
+}
+
+// ─────────────────────────────────────────────────────────
+// MÉTRICAS DE CARTERA GLOBAL
+// ─────────────────────────────────────────────────────────
+function calcPortfolioMetrics(){
+  const {computed,tv,tc,tp,tpp,pnlSeries}=S;
+  if(!computed.length)return null;
+
+  // Volatilidad de cartera ponderada (simplificada — asume correlación media intra-categoría)
+  const portVol=computed.reduce((s,a)=>s+(a.vol||0)*(a.valor/Math.max(tv,1)),0);
+  const portCagr=computed.reduce((s,a)=>{
+    const c=S.volC[a.id]?.cagr||0;
+    return s+c*(a.valor/Math.max(tv,1));
+  },0);
+  const Rf=0.03;
+  const sharpe=portVol>0?(portCagr-Rf)/portVol:0;
+
+  // TWR desde pnlSeries (si existe)
+  let twr=0,mddCart=0,twrYears=0;
+  if(pnlSeries&&pnlSeries.dates.length>30){
+    const vals=pnlSeries.vals,costs=pnlSeries.costs;
+    // Daily returns sobre retorno neto de aportaciones (método Dietz simplificado diario)
+    const dailyRets=[];
+    for(let i=1;i<vals.length;i++){
+      const capIn=costs[i]-costs[i-1];  // aportación del día
+      const denom=vals[i-1]+capIn*0.5;
+      if(denom>0){
+        const r=(vals[i]-vals[i-1]-capIn)/denom;
+        if(isFinite(r)&&Math.abs(r)<0.5)dailyRets.push(r);
+      }
+    }
+    if(dailyRets.length>10){
+      const cum=dailyRets.reduce((s,r)=>s*(1+r),1);
+      twrYears=dailyRets.length/252;
+      twr=Math.pow(cum,1/Math.max(twrYears,0.1))-1;
+    }
+    // Max Drawdown de la cartera como % sobre (vals/costs)
+    const ratios=vals.map((v,i)=>costs[i]>0?v/costs[i]:1);
+    let peak=ratios[0]||1;
+    for(const r of ratios){if(r>peak)peak=r;const dd=(peak-r)/peak;if(dd>mddCart)mddCart=dd;}
+  }
+
+  // Concentración — Herfindahl-Hirschman
+  const weights=computed.map(a=>a.peso/100);
+  const hhi=weights.reduce((s,w)=>s+w*w,0);
+  const nEff=hhi>0?1/hhi:0;  // nº efectivo de activos
+  const sorted=[...computed].sort((a,b)=>b.valor-a.valor);
+  const top3=sorted.slice(0,3).reduce((s,a)=>s+a.peso,0);
+  const top5=sorted.slice(0,5).reduce((s,a)=>s+a.peso,0);
+
+  // Contribución al riesgo de cada activo: w_i × σ_i / σ_portfolio
+  const riskContrib=computed.map(a=>{
+    const w=a.valor/Math.max(tv,1);
+    const contrib=portVol>0?(w*(a.vol||0))/portVol*100:0;
+    return{name:a.name,cat:a.cat,contrib,weight:w*100,vol:(a.vol||0)*100};
+  }).sort((a,b)=>b.contrib-a.contrib);
+
+  return{portVol,portCagr,sharpe,twr,twrYears,mddCart,hhi,nEff,top3,top5,riskContrib};
+}
+
+// ─────────────────────────────────────────────────────────
+// ENTRY POINT
+// ─────────────────────────────────────────────────────────
 function renderAnalysis(){
-  const{computed,tv,tc,tp,tpp,bycat}=S;
+  const {computed,tv,tc,tp,tpp}=S;
+  if(!computed.length)return;
+
+  // KPIs de cabecera globales
+  sk('aKinv',f(tc));sk('aKval',f(tv));
+  const vs=document.getElementById('aKvalS');
+  if(vs){vs.textContent=(tp>=0?'+':'')+f(tp)+' ('+tpp.toFixed(2)+'%)';vs.className='kpi-s '+(tp>=0?'pos':'neg');}
+
+  const m=calcPortfolioMetrics();
+  if(m){
+    const tw=document.getElementById('aKtwr');
+    if(tw){
+      tw.textContent=m.twrYears>0?((m.twr*100)>=0?'+':'')+(m.twr*100).toFixed(2)+'%':'—';
+      tw.style.color=m.twr>=0?'var(--acc)':'var(--red)';
+    }
+    sk('aKtwrS',m.twrYears>0?`${m.twrYears.toFixed(1)} años de histórico`:'Carga histórico');
+
+    const sh=document.getElementById('aKsharpe');
+    if(sh){sh.textContent=m.sharpe.toFixed(2);sh.style.color=m.sharpe>=1?'var(--acc)':m.sharpe>=0.5?'var(--yel)':'var(--red)';}
+    sk('aKsharpeS',m.sharpe>=1?'Excelente':m.sharpe>=0.5?'Aceptable':m.sharpe>=0?'Bajo':'Negativo');
+
+    sk('aKvol','±'+(m.portVol*100).toFixed(1)+'%');
+    const mdd=document.getElementById('aKmdd');
+    if(mdd){mdd.textContent='−'+(m.mddCart*100).toFixed(1)+'%';mdd.style.color='var(--red)';}
+    sk('aKmddS',m.mddCart>0.2?'Alto':m.mddCart>0.1?'Moderado':'Contenido');
+  }
+
+  // Renderizar la sub-pestaña activa
+  renderAnSubTab(S.anTab||'perf');
+}
+
+function renderAnSubTab(id){
+  if(id==='perf')  renderAnPerf();
+  if(id==='risk')  renderAnRisk();
+  if(id==='conc')  renderAnConc();
+  if(id==='bench') renderAnBench();
+  if(id==='insig') renderAnInsights();
+}
+
+// ═════════════════════════════════════════════════════════
+// SUB-PANEL: RENDIMIENTO
+// ═════════════════════════════════════════════════════════
+function renderAnPerf(){
+  const {computed,bycat,tv}=S;
+  // Tabla CAGR por categoría
+  const rows=[];
+  for(const cat of CATS){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)continue;
+    const w=bycat[cat].valor/Math.max(tv,1);
+    const weightedCagr=sub.reduce((s,a)=>{
+      const cagr=S.volC[a.id]?.cagr||0;
+      return s+cagr*(a.valor/Math.max(bycat[cat].valor,1));
+    },0);
+    const weightedYtd=sub.reduce((s,a)=>{
+      const y=S.volC[a.id]?.ytd||0;
+      return s+y*(a.valor/Math.max(bycat[cat].valor,1));
+    },0);
+    const weightedMtd=sub.reduce((s,a)=>{
+      const y=S.volC[a.id]?.mtd||0;
+      return s+y*(a.valor/Math.max(bycat[cat].valor,1));
+    },0);
+    const totalPctCat=bycat[cat].coste>0?(bycat[cat].valor-bycat[cat].coste)/bycat[cat].coste*100:0;
+    rows.push({cat,label:CL[cat],weight:w*100,cagr:weightedCagr*100,ytd:weightedYtd*100,mtd:weightedMtd*100,total:totalPctCat,n:sub.length});
+  }
+
+  const totalW=rows.reduce((s,r)=>s+r.weight,0);
+  const totalCagr=rows.reduce((s,r)=>s+r.cagr*(r.weight/Math.max(totalW,1)),0);
+  const totalYtd=rows.reduce((s,r)=>s+r.ytd*(r.weight/Math.max(totalW,1)),0);
+  const totalMtd=rows.reduce((s,r)=>s+r.mtd*(r.weight/Math.max(totalW,1)),0);
+  const totalTot=(S.tv-S.tc)/Math.max(S.tc,1)*100;
+
+  const el=document.getElementById('anCagrTable');
+  if(el){
+    el.innerHTML=`<table class="an-table"><thead><tr>
+      <th>Categoría</th><th>Peso</th><th>Nº</th><th>CAGR</th><th>YTD</th><th>MTD</th><th>Total</th>
+    </tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td><span class="an-cat-tag ${r.cat}">${r.cat}</span>${r.label}</td>
+      <td>${r.weight.toFixed(1)}%</td>
+      <td>${r.n}</td>
+      <td class="${r.cagr>=0?'an-val-good':'an-val-bad'}">${r.cagr>=0?'+':''}${r.cagr.toFixed(2)}%</td>
+      <td class="${r.ytd>=0?'an-val-good':'an-val-bad'}">${r.ytd>=0?'+':''}${r.ytd.toFixed(2)}%</td>
+      <td class="${r.mtd>=0?'an-val-good':'an-val-bad'}">${r.mtd>=0?'+':''}${r.mtd.toFixed(2)}%</td>
+      <td class="${r.total>=0?'an-val-good':'an-val-bad'}">${r.total>=0?'+':''}${r.total.toFixed(2)}%</td>
+    </tr>`).join('')}
+    <tr class="total-row">
+      <td>CARTERA TOTAL</td>
+      <td>${totalW.toFixed(1)}%</td>
+      <td>${S.computed.length}</td>
+      <td class="${totalCagr>=0?'an-val-good':'an-val-bad'}">${totalCagr>=0?'+':''}${totalCagr.toFixed(2)}%</td>
+      <td class="${totalYtd>=0?'an-val-good':'an-val-bad'}">${totalYtd>=0?'+':''}${totalYtd.toFixed(2)}%</td>
+      <td class="${totalMtd>=0?'an-val-good':'an-val-bad'}">${totalMtd>=0?'+':''}${totalMtd.toFixed(2)}%</td>
+      <td class="${totalTot>=0?'an-val-good':'an-val-bad'}">${totalTot>=0?'+':''}${totalTot.toFixed(2)}%</td>
+    </tr>
+    </tbody></table>`;
+  }
+
+  // Gráfico retornos por periodo — barras agrupadas por categoría
+  const labels=rows.map(r=>r.label);
+  mkC('anPeriodChart',{type:'bar',data:{labels,datasets:[
+    {label:'MTD',data:rows.map(r=>+r.mtd.toFixed(2)),backgroundColor:'rgba(245,197,24,.5)',borderColor:'#f5c518',borderWidth:1,borderRadius:3},
+    {label:'YTD',data:rows.map(r=>+r.ytd.toFixed(2)),backgroundColor:'rgba(74,158,255,.5)',borderColor:'#4a9eff',borderWidth:1,borderRadius:3},
+    {label:'CAGR',data:rows.map(r=>+r.cagr.toFixed(2)),backgroundColor:'rgba(0,229,160,.5)',borderColor:'#00e5a0',borderWidth:1,borderRadius:3},
+  ]},options:{plugins:{legend:{labels:{color:'#6b7a8d',font:{size:10}}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw>=0?'+':''}${c.raw.toFixed(2)}%`}}},scales:{x:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:10}}},y:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%',font:{size:10}}}}}});
+
+  // Histograma de retornos diarios de la cartera
+  if(S.pnlSeries&&S.pnlSeries.vals.length>30){
+    const vals=S.pnlSeries.vals,costs=S.pnlSeries.costs;
+    const dailyRets=[];
+    for(let i=1;i<vals.length;i++){
+      const capIn=costs[i]-costs[i-1];
+      const denom=vals[i-1]+capIn*0.5;
+      if(denom>0){
+        const r=(vals[i]-vals[i-1]-capIn)/denom*100;
+        if(isFinite(r)&&Math.abs(r)<10)dailyRets.push(r);
+      }
+    }
+    if(dailyRets.length>10){
+      const bins=25;
+      const minR=Math.min(...dailyRets),maxR=Math.max(...dailyRets);
+      const range=Math.max(maxR-minR,0.01);
+      const binSize=range/bins;
+      const hist=new Array(bins).fill(0);
+      for(const r of dailyRets){
+        const idx=Math.min(bins-1,Math.max(0,Math.floor((r-minR)/binSize)));
+        hist[idx]++;
+      }
+      const labels2=hist.map((_,i)=>(minR+binSize*(i+0.5)).toFixed(2)+'%');
+      const colors=hist.map((_,i)=>(minR+binSize*(i+0.5))>=0?'rgba(0,229,160,.6)':'rgba(255,71,87,.6)');
+      mkC('anHistChart',{type:'bar',data:{labels:labels2,datasets:[{label:'Días',data:hist,backgroundColor:colors,borderWidth:0}]},
+        options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} días en ${c.label}`}}},scales:{x:{grid:{display:false},ticks:{color:'#6b7a8d',font:{size:8},maxRotation:0,autoSkip:true,maxTicksLimit:10}},y:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',font:{size:10}}}}}});
+    }
+  }
+}
+
+// ═════════════════════════════════════════════════════════
+// SUB-PANEL: RIESGO
+// ═════════════════════════════════════════════════════════
+function renderAnRisk(){
+  const {computed,bycat,tv}=S;
+  // Métricas por categoría
+  const rows=[];
+  for(const cat of CATS){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)continue;
+    // Ponderadas por valor
+    const wSum=Math.max(bycat[cat].valor,1);
+    const vol=sub.reduce((s,a)=>s+(a.vol||0)*(a.valor/wSum),0);
+    const mdd=sub.reduce((s,a)=>s+(S.volC[a.id]?.maxDD||0)*(a.valor/wSum),0);
+    const sharpe=sub.reduce((s,a)=>s+(S.volC[a.id]?.sharpe||0)*(a.valor/wSum),0);
+    const sortino=sub.reduce((s,a)=>s+(S.volC[a.id]?.sortino||0)*(a.valor/wSum),0);
+    const calmar=sub.reduce((s,a)=>s+(S.volC[a.id]?.calmar||0)*(a.valor/wSum),0);
+    const cagr=sub.reduce((s,a)=>s+(S.volC[a.id]?.cagr||0)*(a.valor/wSum),0);
+    rows.push({cat,label:CL[cat],vol,mdd,sharpe,sortino,calmar,cagr,n:sub.length});
+  }
+
+  const m=calcPortfolioMetrics();
+  const el=document.getElementById('anRiskTable');
+  if(el){
+    el.innerHTML=`<table class="an-table"><thead><tr>
+      <th>Categoría</th><th>Retorno (CAGR)</th><th>Volatilidad</th><th>Max DD</th><th>Sharpe</th><th>Sortino</th><th>Calmar</th>
+    </tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td><span class="an-cat-tag ${r.cat}">${r.cat}</span>${r.label}</td>
+      <td class="${r.cagr>=0?'an-val-good':'an-val-bad'}">${(r.cagr*100).toFixed(2)}%</td>
+      <td>±${(r.vol*100).toFixed(1)}%</td>
+      <td class="an-val-bad">−${(r.mdd*100).toFixed(1)}%</td>
+      <td class="${r.sharpe>=1?'an-val-good':r.sharpe>=0.5?'an-val-neutral':'an-val-bad'}">${r.sharpe.toFixed(2)}</td>
+      <td class="${r.sortino>=1.5?'an-val-good':r.sortino>=0.7?'an-val-neutral':'an-val-bad'}">${r.sortino.toFixed(2)}</td>
+      <td class="${r.calmar>=0.5?'an-val-good':r.calmar>=0.2?'an-val-neutral':'an-val-bad'}">${r.calmar.toFixed(2)}</td>
+    </tr>`).join('')}
+    ${m?`<tr class="total-row">
+      <td>CARTERA TOTAL</td>
+      <td class="${m.portCagr>=0?'an-val-good':'an-val-bad'}">${(m.portCagr*100).toFixed(2)}%</td>
+      <td>±${(m.portVol*100).toFixed(1)}%</td>
+      <td class="an-val-bad">−${(m.mddCart*100).toFixed(1)}%</td>
+      <td class="${m.sharpe>=1?'an-val-good':m.sharpe>=0.5?'an-val-neutral':'an-val-bad'}">${m.sharpe.toFixed(2)}</td>
+      <td>—</td><td>—</td>
+    </tr>`:''}
+    </tbody></table>
+    <div style="font-size:.6rem;color:var(--mut);margin-top:10px;line-height:1.5">
+      <strong>Sharpe</strong>: retorno por unidad de riesgo total (Rf=3%). >1 excelente · 0.5-1 aceptable · &lt;0.5 bajo<br>
+      <strong>Sortino</strong>: como Sharpe pero solo penaliza volatilidad a la baja. >1.5 muy bueno<br>
+      <strong>Calmar</strong>: CAGR / Max Drawdown. Mide eficiencia frente a caídas
+    </div>`;
+  }
+
+  // Frontera eficiente — scatter con todos los activos
+  const nonEp=computed.filter(a=>a.cat!=='EP'&&(a.vol||0)>0);
+  const maxV=Math.max(...nonEp.map(a=>a.valor),1);
+  const ds=CATS.filter(c=>c!=='EP').map(cat=>{
+    const sub=nonEp.filter(a=>a.cat===cat);
+    return{label:CL[cat],data:sub.map(a=>({x:(a.vol||0)*100,y:(S.volC[a.id]?.cagr||0)*100,r:Math.max(5,Math.sqrt(a.valor/maxV)*28),lbl:a.name})),backgroundColor:CC[cat]+'66',borderColor:CC[cat],borderWidth:1.5};
+  });
+  // Añadir cartera total
+  if(m){
+    ds.push({label:'Cartera',data:[{x:m.portVol*100,y:m.portCagr*100,r:14,lbl:'Cartera Total'}],backgroundColor:'rgba(255,255,255,.8)',borderColor:'#fff',borderWidth:2,pointStyle:'rectRot'});
+  }
+  mkC('anFrontierChart',{type:'bubble',data:{datasets:ds},options:{plugins:{legend:{position:'bottom',labels:{padding:12,boxWidth:8,font:{size:10}}},tooltip:{callbacks:{label:ctx=>{const d=ctx.raw;return[d.lbl,`  Retorno: ${d.y.toFixed(2)}%`,`  Volatilidad: ±${d.x.toFixed(1)}%`];}}}},scales:{x:{title:{display:true,text:'Volatilidad real anualizada %',color:'#6b7a8d',font:{size:10}},grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%'}},y:{title:{display:true,text:'CAGR %',color:'#6b7a8d',font:{size:10}},grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%'}}}}});
+
+  // Radar con DATOS REALES — 5 ejes
+  function radarMetrics(cat){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)return[0,0,0,0,0];
+    const w=Math.max(sub.reduce((s,a)=>s+a.valor,0),1);
+    const cagr=sub.reduce((s,a)=>s+(S.volC[a.id]?.cagr||0)*(a.valor/w),0)*100;
+    const retScore=Math.max(0,Math.min(100,(cagr+15)*100/45));
+    const vol=sub.reduce((s,a)=>s+(a.vol||0)*(a.valor/w),0)*100;
+    const stabScore=Math.max(0,Math.min(100,100-vol*1.25));
+    const sumSq=sub.reduce((s,a)=>s+Math.pow(a.valor/w,2),0);
+    const divScore=(1-sumSq)*100/Math.max(1-1/Math.max(sub.length,2),0.01);
+    const mdd=sub.reduce((s,a)=>s+(S.volC[a.id]?.maxDD||0)*(a.valor/w),0)*100;
+    const presScore=Math.max(0,Math.min(100,100-mdd*2));
+    const ytd=sub.reduce((s,a)=>s+(S.volC[a.id]?.ytd||0)*(a.valor/w),0)*100;
+    const momScore=Math.max(0,Math.min(100,(ytd+20)*100/50));
+    return[retScore,stabScore,divScore,presScore,momScore].map(x=>+x.toFixed(0));
+  }
+  const datasets=[];
+  for(const cat of ['RF','RV','CR','EP','AC']){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)continue;
+    const col=CC[cat];
+    datasets.push({label:CL[cat],data:radarMetrics(cat),fill:true,
+      backgroundColor:col+'1a',borderColor:col,pointBackgroundColor:col,pointRadius:3});
+  }
+  mkC('anRadarReal',{type:'radar',data:{
+    labels:['Rentabilidad','Estabilidad','Diversificación','Preservación','Momentum YTD'],
+    datasets},
+    options:{scales:{r:{grid:{color:'#1e2430'},angleLines:{color:'#1e2430'},pointLabels:{font:{size:10},color:'#8a9ab0'},ticks:{display:false,beginAtZero:true},suggestedMin:0,suggestedMax:100}},
+    plugins:{legend:{position:'bottom',labels:{padding:12,boxWidth:8,font:{size:10}}},
+    tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw}/100`}}}}});
+}
+
+// ═════════════════════════════════════════════════════════
+// SUB-PANEL: CONCENTRACIÓN
+// ═════════════════════════════════════════════════════════
+function renderAnConc(){
+  const m=calcPortfolioMetrics();if(!m)return;
+
+  // HHI: <1500 baja, 1500-2500 moderada, >2500 alta concentración (US DoJ)
+  const hhiScaled=m.hhi*10000;
+  const hhiEl=document.getElementById('aKhhi');
+  if(hhiEl){hhiEl.textContent=Math.round(hhiScaled);hhiEl.style.color=hhiScaled<1500?'var(--acc)':hhiScaled<2500?'var(--yel)':'var(--red)';}
+  sk('aKhhiS',hhiScaled<1500?'Baja':hhiScaled<2500?'Moderada':'Alta');
+  sk('aKtop3',m.top3.toFixed(1)+'%');
+  sk('aKtop5',m.top5.toFixed(1)+'%');
+  sk('aKneff',m.nEff.toFixed(1));
+
+  // Gráfico de contribución al riesgo
+  const rc=m.riskContrib.slice(0,15);
+  mkC('anRiskContrib',{type:'bar',data:{
+    labels:rc.map(r=>r.name.length>22?r.name.slice(0,20)+'…':r.name),
+    datasets:[{label:'Contribución al riesgo %',data:rc.map(r=>+r.contrib.toFixed(2)),backgroundColor:rc.map(r=>CC[r.cat]+'66'),borderColor:rc.map(r=>CC[r.cat]),borderWidth:1,borderRadius:3},
+              {label:'Peso %',data:rc.map(r=>+r.weight.toFixed(2)),backgroundColor:'rgba(255,255,255,.08)',borderColor:'rgba(255,255,255,.3)',borderWidth:1,borderRadius:3}]},
+    options:{indexAxis:'y',plugins:{legend:{position:'top',labels:{color:'#6b7a8d',font:{size:10}}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw.toFixed(2)}%`}}},scales:{x:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:9}}}}}});
+
+  // Cartera actual vs óptima — heurística razonable ajustada por edad/perfil agresivo
+  const {tv,bycat}=S;
   const rfP=bycat.RF.valor/tv*100,rvP=bycat.RV.valor/tv*100,crP=bycat.CR.valor/tv*100;
+  const epP=bycat.EP.valor/tv*100,acP=bycat.AC.valor/tv*100;
+  const actual=[+rfP.toFixed(1),+rvP.toFixed(1),+crP.toFixed(1),+epP.toFixed(1),+acP.toFixed(1)];
+  // Perfil moderado-agresivo (long-term growth)
+  const optimo=[20,60,5,10,5];
+  mkC('optChart',{type:'bar',data:{labels:CATS.map(c=>CL[c]),datasets:[
+    {label:'Actual',data:actual,backgroundColor:CATS.map(c=>CC[c]+'55'),borderColor:CATS.map(c=>CC[c]),borderWidth:1,borderRadius:5},
+    {label:'Óptimo (moderado-agresivo)',data:optimo,backgroundColor:'rgba(255,255,255,.06)',borderColor:'rgba(255,255,255,.3)',borderWidth:1,borderRadius:5}]},
+    options:{plugins:{legend:{labels:{color:'#6b7a8d',font:{size:10}}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${(+c.raw).toFixed(1)}%`}}},scales:{x:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:10}}},y:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%',font:{size:10}},max:Math.max(...actual,...optimo)+10}}}});
+}
+
+// ═════════════════════════════════════════════════════════
+// SUB-PANEL: BENCHMARKS
+// ═════════════════════════════════════════════════════════
+function renderAnBench(){
+  const statusEl=document.getElementById('anBenchStatus');
+  const tblEl=document.getElementById('anBenchTable');
+  if(!S.benchMetrics||Object.keys(S.benchMetrics).length<2){
+    if(statusEl)statusEl.textContent='Carga el histórico para ver benchmarks';
+    if(tblEl)tblEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--mut);font-size:.72rem">Ve a la pestaña <strong>P&L Histórico</strong> y pulsa <strong>Cargar histórico</strong> para activar los benchmarks.</div>';
+    return;
+  }
+  if(statusEl)statusEl.textContent='Benchmarks cargados ✓';
+
+  const {computed,bycat,tv}=S;
+  const rows=[];
+  for(const cat of CATS){
+    const sub=computed.filter(a=>a.cat===cat);
+    if(!sub.length)continue;
+    const benchKey=CAT_BENCHMARK[cat];
+    const bench=S.benchMetrics[benchKey];
+    const benchName=benchKey==='MIX50'?'50% MSCI World + 50% Euro Agg':(BENCHMARKS[benchKey]?.name||benchKey);
+    const wSum=Math.max(bycat[cat].valor,1);
+    const catCagr=sub.reduce((s,a)=>s+(S.volC[a.id]?.cagr||0)*(a.valor/wSum),0);
+    const catVol=sub.reduce((s,a)=>s+(a.vol||0)*(a.valor/wSum),0);
+    const catMdd=sub.reduce((s,a)=>s+(S.volC[a.id]?.maxDD||0)*(a.valor/wSum),0);
+    const catSharpe=sub.reduce((s,a)=>s+(S.volC[a.id]?.sharpe||0)*(a.valor/wSum),0);
+    const alpha=bench?(catCagr-bench.cagr)*100:null;
+    rows.push({cat,label:CL[cat],benchName,benchKey,catCagr:catCagr*100,catVol:catVol*100,catMdd:catMdd*100,catSharpe,
+      benchCagr:bench?bench.cagr*100:null,benchVol:bench?bench.vol*100:null,benchMdd:bench?bench.maxDD*100:null,benchSharpe:bench?bench.sharpe:null,alpha});
+  }
+
+  if(tblEl){
+    tblEl.innerHTML=`<table class="an-table"><thead><tr>
+      <th>Categoría</th><th>Benchmark</th><th>Retorno (tú)</th><th>Retorno (bench)</th><th>Alpha</th><th>Vol (tú)</th><th>Vol (bench)</th><th>Sharpe (tú)</th><th>Sharpe (bench)</th>
+    </tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td><span class="an-cat-tag ${r.cat}">${r.cat}</span>${r.label}</td>
+      <td style="font-size:.65rem;color:var(--mut)">${r.benchName}</td>
+      <td class="${r.catCagr>=0?'an-val-good':'an-val-bad'}">${r.catCagr>=0?'+':''}${r.catCagr.toFixed(2)}%</td>
+      <td>${r.benchCagr!=null?(r.benchCagr>=0?'+':'')+r.benchCagr.toFixed(2)+'%':'—'}</td>
+      <td class="${r.alpha>=0?'an-val-good':'an-val-bad'}">${r.alpha!=null?(r.alpha>=0?'+':'')+r.alpha.toFixed(2)+' pts':'—'}</td>
+      <td>±${r.catVol.toFixed(1)}%</td>
+      <td>${r.benchVol!=null?'±'+r.benchVol.toFixed(1)+'%':'—'}</td>
+      <td class="${r.catSharpe>=1?'an-val-good':r.catSharpe>=0.5?'an-val-neutral':'an-val-bad'}">${r.catSharpe.toFixed(2)}</td>
+      <td>${r.benchSharpe!=null?r.benchSharpe.toFixed(2):'—'}</td>
+    </tr>`).join('')}
+    </tbody></table>`;
+  }
+
+  // Evolución cartera vs benchmark ponderado
+  if(S.pnlSeries&&S.pnlSeries.vals.length>30){
+    const dates=S.pnlSeries.dates;
+    const vals=S.pnlSeries.vals,costs=S.pnlSeries.costs;
+    // Cartera normalizada a 100
+    const cartRatio=vals.map((v,i)=>costs[i]>0?v/costs[i]*100:100);
+    // Benchmark ponderado: mix según % categoría actual (estático)
+    const wRF=bycat.RF.valor/Math.max(tv,1);
+    const wRV=(bycat.RV.valor+bycat.AC.valor)/Math.max(tv,1);
+    const wCR=bycat.CR.valor/Math.max(tv,1);
+    const wEP=bycat.EP.valor/Math.max(tv,1);
+    // Construir serie benchmark combinada sobre las mismas fechas
+    function seriesOn(benchKey,targetDates){
+      const m={};const h=S.benchHist[benchKey];if(!h)return null;
+      for(const{date,nav}of h)m[date]=nav;
+      const sorted=Object.keys(m).sort();
+      const result=[];let lastVal=null;let idx=0;
+      for(const td of targetDates){
+        while(idx<sorted.length&&sorted[idx]<=td){lastVal=m[sorted[idx]];idx++;}
+        result.push(lastVal);
+      }
+      // Normalizar al primer valor válido a 100
+      const firstVal=result.find(v=>v!=null);
+      if(!firstVal)return null;
+      return result.map(v=>v!=null?v/firstVal*100:null);
+    }
+    const sMSCI=seriesOn('MSCIW',dates);
+    const sEAGG=seriesOn('EAGG',dates);
+    const sBTC=seriesOn('BTC',dates);
+    const sMIX=seriesOn('MIX50',dates);
+    const benchComb=dates.map((_,i)=>{
+      let sum=0,wTot=0;
+      if(sMSCI&&sMSCI[i]!=null){sum+=sMSCI[i]*wRV;wTot+=wRV;}
+      if(sEAGG&&sEAGG[i]!=null){sum+=sEAGG[i]*wRF;wTot+=wRF;}
+      if(sBTC&&sBTC[i]!=null){sum+=sBTC[i]*wCR;wTot+=wCR;}
+      if(sMIX&&sMIX[i]!=null){sum+=sMIX[i]*wEP;wTot+=wEP;}
+      return wTot>0?sum/wTot:null;
+    });
+    const SD=thin(dates,300);
+    const cartMap=Object.fromEntries(dates.map((d,i)=>[d,cartRatio[i]]));
+    const benchMap=Object.fromEntries(dates.map((d,i)=>[d,benchComb[i]]));
+    mkC('anBenchEvo',{type:'line',data:{labels:SD,datasets:[
+      {label:'Mi cartera',data:SD.map(d=>cartMap[d]),borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,.12)',borderWidth:2,fill:true,pointRadius:0,tension:.3},
+      {label:'Benchmark ponderado',data:SD.map(d=>benchMap[d]),borderColor:'#ffffff',backgroundColor:'rgba(255,255,255,.05)',borderWidth:2,borderDash:[5,4],fill:false,pointRadius:0,tension:.3},
+    ]},options:{plugins:{legend:{position:'top',labels:{color:'#6b7a8d',font:{size:10}}},tooltip:{callbacks:{label:c=>c.raw!=null?` ${c.dataset.label}: ${c.raw.toFixed(1)}%`:''}}},scales:{x:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',font:{size:8},maxRotation:0,autoSkip:true,maxTicksLimit:10}},y:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',font:{size:10},callback:v=>v+''}}}}});
+  }
+
+  // Alpha por categoría — barras horizontales
+  const alphaRows=rows.filter(r=>r.alpha!=null);
+  mkC('anAlphaChart',{type:'bar',data:{labels:alphaRows.map(r=>r.label),datasets:[{label:'Alpha vs benchmark',data:alphaRows.map(r=>+r.alpha.toFixed(2)),backgroundColor:alphaRows.map(r=>r.alpha>=0?'rgba(0,229,160,.55)':'rgba(255,71,87,.55)'),borderColor:alphaRows.map(r=>r.alpha>=0?'#00e5a0':'#ff4757'),borderWidth:1,borderRadius:4}]},
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw>=0?'+':''}${c.raw.toFixed(2)} pts`}}},scales:{x:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+' pts',font:{size:9}}},y:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:11}}}}}});
+}
+
+// ═════════════════════════════════════════════════════════
+// SUB-PANEL: HALLAZGOS Y RECOMENDACIONES DINÁMICAS
+// ═════════════════════════════════════════════════════════
+function renderAnInsights(){
+  const {computed,tv,tc,tp,tpp,bycat}=S;
+  const m=calcPortfolioMetrics();
+  const rfP=bycat.RF.valor/tv*100;
+  const rvP=(bycat.RV.valor+bycat.AC.valor)/tv*100;
+  const crP=bycat.CR.valor/tv*100;
+  const epP=bycat.EP.valor/tv*100;
+
   const best=[...computed].sort((a,b)=>b.pnlPct-a.pnlPct)[0];
   const worst=[...computed].sort((a,b)=>a.pnlPct-b.pnlPct)[0];
-  const bestCat=CATS.reduce((b,c)=>bycat[c].coste>0&&bycat[c].pnl/bycat[c].coste>bycat[b].pnl/Math.max(bycat[b].coste,1)?c:b,'RF');
-  sk('aKinv',f(tc));sk('aKval',f(tv));
-  const vs=document.getElementById('aKvalS');if(vs){vs.textContent=(tp>=0?'+':'')+f(tp)+' ('+tpp.toFixed(2)+'%)';vs.className='kpi-s '+(tp>=0?'pos':'neg');}
-  sk('aKbestCat',CL[bestCat]);sk('aKbestCatN',(bycat[bestCat].coste>0?(bycat[bestCat].valor-bycat[bestCat].coste)/bycat[bestCat].coste*100:0).toFixed(1)+'% retorno total');
-  sk('aKops',TXS.filter(t=>t.t==='buy').length);
-  const ins=[
-    tpp>0?{cls:'ins-g',i:'🚀',h:`Cartera en positivo: +${tpp.toFixed(2)}%`,p:`${computed.filter(a=>a.pnl>0).length} de ${computed.length} activos en positivo. Ganancia latente total: ${f(tp)}.`}:{cls:'ins-w',i:'⚠️',h:`Cartera en pérdida: ${tpp.toFixed(2)}%`,p:`${computed.filter(a=>a.pnl<0).length} de ${computed.length} activos en pérdida.`},
-    {cls:rfP>50?'ins-w':'ins-g',i:'🛡️',h:`RF = ${rfP.toFixed(1)}% de la cartera`,p:rfP>60?'Alta concentración, considera rotar gradualmente a RV.':'Nivel equilibrado.'},
-    {cls:'ins-i',i:'📈',h:`Mejor activo: ${best?.name||'—'}`,p:`+${best?.pnlPct.toFixed(2)||0}% retorno total. ${f(best?.pnl||0)} de ganancia latente.`},
-    {cls:worst?.pnlPct<-10?'ins-w':'ins-i',i:'📉',h:`Activo más débil: ${worst?.name||'—'}`,p:`${worst?.pnlPct.toFixed(2)||0}% sobre coste. ${f(worst?.pnl||0)}.`},
-    crP>15?{cls:'ins-w',i:'⚡',h:`Cripto = ${crP.toFixed(1)}% — alta volatilidad`,p:'Con más del 15% en cripto, vigila el riesgo.'}:null,
-  ].filter(Boolean);
-  document.getElementById('insights').innerHTML=ins.map(i=>`<div class="ins-item ${i.cls}"><div class="ins-ico">${i.i}</div><div class="ins-body"><h4>${i.h}</h4><p>${i.p}</p></div></div>`).join('');
-  document.getElementById('recs').innerHTML=[
-    {cls:'hold',t:'MANTENER',h:'DCA mensual activo',p:'Tu estrategia de aportaciones periódicas en RV es sólida. Sigue con ella.'},
-    {cls:'buy', t:'INCREMENTAR',h:'Ampliar Fidelity Index Funds',p:'Fidelity S&P 500 y MSCI World: menores costes, máxima diversificación.'},
-    {cls:'hold',t:'MANTENER',h:'RF como ancla defensiva',p:'RF Flexible y Horizonte 2027 aportan estabilidad.'},
-    crP>15?{cls:'watch',t:'VIGILAR',h:'Reducir cripto en repuntes',p:`Con ${crP.toFixed(1)}% en cripto, en rallys del 30%+ considera realizar parcialmente.`}:null,
-  ].filter(Boolean).map(r=>`<div class="rec ${r.cls}"><div class="rec-head"><span class="rtag ${r.cls}">${r.t}</span><h4>${r.h}</h4></div><p style="font-size:.7rem;color:var(--mut);line-height:1.55">${r.p}</p></div>`).join('');
-  const actual=[+rfP.toFixed(1),+rvP.toFixed(1),+crP.toFixed(1),+(bycat.EP.valor/tv*100).toFixed(1)];
-  mkC('optChart',{type:'bar',data:{labels:CATS.map(c=>CL[c]),datasets:[{label:'Actual',data:actual,backgroundColor:CATS.map(c=>CC[c]+'55'),borderColor:CATS.map(c=>CC[c]),borderWidth:1,borderRadius:5},{label:'Óptimo sugerido',data:[35,50,5,10],backgroundColor:'rgba(255,255,255,.06)',borderColor:'rgba(255,255,255,.3)',borderWidth:1,borderRadius:5}]},
-    options:{plugins:{legend:{labels:{color:'#6b7a8d',font:{size:10}}},tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${(+c.raw).toFixed(1)}%`}}},scales:{x:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:10}}},y:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%',font:{size:10}},max:100}}}});
+
+  const ins=[];
+  // 1. Resultado global
+  if(tpp>0){
+    const winners=computed.filter(a=>a.pnl>0).length;
+    ins.push({cls:'ins-g',i:'🚀',h:`Cartera en positivo: +${tpp.toFixed(2)}%`,p:`${winners} de ${computed.length} activos ganadores · ${f(tp)} de plusvalía latente.`,meta:'RESULTADO'});
+  } else {
+    const losers=computed.filter(a=>a.pnl<0).length;
+    ins.push({cls:'ins-w ins-crit',i:'⚠️',h:`Cartera en pérdida: ${tpp.toFixed(2)}%`,p:`${losers} de ${computed.length} activos en pérdida · ${f(tp)}.`,meta:'RESULTADO'});
+  }
+  // 2. Sharpe
+  if(m&&m.twrYears>0.5){
+    if(m.sharpe>=1)ins.push({cls:'ins-g',i:'⚡',h:`Sharpe excelente: ${m.sharpe.toFixed(2)}`,p:`Tu cartera genera ${m.sharpe.toFixed(2)}x su riesgo. Indica muy buena compensación riesgo/rentabilidad.`,meta:'RIESGO'});
+    else if(m.sharpe<0.3&&m.twrYears>1)ins.push({cls:'ins-w',i:'⚠️',h:`Sharpe bajo: ${m.sharpe.toFixed(2)}`,p:`Con ${m.twrYears.toFixed(1)}y de histórico, un Sharpe <0.3 indica que no estás siendo bien compensado por el riesgo asumido.`,meta:'RIESGO'});
+  }
+  // 3. Concentración
+  if(m){
+    const hhiScaled=m.hhi*10000;
+    if(hhiScaled>2500){
+      ins.push({cls:'ins-w',i:'🎯',h:`Cartera muy concentrada (HHI ${Math.round(hhiScaled)})`,p:`Solo ${m.nEff.toFixed(1)} activos efectivos. Top 3 = ${m.top3.toFixed(1)}%. Considera diversificar más.`,meta:'CONCENTRACIÓN'});
+    } else if(hhiScaled<1500){
+      ins.push({cls:'ins-g',i:'🎯',h:`Bien diversificada (HHI ${Math.round(hhiScaled)})`,p:`${m.nEff.toFixed(1)} activos efectivos. Diversificación saludable.`,meta:'CONCENTRACIÓN'});
+    }
+  }
+  // 4. Alocación RF vs RV
+  if(rfP>55)ins.push({cls:'ins-w',i:'🛡️',h:`RF demasiado alta (${rfP.toFixed(1)}%)`,p:`Con más del 55% en renta fija, sacrificas rentabilidad a largo plazo. Considera rotar ~10-15 pts a RV.`,meta:'ASSET ALLOC'});
+  else if(rfP<15&&tpp<0)ins.push({cls:'ins-w',i:'🛡️',h:`Sin colchón defensivo (RF=${rfP.toFixed(1)}%)`,p:`Poca RF en cartera y estás en negativo. Evalúa si tu perfil tolera esta volatilidad.`,meta:'ASSET ALLOC'});
+
+  // 5. Cripto
+  if(crP>15)ins.push({cls:'ins-w',i:'₿',h:`Cripto = ${crP.toFixed(1)}% — alto`,p:`Más del 15% en cripto aumenta la volatilidad global. Recomendación académica: <10% por riesgo binario.`,meta:'RIESGO'});
+  else if(crP>5&&crP<=10)ins.push({cls:'ins-i',i:'₿',h:`Exposición cripto razonable (${crP.toFixed(1)}%)`,p:`Peso moderado dentro de un enfoque satellite. Mantén esta disciplina.`,meta:'RIESGO'});
+
+  // 6. Mejor/peor
+  ins.push({cls:'ins-i',i:'📈',h:`Mejor: ${best?.name||'—'}`,p:`+${best?.pnlPct.toFixed(2)||0}% · ${f(best?.pnl||0)} de plusvalía. Peso: ${best?.peso.toFixed(1)||0}%.`,meta:'TOP'});
+  if(worst&&worst.pnlPct<-10)ins.push({cls:'ins-w',i:'📉',h:`Problemático: ${worst.name}`,p:`${worst.pnlPct.toFixed(2)}% · ${f(worst.pnl)}. Peso ${worst.peso.toFixed(1)}%. Revisa tesis de inversión.`,meta:'REVISAR'});
+
+  // 7. Benchmark alpha
+  if(S.benchMetrics&&Object.keys(S.benchMetrics).length>=2){
+    const rvSub=computed.filter(a=>a.cat==='RV');
+    if(rvSub.length&&S.benchMetrics.MSCIW){
+      const wSum=Math.max(bycat.RV.valor,1);
+      const rvCagr=rvSub.reduce((s,a)=>s+(S.volC[a.id]?.cagr||0)*(a.valor/wSum),0);
+      const alphaRV=(rvCagr-S.benchMetrics.MSCIW.cagr)*100;
+      if(Math.abs(alphaRV)>0.5){
+        if(alphaRV>0)ins.push({cls:'ins-g',i:'🏆',h:`Batiendo MSCI World: +${alphaRV.toFixed(2)} pts`,p:`Tu RV anualiza ${(rvCagr*100).toFixed(2)}% frente al ${(S.benchMetrics.MSCIW.cagr*100).toFixed(2)}% del índice.`,meta:'BENCHMARK'});
+        else ins.push({cls:'ins-w',i:'📊',h:`Infrarrendimiento vs MSCI World: ${alphaRV.toFixed(2)} pts`,p:`Tu RV anualiza ${(rvCagr*100).toFixed(2)}% vs ${(S.benchMetrics.MSCIW.cagr*100).toFixed(2)}% del índice. Considera si la gestión activa merece la pena.`,meta:'BENCHMARK'});
+      }
+    }
+  }
+
+  document.getElementById('insights').innerHTML=ins.map(i=>
+    `<div class="ins-item ${i.cls}"><div class="ins-ico">${i.i}</div><div class="ins-body"><h4>${i.h}${i.meta?`<span class="ins-meta">${i.meta}</span>`:''}</h4><p>${i.p}</p></div></div>`
+  ).join('');
+
+  // RECOMENDACIONES DINÁMICAS
+  const recs=[];
+  // Regla 1: concentración
+  if(m&&m.hhi*10000>2500){
+    const topAsset=computed.sort((a,b)=>b.peso-a.peso)[0];
+    recs.push({cls:'watch',t:'DIVERSIFICAR',h:`Reducir peso de "${topAsset.name}"`,p:`Con ${topAsset.peso.toFixed(1)}% concentrado en un solo activo, una caída del 30% en él supondría −${(topAsset.peso*0.3).toFixed(1)}% para toda la cartera.`});
+  }
+  // Regla 2: RF excesiva
+  if(rfP>55){
+    recs.push({cls:'buy',t:'REBALANCEAR',h:'Rotar RF → RV',p:`Tu ${rfP.toFixed(1)}% en RF es alto para un perfil crecimiento. Traspasar 10-15 pts a RV indexada (S&P 500 / MSCI World) mejoraría retorno esperado.`});
+  }
+  // Regla 3: cripto excesiva
+  if(crP>15){
+    recs.push({cls:'sell',t:'REDUCIR',h:'Realizar parcialmente cripto',p:`Con ${crP.toFixed(1)}% en cripto, en rebote del 30%+ considera vender 1/3 para bajar a ~10%. Bloquea ganancias y baja riesgo binario.`});
+  }
+  // Regla 4: sin EPSV
+  if(epP<3){
+    recs.push({cls:'buy',t:'VENTAJA FISCAL',h:'Ampliar EPSV/pensiones',p:`Tu ${epP.toFixed(1)}% en EPSV deja desgravación fiscal sobre la mesa. Límite 5.000€/año en Bizkaia.`});
+  }
+  // Regla 5: benchmark
+  if(S.benchMetrics?.MSCIW){
+    const fwrld=computed.find(a=>a.id==='fworld');
+    const fsp=computed.find(a=>a.id==='fsp500');
+    if(fwrld&&fwrld.peso<10&&!fsp)recs.push({cls:'buy',t:'AMPLIAR',h:'Fidelity MSCI World',p:`Core global con 0.12% TER. Tu ${fwrld.peso.toFixed(1)}% es bajo para un fondo índice tan eficiente.`});
+  }
+  // Regla 6: DCA mantener
+  if(TXS.filter(t=>t.t==='buy').length>=30)recs.push({cls:'hold',t:'MANTENER',h:'DCA mensual',p:`Llevas ${TXS.filter(t=>t.t==='buy').length} compras registradas. La disciplina de aportar regularmente es tu mayor ventaja.`});
+  // Regla 7: peor activo
+  if(worst&&worst.pnlPct<-20){
+    recs.push({cls:'watch',t:'REVISAR TESIS',h:`Evaluar "${worst.name}"`,p:`Con ${worst.pnlPct.toFixed(1)}% de pérdida, decide: ¿sigue siendo válida la tesis? Si no, corta pérdidas (loss harvesting permite compensar fiscalmente).`});
+  }
+  // Fallback si no hay recs
+  if(!recs.length)recs.push({cls:'hold',t:'EQUILIBRADA',h:'Cartera bien estructurada',p:'No detectamos desajustes críticos. Mantén la disciplina de aportación y revisa cada 6 meses.'});
+
+  document.getElementById('recs').innerHTML=recs.map(r=>
+    `<div class="rec ${r.cls}"><div class="rec-head"><span class="rtag ${r.cls}">${r.t}</span><h4>${r.h}</h4></div><p style="font-size:.7rem;color:var(--mut);line-height:1.55">${r.p}</p></div>`
+  ).join('');
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4334,6 +5205,18 @@ setStatus('ld','Obteniendo datos...');
 Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(() => {
   for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
   loadAll(); // loadAll ya llama a computeAndRender internamente
+  // Pre-cargar snapshot en segundo plano (no bloquea UI)
+  // Así cuando el usuario entre a Análisis/Riesgo/P&L, los datos ya estarán listos
+  setTimeout(()=>{
+    loadSnapshot().then(ok=>{
+      if(ok){
+        buildPnlSeries();computeAndRender();
+        if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
+        if(document.getElementById('panel-risk').classList.contains('active'))renderRisk();
+        if(document.getElementById('panel-pnl').classList.contains('active')){renderPnl();renderContrib();renderMonthly();}
+      }
+    });
+  },1500);
 });
 // Auto-refresh cada 4h, pausado cuando la pestaña está en background
 (function setupAutoRefresh(){
