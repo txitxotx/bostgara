@@ -46,7 +46,7 @@ const CG_TO_KRAKEN = {
 // Benchmarks Yahoo Finance
 const BENCH_TICKERS = {
   MSCIW: 'IWDA.L',
-  EAGG:  'AGGH.DE',
+  EAGG:  'EUN4.DE',  // iShares EUR Aggregate Bond (Xetra) — ticker confirmado
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
