@@ -871,7 +871,7 @@ body.privacy #trPosTable{
     <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap">
       <div id="pnlStatus" style="font-size:.7rem;color:var(--mut);min-height:18px;flex:1"></div>
-      <button id="pnlForceReload" onclick="forceLiveReload()" style="font-size:.62rem;padding:4px 10px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;color:var(--mut);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em;display:none" title="Descargar histórico en vivo ignorando el snapshot del día">↻ Recarga en vivo</button>
+      <button id="pnlForceReload" onclick="forceLiveReload()" style="font-size:.62rem;padding:4px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;color:var(--mut);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em" title="Descargar histórico en vivo ignorando el snapshot del día">↻ Recarga en vivo</button>
     </div>
     <div class="cv cv-320"><canvas id="pnlChart"></canvas></div>
   </div>
@@ -2614,12 +2614,18 @@ function rankSet(btn,f2){actTf('rankTf',btn);S.rankFlt=f2;renderRankBar();}
 //  Si existe y es reciente, evita re-descargar todo el histórico
 // ══════════════════════════════════════════════════════════
 async function loadSnapshot(){
-  // Si ya se cargó un snapshot en esta sesión, no volver a intentar
-  if(S.snapshotTried)return S.snapshotOk;
+  // Si ya se intentó y funcionó, no repetir
+  if(S.snapshotTried && S.snapshotOk)return true;
+  // Si ya falló, no reintentar (salvo forceLiveReload que resetea el flag)
+  if(S.snapshotTried && !S.snapshotOk)return false;
   S.snapshotTried=true;
   try{
     const r=await fetch('/api/get-snapshot',{cache:'no-store'});
-    if(!r.ok){S.snapshotOk=false;return false;}
+    if(!r.ok){
+      if(r.status===404)console.log('[snapshot] no existe aún — genera uno con /api/cron-snapshot');
+      else console.warn('[snapshot] HTTP',r.status);
+      S.snapshotOk=false;return false;
+    }
     const snap=await r.json();
     if(!snap||!snap.histories){S.snapshotOk=false;return false;}
 
@@ -2627,10 +2633,10 @@ async function loadSnapshot(){
     const genAt=snap.generatedAt?new Date(snap.generatedAt):null;
     const ageH=genAt?(Date.now()-genAt.getTime())/3600000:999;
     S.snapshotAge=ageH;
-    console.log(`[snapshot] cargado, generado hace ${ageH.toFixed(1)}h`);
+    console.log(`[snapshot] OK · generado hace ${ageH.toFixed(1)}h · ${Object.keys(snap.histories).length} activos`);
 
     // Si el snapshot tiene más de 36h, no es fiable — cargamos en vivo
-    if(ageH>36){console.warn('[snapshot] demasiado viejo, cargando en vivo');S.snapshotOk=false;return false;}
+    if(ageH>36){console.warn('[snapshot] demasiado viejo ('+ageH.toFixed(0)+'h) — se usará carga en vivo');S.snapshotOk=false;return false;}
 
     // ── Aplicar histories a S.hist ──────────────────────────────
     // Los fondos se indexan por ISIN en el snapshot; nosotros por asset.id en S.hist
@@ -2752,20 +2758,22 @@ function setProgress(p){const el=document.getElementById('progBar');if(el)el.sty
 
 // Fuerza recarga en vivo ignorando el snapshot (útil si hay nuevas operaciones en el día)
 async function forceLiveReload(){
-  S.histLoaded=false;S.snapshotTried=false;S.snapshotOk=false;
-  S.hist={};S.volC={};S.benchHist=null;S.benchMetrics=null;
   const btn=document.getElementById('pnlForceReload');
-  if(btn)btn.style.display='none';
-  sk('pnlStatus','Forzando recarga en vivo...');
-  // Saltarse el snapshot y forzar las llamadas en vivo — marcamos snapshotTried como true
-  // con snapshotOk=false para que loadHistory vaya directo al fallback
-  S.snapshotTried=true;S.snapshotOk=false;
+  if(btn){btn.textContent='⏳ Cargando...';btn.disabled=true;}
+  // Reset completo para forzar carga en vivo
+  S.histLoaded=false;
+  S.snapshotTried=true;  // true + snapshotOk=false = saltar snapshot, ir directo a vivo
+  S.snapshotOk=false;
+  S.hist={};S.volC={};S.benchHist=null;S.benchMetrics=null;
+  sk('pnlStatus','Descargando histórico en vivo...');
   await loadHistory();
-  // Cargar benchmarks en vivo también
+  // Benchmarks en vivo también
   S.benchHist=null;S.benchMetrics=null;
   await loadBenchmarks();
-  if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
-  if(document.getElementById('panel-risk').classList.contains('active'))renderRisk();
+  const active=document.querySelector('.panel.active')?.id;
+  if(active==='panel-analysis')renderAnalysis();
+  if(active==='panel-risk')renderRisk();
+  if(btn){btn.textContent='↻ Recarga en vivo';btn.disabled=false;}
 }
 
 function calcRealVols(){
@@ -3602,7 +3610,15 @@ function showTab(id,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');if(btn)btn.classList.add('active');
-  if(id==='pnl'){if(!S.histLoaded)loadHistory();else{renderPnl();if(!CHS.contribChart)renderContrib();if(!CHS.monthlyChart)renderMonthly();}}
+  if(id==='pnl'){
+    if(!S.histLoaded){
+      loadHistory(); // carga automática: intenta snapshot, si no en vivo
+    } else {
+      renderPnl();
+      if(!CHS.contribChart)renderContrib();
+      if(!CHS.monthlyChart)renderMonthly();
+    }
+  }
   if(id==='assets'&&S.computed.length)renderTable();
   if(id==='returns'&&S.computed.length)renderReturns();
   if(id==='risk'&&S.computed.length)renderRisk();
@@ -5205,18 +5221,22 @@ setStatus('ld','Obteniendo datos...');
 Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(() => {
   for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
   loadAll(); // loadAll ya llama a computeAndRender internamente
-  // Pre-cargar snapshot en segundo plano (no bloquea UI)
-  // Así cuando el usuario entre a Análisis/Riesgo/P&L, los datos ya estarán listos
-  setTimeout(()=>{
-    loadSnapshot().then(ok=>{
-      if(ok){
-        buildPnlSeries();computeAndRender();
-        if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
-        if(document.getElementById('panel-risk').classList.contains('active'))renderRisk();
-        if(document.getElementById('panel-pnl').classList.contains('active')){renderPnl();renderContrib();renderMonthly();}
-      }
-    });
-  },1500);
+  // Cargar snapshot en background ~2s después de que precios estén listos
+  // Así Análisis/Riesgo/P&L tienen datos sin pulsar nada
+  setTimeout(async ()=>{
+    const ok = await loadSnapshot();
+    if(ok){
+      // Snapshot cargado — actualizar paneles si están activos
+      buildPnlSeries();
+      computeAndRender();
+      const active = document.querySelector('.panel.active')?.id;
+      if(active==='panel-analysis') renderAnalysis();
+      if(active==='panel-risk')    renderRisk();
+      if(active==='panel-pnl'){    renderPnl();renderContrib();renderMonthly();}
+    }
+    // Si no hay snapshot (primera vez o falló), el usuario verá el botón
+    // "Recarga en vivo" y al entrar al P&L se cargará automáticamente
+  }, 2000);
 });
 // Auto-refresh cada 4h, pausado cuando la pestaña está en background
 (function setupAutoRefresh(){
