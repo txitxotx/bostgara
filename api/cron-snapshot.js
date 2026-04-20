@@ -189,15 +189,27 @@ async function fetchYahooHistory(baseUrl, ticker) {
 // ═════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
   // ── Autenticación: Vercel Cron o secret en query ─────────────
-  const CRON_SECRET = process.env.CRON_SECRET;
-  const authHeader = req.headers.authorization || '';
-  const querySecret = req.query?.secret;
+  // Trim para evitar problemas con espacios/saltos de línea al copiar openssl
+  const CRON_SECRET = (process.env.CRON_SECRET || '').trim();
+  const authHeader  = (req.headers.authorization || '').trim();
+  const querySecret = (req.query?.secret || '').trim();
 
-  const isVercelCron = CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`;
-  const isManualAuth = CRON_SECRET && querySecret === CRON_SECRET;
+  const isVercelCron  = CRON_SECRET && authHeader === `Bearer ${CRON_SECRET}`;
+  const isManualAuth  = CRON_SECRET && querySecret === CRON_SECRET;
+  const noAuthRequired = !CRON_SECRET; // sin variable configurada → acceso libre
 
-  if (CRON_SECRET && !isVercelCron && !isManualAuth) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!noAuthRequired && !isVercelCron && !isManualAuth) {
+    return res.status(401).json({
+      error: 'Unauthorized',
+      hint: 'Añade ?secret=VALOR a la URL. Debe coincidir exactamente con la var CRON_SECRET en Vercel.',
+      debug: {
+        hasCronSecret: !!process.env.CRON_SECRET,
+        hasQuerySecret: !!querySecret,
+        hasAuthHeader: !!authHeader,
+        cronSecretPrefix: CRON_SECRET ? CRON_SECRET.slice(0,4)+'...' : '(no configurado)',
+        querySecretPrefix: querySecret ? querySecret.slice(0,4)+'...' : '(vacio)',
+      }
+    });
   }
 
   // ── Comprobación de env vars ────────────────────────────────
