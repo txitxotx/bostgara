@@ -869,10 +869,7 @@ body.privacy #trPosTable{
       </div>
     </div>
     <div class="prog-wrap"><div class="prog-bar" id="progBar"></div></div>
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap">
-      <div id="pnlStatus" style="font-size:.7rem;color:var(--mut);min-height:18px;flex:1"></div>
-      <button id="pnlForceReload" onclick="forceLiveReload()" style="font-size:.62rem;padding:4px 12px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;color:var(--mut);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em" title="Descargar histórico en vivo ignorando el snapshot del día">↻ Recarga en vivo</button>
-    </div>
+    <div id="pnlStatus" style="font-size:.7rem;color:var(--mut);margin-bottom:10px;min-height:18px"></div>
     <div class="cv cv-320"><canvas id="pnlChart"></canvas></div>
   </div>
   <div class="g2">
@@ -2609,106 +2606,9 @@ function rankSet(btn,f2){actTf('rankTf',btn);S.rankFlt=f2;renderRankBar();}
 //  HISTÓRICO P&L — construye serie día a día desde TXS
 //  Para fondos CONJUNTA: usa el mismo histórico de precios que el fondo normal (mismo ISIN)
 // ══════════════════════════════════════════════════════════
-// ══════════════════════════════════════════════════════════
-//  SNAPSHOT — carga datos pre-calculados por el cron diario
-//  Si existe y es reciente, evita re-descargar todo el histórico
-// ══════════════════════════════════════════════════════════
-async function loadSnapshot(){
-  // Si ya se intentó y funcionó, no repetir
-  if(S.snapshotTried && S.snapshotOk)return true;
-  // Si ya falló, no reintentar (salvo forceLiveReload que resetea el flag)
-  if(S.snapshotTried && !S.snapshotOk)return false;
-  S.snapshotTried=true;
-  try{
-    const r=await fetch('/api/get-snapshot',{cache:'no-store'});
-    if(!r.ok){
-      if(r.status===404)console.log('[snapshot] no existe aún — genera uno con /api/cron-snapshot');
-      else console.warn('[snapshot] HTTP',r.status);
-      S.snapshotOk=false;return false;
-    }
-    const snap=await r.json();
-    if(!snap||!snap.histories){S.snapshotOk=false;return false;}
-
-    // Edad del snapshot en horas
-    const genAt=snap.generatedAt?new Date(snap.generatedAt):null;
-    const ageH=genAt?(Date.now()-genAt.getTime())/3600000:999;
-    S.snapshotAge=ageH;
-    console.log(`[snapshot] OK · generado hace ${ageH.toFixed(1)}h · ${Object.keys(snap.histories).length} activos`);
-
-    // Si el snapshot tiene más de 36h, no es fiable — cargamos en vivo
-    if(ageH>36){console.warn('[snapshot] demasiado viejo ('+ageH.toFixed(0)+'h) — se usará carga en vivo');S.snapshotOk=false;return false;}
-
-    // ── Aplicar histories a S.hist ──────────────────────────────
-    // Los fondos se indexan por ISIN en el snapshot; nosotros por asset.id en S.hist
-    for(const a of ASSETS){
-      let key=null;
-      if(a.src==='ms'&&a.isin)key=a.isin;
-      else if(a.src==='cg'&&a.cgId)key=a.cgId;
-      else if(a.src==='yf'&&a.ticker)key=a.ticker;
-      if(key&&snap.histories[key]){
-        S.hist[a.id]=snap.histories[key];
-      }
-    }
-
-    // ── Aplicar métricas pre-calculadas a S.volC (con misma estructura) ──
-    S.volC={};
-    const VOL_FB={RF:.015,RV:.12,CR:.70,EP:.02,AC:.10};
-    const DD_FB ={RF:.01, RV:.08,CR:.35,EP:.01,AC:.08};
-    for(const a of ASSETS){
-      let key=null;
-      if(a.src==='ms'&&a.isin)key=a.isin;
-      else if(a.src==='cg'&&a.cgId)key=a.cgId;
-      else if(a.src==='yf'&&a.ticker)key=a.ticker;
-      const m=key?snap.metrics[key]:null;
-      if(m){
-        S.volC[a.id]={
-          vol:m.vol, maxDD:m.maxDD, ytd:m.ytd, mtd:m.mtd,
-          cagr:m.cagr, sharpe:m.sharpe, sortino:m.sortino, calmar:m.calmar,
-          downVol:m.downVol, retDaily:m.retDaily, nDays:m.nDays,
-        };
-      } else {
-        S.volC[a.id]={vol:VOL_FB[a.cat]??0.1,maxDD:DD_FB[a.cat]??0.05,ytd:0,mtd:0,cagr:0,sharpe:0,sortino:0,calmar:0};
-      }
-    }
-
-    // ── Benchmarks ─────────────────────────────────────────────
-    if(snap.benchmarks){
-      S.benchHist={};S.benchMetrics={};
-      for(const[k,b]of Object.entries(snap.benchmarks)){
-        if(b.history)S.benchHist[k]=b.history;
-        if(b.metrics)S.benchMetrics[k]={...b.metrics,hist:b.history};
-      }
-    }
-
-    S.histLoaded=true;
-    S.snapshotOk=true;
-    return true;
-  }catch(e){
-    console.warn('[snapshot] error:',e.message);
-    S.snapshotOk=false;
-    return false;
-  }
-}
-
 async function loadHistory(){
   if(S.histLoaded){buildPnlSeries();renderPnl();renderContrib();renderMonthly();return;}
-
-  // ── Intento 1: cargar snapshot pre-calculado (rápido, 1 sola request) ──
-  sk('pnlStatus','Cargando snapshot diario...');setProgress(15);
-  const snapOk=await loadSnapshot();
-  if(snapOk){
-    setProgress(95);
-    sk('pnlStatus',`✓ Snapshot cargado · generado ${S.snapshotAge<1?'hace menos de 1h':'hace '+Math.round(S.snapshotAge)+'h'}`);
-    const btn=document.getElementById('pnlForceReload');
-    if(btn)btn.style.display='inline-block';
-    buildPnlSeries();renderPnl();renderContrib();renderMonthly();computeAndRender();
-    setProgress(100);setTimeout(()=>setProgress(0),2000);
-    if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
-    return;
-  }
-
-  // ── Intento 2 (fallback): carga en vivo como antes ────────────
-  sk('pnlStatus','Cargando histórico en vivo...');setProgress(5);
+  sk('pnlStatus','Cargando histórico de precios...');setProgress(5);
   // Deduplicar por ISIN para la carga, luego compartir precios
   const isins=new Map();
   for(const a of ASSETS){if(a.src==='ms'){if(!isins.has(a.isin))isins.set(a.isin,a);}}
@@ -2749,7 +2649,7 @@ async function loadHistory(){
 
   setProgress(100);S.histLoaded=true;sk('pnlStatus','');setTimeout(()=>setProgress(0),600);
   calcRealVols();buildPnlSeries();renderPnl();renderContrib();renderMonthly();computeAndRender();
-  // Cargar benchmarks en segundo plano (no bloquea UI)
+  // Cargar benchmarks en segundo plano
   loadBenchmarks().then(()=>{
     if(document.getElementById('panel-analysis').classList.contains('active'))renderAnalysis();
   });
@@ -2757,25 +2657,6 @@ async function loadHistory(){
 function setProgress(p){const el=document.getElementById('progBar');if(el)el.style.width=p+'%';}
 
 // Fuerza recarga en vivo ignorando el snapshot (útil si hay nuevas operaciones en el día)
-async function forceLiveReload(){
-  const btn=document.getElementById('pnlForceReload');
-  if(btn){btn.textContent='⏳ Cargando...';btn.disabled=true;}
-  // Reset completo para forzar carga en vivo
-  S.histLoaded=false;
-  S.snapshotTried=true;  // true + snapshotOk=false = saltar snapshot, ir directo a vivo
-  S.snapshotOk=false;
-  S.hist={};S.volC={};S.benchHist=null;S.benchMetrics=null;
-  sk('pnlStatus','Descargando histórico en vivo...');
-  await loadHistory();
-  // Benchmarks en vivo también
-  S.benchHist=null;S.benchMetrics=null;
-  await loadBenchmarks();
-  const active=document.querySelector('.panel.active')?.id;
-  if(active==='panel-analysis')renderAnalysis();
-  if(active==='panel-risk')renderRisk();
-  if(btn){btn.textContent='↻ Recarga en vivo';btn.disabled=false;}
-}
-
 function calcRealVols(){
   S.volC={};
   // Fallbacks por categoría (consistentes)
@@ -3610,15 +3491,7 @@ function showTab(id,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('panel-'+id).classList.add('active');if(btn)btn.classList.add('active');
-  if(id==='pnl'){
-    if(!S.histLoaded){
-      loadHistory(); // carga automática: intenta snapshot, si no en vivo
-    } else {
-      renderPnl();
-      if(!CHS.contribChart)renderContrib();
-      if(!CHS.monthlyChart)renderMonthly();
-    }
-  }
+  if(id==='pnl'){if(!S.histLoaded)loadHistory();else{renderPnl();if(!CHS.contribChart)renderContrib();if(!CHS.monthlyChart)renderMonthly();}}
   if(id==='assets'&&S.computed.length)renderTable();
   if(id==='returns'&&S.computed.length)renderReturns();
   if(id==='risk'&&S.computed.length)renderRisk();
@@ -5217,23 +5090,10 @@ loadSavedTxn();  // limpia localStorage antiguo
 for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
 updateTxnBtnState();
 setStatus('ld','Obteniendo datos...');
-// Primero cargar CSV y TXS desde GitHub, luego precios en vivo, luego snapshot
-Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(async () => {
+// Primero cargar CSV y TXS desde GitHub, luego UN SOLO loadAll que renderiza
+Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(() => {
   for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
-  // Cargar precios en vivo (KPIs principales)
-  await loadAll();
-  // Inmediatamente después cargar snapshot — hidrata S.hist, S.volC, S.benchmarks
-  // Esto hace que P&L/Análisis/Riesgo tengan datos sin que el usuario pulse nada
-  const snapOk = await loadSnapshot();
-  if(snapOk){
-    buildPnlSeries();
-    computeAndRender();
-    // Si el usuario ya está en alguno de estos paneles, renderizar
-    const active = document.querySelector('.panel.active')?.id;
-    if(active==='panel-pnl'){renderPnl();renderContrib();renderMonthly();}
-    if(active==='panel-analysis')renderAnalysis();
-    if(active==='panel-risk')renderRisk();
-  }
+  loadAll();
 });
 // Auto-refresh cada 4h, pausado cuando la pestaña está en background
 (function setupAutoRefresh(){
