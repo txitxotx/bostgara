@@ -52,8 +52,11 @@ const BENCH_TICKERS = {
 // HELPER: self-fetch a las APIs internas del proyecto
 // ═════════════════════════════════════════════════════════════
 function getBaseUrl(req) {
+  // Vercel preview / production
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  // Custom host
   if (process.env.ALLOWED_HOST) return `https://${process.env.ALLOWED_HOST}`;
+  // Fallback desde headers
   const host = req.headers['x-forwarded-host'] || req.headers.host;
   const proto = req.headers['x-forwarded-proto'] || 'https';
   return `${proto}://${host}`;
@@ -77,6 +80,7 @@ function computeMetrics(history) {
   const prices = history.map(h => h.nav).filter(v => v > 0);
   if (prices.length < 15) return null;
 
+  // Log-returns diarios
   const rets = [];
   for (let i = 1; i < prices.length; i++) {
     if (prices[i-1] > 0 && prices[i] > 0) rets.push(Math.log(prices[i]/prices[i-1]));
@@ -87,11 +91,13 @@ function computeMetrics(history) {
   const variance = rets.reduce((s, v) => s + (v - mean) ** 2, 0) / (rets.length - 1);
   const vol = Math.sqrt(variance * 252);
 
+  // Downside deviation (Sortino)
   const neg = rets.filter(r => r < 0);
   const downVol = neg.length > 1
     ? Math.sqrt(neg.reduce((s, v) => s + v * v, 0) / (neg.length - 1) * 252)
     : vol * 0.7;
 
+  // Max Drawdown
   let peak = prices[0], maxDD = 0;
   for (const p of prices) {
     if (p > peak) peak = p;
@@ -99,11 +105,13 @@ function computeMetrics(history) {
     if (dd > maxDD) maxDD = dd;
   }
 
+  // CAGR
   const nDays = (new Date(history[history.length-1].date) - new Date(history[0].date)) / 86400000;
   const years = Math.max(nDays / 365.25, 0.1);
   const totalRet = prices[prices.length-1] / prices[0];
   const cagr = Math.pow(totalRet, 1/years) - 1;
 
+  // YTD / MTD
   const now = new Date();
   const ytdCut = `${now.getFullYear()}-01-01`;
   const mtdCut = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
@@ -112,6 +120,7 @@ function computeMetrics(history) {
   const mtdS = history.find(h => h.date >= mtdCut);
   const mtd = mtdS ? (prices[prices.length-1] - mtdS.nav) / mtdS.nav : 0;
 
+  // Sharpe, Sortino, Calmar (Rf = 3%)
   const Rf = 0.03;
   const sharpe  = vol > 0     ? (cagr - Rf) / vol : 0;
   const sortino = downVol > 0 ? (cagr - Rf) / downVol : 0;
@@ -179,6 +188,7 @@ async function fetchYahooHistory(baseUrl, ticker) {
 // HANDLER
 // ═════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
+  // ── Autenticación: Vercel Cron o secret en query ─────────────
   const CRON_SECRET = process.env.CRON_SECRET;
   const authHeader = req.headers.authorization || '';
   const querySecret = req.query?.secret;
@@ -190,6 +200,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  // ── Comprobación de env vars ────────────────────────────────
   const { GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH = 'main' } = process.env;
   if (!GITHUB_TOKEN || !GITHUB_REPO) {
     return res.status(500).json({ error: 'Faltan variables GITHUB_TOKEN / GITHUB_REPO' });
@@ -200,9 +211,9 @@ export default async function handler(req, res) {
   const snapshot = {
     generatedAt: new Date().toISOString(),
     generatedBy: isVercelCron ? 'vercel-cron' : 'manual',
-    histories: {},
-    metrics:   {},
-    benchmarks: {},
+    histories: {},   // { isin|cgId|ticker : [{date,nav}, ...] }
+    metrics:   {},   // { isin|cgId|ticker : {vol,cagr,sharpe,...} }
+    benchmarks: {},  // { MSCIW: {history, metrics}, EAGG: {...}, BTC: {...} }
     stats: {
       fundsOk: 0, fundsFail: 0,
       cryptosOk: 0, cryptosFail: 0,
@@ -210,7 +221,7 @@ export default async function handler(req, res) {
     },
   };
 
-  // 1. Fondos Morningstar (3 en paralelo)
+  // ── 1. Descargar fondos Morningstar (en paralelo, 3 a la vez) ──
   for (let i = 0; i < MS_ISINS.length; i += 3) {
     const batch = MS_ISINS.slice(i, i + 3);
     await Promise.allSettled(batch.map(async isin => {
@@ -226,7 +237,7 @@ export default async function handler(req, res) {
     }));
   }
 
-  // 2. Criptos (secuencial por rate-limit Kraken)
+  // ── 2. Descargar criptos (secuencial, Kraken tiene rate-limit) ──
   for (const cgId of CRYPTO_IDS) {
     const hist = await fetchCryptoHistory(baseUrl, cgId);
     if (hist) {
@@ -237,10 +248,10 @@ export default async function handler(req, res) {
     } else {
       snapshot.stats.cryptosFail++;
     }
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 300)); // respetar rate-limit
   }
 
-  // 3. Benchmarks Yahoo
+  // ── 3. Descargar benchmarks Yahoo ─────────────────────────────
   for (const [key, ticker] of Object.entries(BENCH_TICKERS)) {
     const hist = await fetchYahooHistory(baseUrl, ticker);
     if (hist) {
@@ -262,7 +273,7 @@ export default async function handler(req, res) {
     snapshot.stats.benchmarksOk++;
   }
 
-  // MIX50 sintético
+  // MIX50 sintético: 50% MSCI World + 50% Euro Agg
   const msciw = snapshot.benchmarks.MSCIW?.history;
   const eagg = snapshot.benchmarks.EAGG?.history;
   if (msciw && eagg) {
@@ -284,6 +295,7 @@ export default async function handler(req, res) {
     }
   }
 
+  // ── 4. Guardar en GitHub ─────────────────────────────────────
   snapshot.elapsedMs = Date.now() - startTime;
 
   try {

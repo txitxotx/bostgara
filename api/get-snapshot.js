@@ -12,6 +12,7 @@ export default async function handler(req, res) {
 
   res.setHeader('Access-Control-Allow-Origin', allowedOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  // Cache de borde Vercel: 30 min fresh + 1h stale
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=3600');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
