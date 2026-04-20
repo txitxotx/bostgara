@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-20T11:37:10.269Z",
+  "generatedAt": "2026-04-20T11:40:23.186Z",
   "generatedBy": "manual",
   "histories": {},
   "metrics": {},
@@ -12,5 +12,5 @@
     "benchmarksOk": 0,
     "benchmarksFail": 2
   },
-  "elapsedMs": 2787
+  "elapsedMs": 2769
 }
