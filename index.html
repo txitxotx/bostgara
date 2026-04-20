@@ -5217,26 +5217,23 @@ loadSavedTxn();  // limpia localStorage antiguo
 for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
 updateTxnBtnState();
 setStatus('ld','Obteniendo datos...');
-// Primero cargar CSV y TXS desde GitHub, luego UN SOLO loadAll que renderiza
-Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(() => {
+// Primero cargar CSV y TXS desde GitHub, luego precios en vivo, luego snapshot
+Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(async () => {
   for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:a.costPrice,d1:0,ok:false};}
-  loadAll(); // loadAll ya llama a computeAndRender internamente
-  // Cargar snapshot en background ~2s después de que precios estén listos
-  // Así Análisis/Riesgo/P&L tienen datos sin pulsar nada
-  setTimeout(async ()=>{
-    const ok = await loadSnapshot();
-    if(ok){
-      // Snapshot cargado — actualizar paneles si están activos
-      buildPnlSeries();
-      computeAndRender();
-      const active = document.querySelector('.panel.active')?.id;
-      if(active==='panel-analysis') renderAnalysis();
-      if(active==='panel-risk')    renderRisk();
-      if(active==='panel-pnl'){    renderPnl();renderContrib();renderMonthly();}
-    }
-    // Si no hay snapshot (primera vez o falló), el usuario verá el botón
-    // "Recarga en vivo" y al entrar al P&L se cargará automáticamente
-  }, 2000);
+  // Cargar precios en vivo (KPIs principales)
+  await loadAll();
+  // Inmediatamente después cargar snapshot — hidrata S.hist, S.volC, S.benchmarks
+  // Esto hace que P&L/Análisis/Riesgo tengan datos sin que el usuario pulse nada
+  const snapOk = await loadSnapshot();
+  if(snapOk){
+    buildPnlSeries();
+    computeAndRender();
+    // Si el usuario ya está en alguno de estos paneles, renderizar
+    const active = document.querySelector('.panel.active')?.id;
+    if(active==='panel-pnl'){renderPnl();renderContrib();renderMonthly();}
+    if(active==='panel-analysis')renderAnalysis();
+    if(active==='panel-risk')renderRisk();
+  }
 });
 // Auto-refresh cada 4h, pausado cuando la pestaña está en background
 (function setupAutoRefresh(){
