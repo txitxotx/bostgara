@@ -198,5 +198,44 @@
       "Current Ratio 0.70x < 0.8x"
     ],
     "savedAt": "2026-03-31T17:41:29.597Z"
+  },
+  {
+    "ticker": "SANOFI",
+    "name": "Sanofi",
+    "sector": "Healthcare",
+    "sectorKey": "health",
+    "globalScore": 88,
+    "globalVerdict": "COMPRAR",
+    "profileScores": {
+      "value": 87,
+      "quality": 85,
+      "garp": 87,
+      "growth": 87,
+      "smallcap": 86,
+      "income": 90,
+      "dgi": 89,
+      "deepvalue": 88,
+      "defensive": 88,
+      "incgrowth": 88
+    },
+    "modules": {
+      "m1": 0.8,
+      "m2": 0.8260869565217391,
+      "m3": 0.7368421052631579,
+      "m4": 1,
+      "m5": 0.7272727272727273,
+      "m6": 1,
+      "m7": 1,
+      "m8": 1,
+      "m9": 0.8181818181818182
+    },
+    "fv": "117,65 €",
+    "fvUpside": 46.9,
+    "fvConf": "HIGH",
+    "price": "80.09€",
+    "reasoning": "Score global: 88% → COMPRAR. Sector: health. Riesgo: 100% · Valoración: 100% · Val.Intrínseca: 100%. Sin vetos.",
+    "m0Passes": true,
+    "vetos": [],
+    "savedAt": "2026-04-26T08:55:19.307Z"
   }
 ]
