@@ -2766,125 +2766,113 @@ function renderFinalSection(verdicts, clResult) {
 }
 
 /* ══════════════════════════════════════════
-   SAVE REPORT
+   SAVE REPORT — espejo de pantalla
+   Clona el documento entero (head + body con todos los estilos),
+   elimina los botones de guardar y elementos de UI volátiles,
+   despliega todas las pestañas a la vez para preservar 100%
+   del informe que se ve en pantalla (incluyendo header con
+   score global y fair value, KPIs, profiles, módulos,
+   comparativa sector, gráfico, razonamiento, checklist y
+   veredictos finales con razonamiento del experto v2).
 ══════════════════════════════════════════ */
 function saveReport() {
+  if (!analysisResult) { showToast('No hay análisis para guardar'); return; }
+
   const now = new Date();
   const dateStr = now.toLocaleDateString('es-ES', {day:'2-digit',month:'2-digit',year:'numeric'});
   const fileName = `informe_${currentTicker}_${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}.html`;
 
-  // Snapshot current state
-  const profilesHTML  = document.getElementById('profilesGrid')?.innerHTML || '';
-  const modulesHTML   = document.getElementById('modulesGrid')?.innerHTML || '';
-  const scoreBarsHTML = document.getElementById('scoreBarsBox')?.innerHTML || '';
-  const reasonHTML    = document.getElementById('reasoningBody')?.innerHTML || '';
-  const finalHTML     = document.getElementById('finalVerdictsGrid')?.innerHTML || '';
-  const expertHTML    = document.getElementById('finalReasoningArea')?.innerHTML || '';
-  const vetoHTML      = document.getElementById('coVetoAlert')?.outerHTML || '';
-  const m0HTML        = document.getElementById('coM0Status')?.outerHTML || '';
-  const chartHTML     = chartImageURL ? `<img style="width:100%;max-height:320px;object-fit:contain;border-radius:8px;background:#0d0f1a;display:block" src="${chartImageURL}" alt="Gráfico ingresos">` : '<div style="padding:20px;text-align:center;color:#4a5175">No se adjuntó gráfico de ingresos</div>';
-  const R = analysisResult;
+  // 1) Clonamos TODO el documento
+  const clone = document.documentElement.cloneNode(true);
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Informe ${currentTicker} · ${dateStr}</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#070810;--s1:#0d0f1a;--s3:#191d2b;--s4:#1f2438;--text:#e8eaf2;--text2:#9098b8;--text3:#4a5175;--text4:#2a3050;--border:rgba(255,255,255,.06);--border2:rgba(255,255,255,.11);--buy:#22d45a;--buy-pale:rgba(34,212,90,.08);--hold:#f0b429;--hold-pale:rgba(240,180,41,.08);--risk:#f0483a;--risk-pale:rgba(240,72,58,.08);--accent:#6a8fff;--gold:#e8c55a;--f-d:'Syne',sans-serif;--f-s:'Fraunces',Georgia,serif;--f-m:'DM Mono',monospace;}
-*{box-sizing:border-box;margin:0;padding:0}html{font-size:14px}body{font-family:var(--f-d);background:var(--bg);color:var(--text)}
-.cover{background:var(--s1);padding:40px 48px;border-bottom:1px solid var(--border)}
-.cover h1{font-family:var(--f-s);font-size:2rem;font-weight:700;color:var(--text);margin-bottom:6px}
-.cover-meta{font-family:var(--f-m);font-size:.7rem;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px}
-.cover-sub{font-size:.85rem;color:var(--text2);font-family:var(--f-s)}
-.section{max-width:1280px;margin:0 auto;padding:28px 48px}
-.section-title{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
-.profiles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
-.profile-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:2px solid}
-.pc-icon{font-size:1.1rem}.pc-name{font-size:.8rem;font-weight:700;color:var(--text);margin:6px 0 2px}.pc-phil{font-size:.66rem;color:var(--text3);font-style:italic;font-family:var(--f-s);margin-bottom:8px}
-.pc-verdict{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid;display:inline-block;margin-bottom:8px}
-.pv-buy{background:var(--buy-pale);border-color:rgba(34,212,90,.3);color:var(--buy)}.pv-hold{background:var(--hold-pale);border-color:rgba(240,180,41,.3);color:var(--hold)}.pv-no{background:var(--risk-pale);border-color:rgba(240,72,58,.3);color:var(--risk)}
-.pc-score-num{font-family:var(--f-m);font-size:1.6rem;font-weight:500}
-.modules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
-.mod-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.mod-head{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.mh-left{display:flex;align-items:center;gap:7px}.mh-icon{font-size:.95rem}.mh-title{font-size:.78rem;font-weight:700;color:var(--text)}.mh-score{font-family:var(--f-m);font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:4px;border:1px solid}
-.mod-body{padding:12px 14px}
-.check-row{display:flex;align-items:flex-start;gap:7px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:.77rem}
-.check-row:last-child{border-bottom:none}.cr-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px}
-.cd-buy{background:var(--buy)}.cd-no{background:var(--risk)}.cd-na{background:var(--text4)}
-.cr-label{flex:1;color:var(--text2);line-height:1.3}.cr-val{font-family:var(--f-m);font-size:.73rem;color:var(--text);white-space:nowrap}
-.mod-note{margin:8px 14px 10px;padding:8px 11px;background:var(--s4);border-radius:5px;font-size:.72rem;color:var(--text2);line-height:1.45;border-left:2px solid var(--accent)}
-.score-bars-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
-.sb-title{font-size:.77rem;font-weight:700;color:var(--text);margin-bottom:14px}
-.score-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.sbr-label{font-size:.72rem;color:var(--text2);width:170px;flex-shrink:0}.sbr-bar-wrap{flex:1;height:5px;background:var(--s4);border-radius:2px;overflow:hidden}.sbr-fill{height:100%;border-radius:2px}.sbr-val{font-family:var(--f-m);font-size:.68rem;color:var(--text);width:40px;text-align:right;flex-shrink:0}
-.reasoning-box{background:var(--s3);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.rb-head{padding:12px 18px;border-bottom:1px solid var(--border);background:var(--s4);font-size:.77rem;font-weight:700;display:flex;align-items:center;gap:8px}
-.rb-body{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
-.reason-block{border-left:2px solid;padding-left:12px}.rb-buy{border-color:var(--buy)}.rb-hold{border-color:var(--hold)}.rb-risk{border-color:var(--risk)}.rb-info{border-color:var(--accent)}.rb-warn{border-color:var(--gold)}
-.reason-title{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:4px}
-.reason-text{font-size:.8rem;color:var(--text2);line-height:1.6;font-family:var(--f-s)}
-.reason-text strong{color:var(--text)}
-.final-verdicts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
-.fv-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;border-top:3px solid}
-.fvc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}.fvc-icon{font-size:1rem}.fvc-verdict-badge{font-family:var(--f-m);font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid}
-.fvc-name{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:1px}.fvc-phil{font-size:.65rem;color:var(--text3);font-style:italic;font-family:var(--f-s);margin-bottom:9px}
-.fvc-scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
-.fvcs{background:var(--s4);border-radius:4px;padding:5px;text-align:center}.fvcs-val{font-family:var(--f-m);font-size:.9rem;font-weight:500}.fvcs-lbl{font-size:.57rem;color:var(--text4);text-transform:uppercase;letter-spacing:.4px;margin-top:1px}
-.expert-verdict-box{background:var(--s3);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.evb-head{padding:14px 20px;border-bottom:1px solid var(--border);background:var(--s4);display:flex;align-items:center;gap:12px}
-.evb-icon{font-size:1.4rem}.evb-title{font-family:var(--f-s);font-size:1rem;font-weight:700;color:var(--text)}.evb-sub{font-size:.73rem;color:var(--text3);margin-top:2px}
-.evb-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
-.footer{max-width:1280px;margin:0 auto;padding:16px 48px 28px;display:flex;justify-content:space-between;border-top:1px solid var(--border);font-family:var(--f-m);font-size:.7rem;color:var(--text3);flex-wrap:wrap;gap:8px}
-.disclaimer{max-width:1280px;margin:0 auto;padding:0 48px 24px;font-size:.67rem;color:var(--text4);font-family:var(--f-s);font-style:italic;line-height:1.5}
-@media(max-width:800px){.section,.cover,.footer,.disclaimer{padding-left:18px;padding-right:18px}}
-</style></head><body>
+  const $$ = sel => clone.querySelectorAll(sel);
+  const $  = sel => clone.querySelector(sel);
+  const remove = sel => $$(sel).forEach(el => el.remove());
 
-<div class="cover">
-  <div class="cover-meta">Informe de Análisis Fundamental Pro · ${dateStr} · 10 Perfiles</div>
-  <h1>${R.meta.name || currentTicker}</h1>
-  <div class="cover-sub">Ticker: ${currentTicker} · Sector: ${R.sectorKey} · ${R.meta.industry || ''} · Fair Value: ${R.meta.fv || 'N/D'}${R.meta.fvUpside ? ' · Upside: +' + R.meta.fvUpside.toFixed(1) + '%' : ''}</div>
-</div>
+  // 2) Título del documento
+  const titleEl = clone.querySelector('title');
+  if (titleEl) titleEl.textContent = `Informe ${currentTicker} · ${dateStr}`;
 
-<div class="section">
-  <div class="section-title">📊 Veredicto por Perfil — Análisis Cuantitativo (80%)</div>
-  <div class="profiles-grid">${profilesHTML}</div>
-</div>
+  // 3) Quitar el hero (uploader) — el informe ya está hecho
+  const hero = $('#heroSection');
+  if (hero) hero.remove();
 
-<div class="section">
-  <div class="section-title">🔬 Análisis por Módulo</div>
-  <div class="modules-grid">${modulesHTML}</div>
-</div>
+  // 4) Asegurar que las secciones de resultados están visibles
+  ['#resultsSection', '#checklistSection', '#finalSection'].forEach(id => {
+    const el = $(id);
+    if (el) {
+      el.classList.add('show');
+      el.style.display = '';
+    }
+  });
 
-<div class="section">
-  <div class="section-title">⚖️ Puntuación por Módulo</div>
-  <div class="score-bars-box">${scoreBarsHTML}</div>
-</div>
+  // 5) Quitar TODOS los botones de guardar (lo único que pidió quitar el usuario)
+  remove('.save-report-btn');
 
-<div class="section">
-  <div class="section-title">📈 Gráfico de Ingresos</div>
-  ${chartHTML}
-</div>
+  // 6) Quitar el botón "+ Nuevo Análisis" — no tiene sentido en un archivado
+  $$('button').forEach(btn => {
+    const txt = (btn.textContent || '').trim().toLowerCase();
+    if (txt.includes('nuevo análisis') || txt.includes('nuevo analisis')) btn.remove();
+  });
 
-<div class="section">
-  <div class="section-title">🧠 Razonamiento Cuantitativo</div>
-  <div class="reasoning-box"><div class="rb-head">🧠 Razonamiento por Módulos</div><div class="rb-body">${reasonHTML}</div></div>
-</div>
+  // 7) TABS → mostrar TODAS las pestañas a la vez
+  const tabsBar = $('#detailTabs');
+  if (tabsBar) tabsBar.remove();
 
-${finalHTML ? `
-<div class="section">
-  <div class="section-title">🎯 Veredicto Final Combinado (80% cuant. + 20% cual.)</div>
-  <div class="final-verdicts-grid">${finalHTML}</div>
-</div>
-<div class="section">${expertHTML}</div>` : ''}
+  const tabTitles = {
+    'tab-modules':   { icon:'🔬', label:'Análisis por Módulo' },
+    'tab-scores':    { icon:'⚖️', label:'Puntuaciones por Módulo' },
+    'tab-peers':     { icon:'🏆', label:'Comparativa con el Sector' },
+    'tab-chart':     { icon:'📈', label:'Gráfico de Ingresos' },
+    'tab-reasoning': { icon:'🧠', label:'Razonamiento Cuantitativo' },
+  };
 
-<div class="footer">
-  <span>📊 Análisis Fundamental Pro · ${currentTicker} · ${dateStr}</span>
-  <span>Sistema: 10 Perfiles · 9 Módulos · 53 Preguntas Cualitativas</span>
-</div>
-<div class="disclaimer">Este informe es puramente informativo y no constituye asesoramiento financiero ni recomendación de inversión. Las métricas y valoraciones se basan en datos proporcionados por el usuario. Toda decisión de inversión debe tomarse con criterio propio y con el apoyo de un asesor financiero certificado. Rentabilidades pasadas no garantizan resultados futuros.</div>
+  Object.entries(tabTitles).forEach(([id, info]) => {
+    const tab = clone.querySelector('#' + id);
+    if (!tab) return;
+    tab.style.display = 'block';
+    tab.style.marginTop = '24px';
+    const h = clone.ownerDocument.createElement('div');
+    h.style.cssText = 'font-size:.78rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);margin:28px 0 14px;padding:10px 0 8px;border-bottom:1px solid var(--border);';
+    h.textContent = `${info.icon}  ${info.label}`;
+    tab.parentElement.insertBefore(h, tab);
+  });
 
-</body></html>`;
+  // 8) Quitar el botón "Limpiar respuestas" del checklist y los botones de respuesta
+  //    (las respuestas ya quedan plasmadas con su clase selected-yes/no/dk)
+  $$('button').forEach(btn => {
+    const txt = (btn.textContent || '').trim().toLowerCase();
+    if (txt.includes('limpiar respuestas')) btn.remove();
+    if (txt.includes('calcular veredicto final')) btn.remove();
+  });
 
+  // 9) Quitar elementos puramente interactivos / volátiles
+  remove('.toast');
+  remove('.progress-bar');
+  remove('#analyzeBtn');
+  remove('.drop-zone');
+  remove('.upload-panel');
+  remove('input[type="file"]');
+  remove('input[type="text"]');
+  remove('#csvModal');
+
+  // 10) Quitar handlers que ya no funcionan (sin scripts)
+  $$('[onclick]').forEach(el => el.removeAttribute('onclick'));
+  $$('[oninput]').forEach(el => el.removeAttribute('oninput'));
+  $$('[onchange]').forEach(el => el.removeAttribute('onchange'));
+
+  // 11) Quitar TODOS los <script> — el informe es estático
+  $$('script').forEach(s => s.remove());
+
+  // 12) Banner de informe archivado
+  const banner = clone.ownerDocument.createElement('div');
+  banner.style.cssText = 'background:linear-gradient(90deg,rgba(34,212,90,.10),rgba(106,143,255,.08));border-bottom:1px solid rgba(34,212,90,.25);padding:10px 24px;font-family:monospace;font-size:.72rem;color:#9098b8;text-align:center;letter-spacing:.5px;';
+  banner.innerHTML = `📑 INFORME ARCHIVADO · ${currentTicker} · ${dateStr} · Snapshot estático del análisis`;
+  const body = clone.querySelector('body');
+  if (body) body.insertBefore(banner, body.firstChild);
+
+  // 13) Construir y descargar
+  const html = '<!DOCTYPE html>\n' + clone.outerHTML;
   const blob = new Blob([html], { type:'text/html;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
