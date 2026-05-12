@@ -1,7 +1,11 @@
 // middleware.js — Vercel Edge Middleware
 // USA Web Crypto API (disponible en Edge), NO Node.js crypto
+//
+// Rutas públicas:
+//   /login.html, /api/login    → flujo de login
+//   /api/cron-snapshot         → Vercel Cron no envía cookies; protegido por CRON_SECRET internamente
 
-const PUBLIC = ['/login.html', '/api/login'];
+const PUBLIC = ['/login.html', '/api/login', '/api/cron-snapshot'];
 
 async function isValidHmacToken(token, secret) {
   try {
@@ -9,8 +13,7 @@ async function isValidHmacToken(token, secret) {
     if (!tsStr || !sig) return false;
     const ts = Number(tsStr);
     if (isNaN(ts)) return false;
-    if (Date.now() - ts > 30 * 24 * 60 * 60 * 1000) return false; // 30 días
-
+    if (Date.now() - ts > 30 * 24 * 60 * 60 * 1000) return false;
     const enc = new TextEncoder();
     const key = await crypto.subtle.importKey(
       'raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
@@ -41,10 +44,10 @@ export default async function middleware(request) {
 
   if (!rawToken) return reject(request, path);
 
-  const hmacOk  = secret ? await isValidHmacToken(rawToken, secret) : false;
-  const legacyOk = rawToken === password; // compatibilidad transitoria
+  const hmacOk   = secret ? await isValidHmacToken(rawToken, secret) : false;
+  const legacyOk = rawToken === password;
 
-  if (hmacOk || legacyOk) return; // ✅ Autenticado
+  if (hmacOk || legacyOk) return;
 
   return reject(request, path);
 }
