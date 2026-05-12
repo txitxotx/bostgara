@@ -2884,7 +2884,8 @@ function renderRisk(){
   mkC('volBar',{type:'bar',data:{labels:sorted.map(a=>a.name.length>18?a.name.slice(0,16)+'…':a.name),datasets:[{label:'Vol. real anual.',data:sorted.map(a=>+((a.vol||0)*100).toFixed(1)),backgroundColor:sorted.map(a=>({RF:'rgba(0,229,160,.4)',RV:'rgba(74,158,255,.4)',CR:'rgba(245,197,24,.4)',EP:'rgba(167,139,250,.4)'})[a.cat]),borderColor:sorted.map(a=>CC[a.cat]),borderWidth:1,borderRadius:4}]},
     options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`±${c.raw.toFixed(1)}%`}}},scales:{x:{grid:{color:'#1e2430'},ticks:{color:'#6b7a8d',callback:v=>v+'%'}},y:{grid:{display:false},ticks:{color:'#e8ecf4',font:{size:9}}}}}});
   const rf=computed.filter(a=>a.cat==='RF'),rv=computed.filter(a=>a.cat==='RV');
-  const mRF=rf.length?Math.max(...rf.map(a=>(a.maxDD||0)*100)):5;const mRV=rv.length?Math.max(...rv.map(a=>(a.maxDD||0)*100)):20;
+  function wAvgDD(items){const tot=items.reduce((s,a)=>s+(a.valor||0),0);if(!tot)return 0;return items.reduce((s,a)=>s+(a.maxDD||0)*100*(a.valor||0),0)/tot;}
+  const mRF=rf.length?wAvgDD(rf):5;const mRV=rv.length?wAvgDD(rv):20;
   const n1=document.getElementById('ddNRF');if(n1)n1.style.left=Math.min(mRF,100)+'%';const n2=document.getElementById('ddNRV');if(n2)n2.style.left=Math.min(mRV,100)+'%';
   sk('ddVRF','-'+mRF.toFixed(1)+'%');sk('ddVRV','-'+mRV.toFixed(1)+'%');
   function renderDD(id,items){const el=document.getElementById(id);if(!el)return;el.innerHTML=items.sort((a,b)=>b.dd-a.dd).map(d=>`<div class="dd-item"><div class="dd-dot" style="background:${d.c}"></div><span class="dd-name">${d.n}</span><div class="dd-bwrap"><div class="dd-bar"><div class="dd-bfill" style="width:${Math.min(d.dd,100)}%;background:${d.dd>25?'#ff4757':d.dd>10?'#f5c518':'#00e5a0'}"></div></div></div><span class="dd-val">−${d.dd.toFixed(1)}%</span></div>`).join('');}
@@ -2921,13 +2922,36 @@ function calcPortfolioMetrics(){
   const {computed,tv,tc,tp,tpp,pnlSeries}=S;
   if(!computed.length)return null;
 
-  // Volatilidad de cartera ponderada (simplificada — asume correlación media intra-categoría)
-  const portVol=computed.reduce((s,a)=>s+(a.vol||0)*(a.valor/Math.max(tv,1)),0);
-  const portCagr=computed.reduce((s,a)=>{
-    const c=S.volC[a.id]?.cagr||0;
-    return s+c*(a.valor/Math.max(tv,1));
-  },0);
+  // Volatilidad / CAGR de cartera — calculados sobre la serie diaria real cuando existe
+  // (evita el sesgo de sumar volatilidades individuales asumiendo correlación=1)
+  let portVol=0,portCagr=0,portSortino=0,portCalmar=0;
   const Rf=0.03;
+
+  if(pnlSeries&&pnlSeries.dates.length>30){
+    const vals=pnlSeries.vals,costs=pnlSeries.costs;
+    const dailyRetsP=[];
+    for(let i=1;i<vals.length;i++){
+      const capIn=costs[i]-costs[i-1];
+      const denom=vals[i-1]+capIn*0.5;
+      if(denom>0){const r=(vals[i]-vals[i-1]-capIn)/denom;if(isFinite(r)&&Math.abs(r)<0.5)dailyRetsP.push(r);}
+    }
+    if(dailyRetsP.length>10){
+      const meanD=dailyRetsP.reduce((s,r)=>s+r,0)/dailyRetsP.length;
+      const varD=dailyRetsP.reduce((s,r)=>s+(r-meanD)**2,0)/(dailyRetsP.length-1);
+      portVol=Math.sqrt(varD*252);
+      const cum=dailyRetsP.reduce((s,r)=>s*(1+r),1);
+      const yrs=dailyRetsP.length/252;
+      portCagr=Math.pow(cum,1/Math.max(yrs,0.1))-1;
+      const negP=dailyRetsP.filter(r=>r<0);
+      const downVolP=negP.length>1?Math.sqrt(negP.reduce((s,r)=>s+r*r,0)/(negP.length-1)*252):portVol*0.7;
+      portSortino=downVolP>0?(portCagr-Rf)/downVolP:0;
+    }
+  }
+  // Fallback si no hay serie histórica suficiente
+  if(!portVol){
+    portVol=computed.reduce((s,a)=>s+(a.vol||0)*(a.valor/Math.max(tv,1)),0);
+    portCagr=computed.reduce((s,a)=>s+(S.volC[a.id]?.cagr||0)*(a.valor/Math.max(tv,1)),0);
+  }
   const sharpe=portVol>0?(portCagr-Rf)/portVol:0;
 
   // TWR desde pnlSeries (si existe)
@@ -2970,7 +2994,8 @@ function calcPortfolioMetrics(){
     return{name:a.name,cat:a.cat,contrib,weight:w*100,vol:(a.vol||0)*100};
   }).sort((a,b)=>b.contrib-a.contrib);
 
-  return{portVol,portCagr,sharpe,twr,twrYears,mddCart,hhi,nEff,top3,top5,riskContrib};
+  portCalmar=mddCart>0?portCagr/mddCart:0;
+  return{portVol,portCagr,sharpe,sortino:portSortino,calmar:portCalmar,twr,twrYears,mddCart,hhi,nEff,top3,top5,riskContrib};
 }
 
 // ─────────────────────────────────────────────────────────
@@ -3155,7 +3180,8 @@ function renderAnRisk(){
       <td>±${(m.portVol*100).toFixed(1)}%</td>
       <td class="an-val-bad">−${(m.mddCart*100).toFixed(1)}%</td>
       <td class="${m.sharpe>=1?'an-val-good':m.sharpe>=0.5?'an-val-neutral':'an-val-bad'}">${m.sharpe.toFixed(2)}</td>
-      <td>—</td><td>—</td>
+      <td class="${(m.sortino||0)>=1.5?'an-val-good':(m.sortino||0)>=0.7?'an-val-neutral':'an-val-bad'}">${(m.sortino||0).toFixed(2)}</td>
+      <td class="${(m.calmar||0)>=0.5?'an-val-good':(m.calmar||0)>=0.2?'an-val-neutral':'an-val-bad'}">${(m.calmar||0).toFixed(2)}</td>
     </tr>`:''}
     </tbody></table>
     <div style="font-size:.6rem;color:var(--mut);margin-top:10px;line-height:1.5">
