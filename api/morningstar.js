@@ -1,4 +1,7 @@
 // api/morningstar.js — Vercel Serverless Function
+// Fix: cascada de sufijos para EPSV (Morningstar puede cambiar el marketplace
+//      sin avisar y romper productos minoritarios como Baskepensiones)
+
 export const config = { maxDuration: 30 };
 
 const HEADERS = {
@@ -9,15 +12,17 @@ const HEADERS = {
   'Origin': 'https://www.morningstar.es',
 };
 
-// ISIN → { pid, sfx }
-// pid: Morningstar performanceId   sfx: sufijo de mercado
+// ISIN → { pid, sfx | sfxs }
+// pid: Morningstar performanceId
+// sfx:  un único sufijo (fondos normales — funciona desde hace años)
+// sfxs: lista de sufijos a probar en orden (productos sensibles como EPSV)
 const FUNDS = {
-  'ES0157640006': { pid: '0P0001R4YK', sfx: 'FOESP$$ALL' }, // RF Horizonte 2027 ← ID correcto
-  'ES0157639008': { pid: 'F00000Z653',  sfx: 'FOESP$$ALL' }, // RF Flexible A
+  'ES0157640006': { pid: '0P0001R4YK', sfx: 'FOESP$$ALL' }, // RF Horizonte 2027
+  'ES0157639008': { pid: 'F00000Z653', sfx: 'FOESP$$ALL' }, // RF Flexible A
   'ES0121776035': { pid: 'F0GBR04DNI', sfx: 'FOESP$$ALL' }, // Constantfons
   'ES0164839005': { pid: 'F00001GJDK', sfx: 'FOESP$$ALL' }, // Zebra US Small Caps A
   'ES0164838007': { pid: 'F0000173VQ', sfx: 'FOESP$$ALL' }, // Value Minus Growth A
-  'ES0157642002': { pid: '0P0001TFN9', sfx: 'FOESP$$ALL' }, // V.I.F. A
+  'ES0157642002': { pid: '0P0001TFN9', sfx: 'FOESP$$ALL' }, // V.I.F.A
   'ES0113319034': { pid: 'F0GBR04DOJ', sfx: 'FOESP$$ALL' }, // Small Caps A
   'ES0141113037': { pid: 'F0GBR06FL7', sfx: 'FOESP$$ALL' }, // Japón A
   'ES0143597005': { pid: 'F00001DJ06', sfx: 'FOESP$$ALL' }, // Global Equity DS A
@@ -27,8 +32,11 @@ const FUNDS = {
   'IE00BYX5MX67': { pid: '0P0001CLDM', sfx: 'FOIRL$$ALL' }, // Fidelity S&P 500 P-EUR
   'IE00BYX5NX33': { pid: '0P0001CLDK', sfx: 'FOIRL$$ALL' }, // Fidelity MSCI World P-EUR
   'ES0119199018': { pid: 'F000016A7V', sfx: 'FOESP$$ALL' }, // Cobas Internacional FI Clase D
-  '0P0001L8Z8':   { pid: '0P0001L8Z8', sfx: 'FOESP$$ALL' }, // Baskepensiones RF Corto
-  '0P0001L8YS':   { pid: '0P0001L8YS', sfx: 'FOESP$$ALL' }, // Baskepensiones Bolsa Euro
+
+  // EPSV — cascada de sufijos por si Morningstar cambia el marketplace
+  // Histórico: FOESP funcionaba; si vuelve a fallar, FEESP / FPESP son los típicos para pensiones EU
+  '0P0001L8Z8': { pid: '0P0001L8Z8', sfxs: ['FOESP$$ALL', 'FEESP$$ALL', 'FPESP$$ALL', 'XIESP$$ALL'] }, // Baskepensiones RF Corto
+  '0P0001L8YS': { pid: '0P0001L8YS', sfxs: ['FOESP$$ALL', 'FEESP$$ALL', 'FPESP$$ALL', 'XIESP$$ALL'] }, // Baskepensiones Bolsa Euro
 };
 
 const CACHE = new Map();
@@ -50,7 +58,9 @@ export default async function handler(req, res) {
         const c = CACHE.get(cKey);
         if (Date.now() - c.ts < 3600000) return res.json({ isin, ...c.data });
       }
-      const data = await fetchMs(fund.pid, fund.sfx, daysAgo(10), today());
+
+      const sfxList = fund.sfxs || [fund.sfx];
+      const data = await fetchMsCascade(fund.pid, sfxList, daysAgo(10), today(), false);
       CACHE.set(cKey, { ts: Date.now(), data });
       return res.json({ isin, performanceId: fund.pid, ...data });
     }
@@ -58,7 +68,9 @@ export default async function handler(req, res) {
     if (action === 'history') {
       const fund = FUNDS[isin];
       if (!fund) return res.status(404).json({ error: `ISIN no mapeado: ${isin}` });
-      const history = await fetchMs(fund.pid, fund.sfx, from || '2021-01-01', today(), true);
+
+      const sfxList = fund.sfxs || [fund.sfx];
+      const history = await fetchMsCascade(fund.pid, sfxList, from || '2021-01-01', today(), true);
       return res.json({ isin, performanceId: fund.pid, history });
     }
 
@@ -70,14 +82,33 @@ export default async function handler(req, res) {
   }
 }
 
-async function fetchMs(pid, sfx, startDate, endDate, returnHistory = false) {
+/**
+ * Prueba varios sufijos en orden hasta que uno devuelve datos.
+ * Si todos fallan, lanza el último error.
+ */
+async function fetchMsCascade(pid, sfxList, startDate, endDate, returnHistory) {
+  let lastErr;
+  for (const sfx of sfxList) {
+    try {
+      const r = await fetchMs(pid, sfx, startDate, endDate, returnHistory);
+      if (sfxList.length > 1) console.log(`[ms-proxy] ${pid} OK con sufijo ${sfx}`);
+      return r;
+    } catch (e) {
+      lastErr = e;
+      // Probar siguiente sufijo
+    }
+  }
+  throw lastErr || new Error(`Ningún sufijo válido para ${pid}`);
+}
+
+async function fetchMs(pid, sfx, startDate, endDate, returnHistory) {
   const msId = `${pid}]2]0]${sfx}`;
   const url = `https://tools.morningstar.co.uk/api/rest.svc/timeseries_price/t92wz0sj7c` +
     `?currencyId=EUR&idtype=Morningstar&frequency=daily&outputType=COMPACTJSON` +
-    `&startDate=${startDate}&endDate=${endDate}&id=${msId}`;
+    `&startDate=${startDate}&endDate=${endDate}&id=${encodeURIComponent(msId)}`;
 
   const r = await fetch(url, { headers: HEADERS });
-  if (!r.ok) throw new Error(`Morningstar HTTP ${r.status} para ${pid}`);
+  if (!r.ok) throw new Error(`Morningstar HTTP ${r.status} para ${pid} (${sfx})`);
   const data = await r.json();
   if (!Array.isArray(data) || data.length === 0)
     throw new Error(`Sin datos para ${pid} (${sfx})`);
