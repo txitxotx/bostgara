@@ -275,6 +275,12 @@ td{padding:9px 10px;white-space:nowrap}
 .an-val-bad{color:var(--red)!important}
 .an-val-neutral{color:var(--yel)!important}
 .an-bench-cell{font-size:.63rem;color:var(--mut);display:block;margin-top:2px}
+.an-asset-row td{padding:6px 12px!important;font-size:.67rem!important;color:var(--mut)!important;border-bottom:1px solid rgba(255,255,255,.02)!important;background:rgba(0,0,0,.15)}
+.an-asset-row td:first-child{padding-left:28px!important;font-family:'DM Mono',monospace!important;font-size:.67rem!important;font-weight:400!important}
+.an-asset-row:last-of-type td{border-bottom:1px solid var(--bd)!important}
+.an-cat-toggle{cursor:pointer;user-select:none}
+.an-cat-toggle:hover td{background:var(--s2)!important}
+.an-toggle-icon{display:inline-block;font-size:.65rem;margin-left:6px;transition:transform .2s;opacity:.5}
 
 /* Insight cards mejoradas */
 .ins-item.ins-crit{border-left:3px solid var(--red);padding-left:10px;margin-left:-3px}
@@ -3164,32 +3170,74 @@ function renderAnRisk(){
   const m=calcPortfolioMetrics();
   const el=document.getElementById('anRiskTable');
   if(el){
+    // Filas de activos individuales por categoría
+    function assetRows(cat){
+      const sub=computed.filter(a=>a.cat===cat);
+      return sub.map(a=>{
+        const vc=S.volC[a.id]||{};
+        const cagr=vc.cagr||0,vol=vc.vol||0,mdd=vc.maxDD||0,sh=vc.sharpe||0,so=vc.sortino||0,ca=vc.calmar||0;
+        const hasData=vc.nDays>0;
+        return `<tr class="an-asset-row" data-cat="${cat}" style="display:none">
+          <td>↳ ${a.name}</td>
+          <td class="${hasData?(cagr>=0?'an-val-good':'an-val-bad'):''}">${hasData?(cagr*100).toFixed(2)+'%':'—'}</td>
+          <td>${hasData?'±'+(vol*100).toFixed(1)+'%':'—'}</td>
+          <td class="${hasData?'an-val-bad':''}">${hasData?'−'+(mdd*100).toFixed(1)+'%':'—'}</td>
+          <td class="${hasData?(sh>=1?'an-val-good':sh>=0.5?'an-val-neutral':'an-val-bad'):''}">${hasData?sh.toFixed(2):'—'}</td>
+          <td class="${hasData?(so>=1.5?'an-val-good':so>=0.7?'an-val-neutral':'an-val-bad'):''}">${hasData?so.toFixed(2):'—'}</td>
+          <td class="${hasData?(ca>=0.5?'an-val-good':ca>=0.2?'an-val-neutral':'an-val-bad'):''}">${hasData?ca.toFixed(2):'—'}</td>
+        </tr>`;
+      }).join('');
+    }
+    // Sortino cartera: semivarianza estándar respecto a 0 (no respecto a media)
+    // Calmar cartera: CAGR / maxDD sobre valor absoluto (no sobre ratio coste)
+    let portSortinoFixed=m?.sortino||0,portCalmarFixed=m?.calmar||0;
+    if(m&&S.pnlSeries&&S.pnlSeries.dates.length>30){
+      const vals=S.pnlSeries.vals,costs=S.pnlSeries.costs;
+      const dailyR=[];
+      for(let i=1;i<vals.length;i++){
+        const capIn=costs[i]-costs[i-1];const denom=vals[i-1]+capIn*0.5;
+        if(denom>0){const r=(vals[i]-vals[i-1]-capIn)/denom;if(isFinite(r)&&Math.abs(r)<0.5)dailyR.push(r);}
+      }
+      if(dailyR.length>10){
+        // Sortino: downside deviation con umbral=0 (estándar)
+        const Rf=0.03,RfD=Rf/252;
+        const negR=dailyR.filter(r=>r<RfD);
+        const downVol=negR.length>1?Math.sqrt(negR.reduce((s,r)=>s+(r-RfD)*(r-RfD),0)/(negR.length-1)*252):m.portVol*0.7;
+        portSortinoFixed=downVol>0?(m.portCagr-Rf)/downVol:0;
+        // Calmar: CAGR / maxDD sobre valor absoluto (no ratio coste)
+        let peak=vals[0],mddAbs=0;
+        for(const v of vals){if(v>peak)peak=v;const dd=(peak-v)/peak;if(dd>mddAbs)mddAbs=dd;}
+        portCalmarFixed=mddAbs>0?m.portCagr/mddAbs:0;
+      }
+    }
     el.innerHTML=`<table class="an-table"><thead><tr>
-      <th>Categoría</th><th>Retorno (CAGR)</th><th>Volatilidad</th><th>Max DD</th><th>Sharpe</th><th>Sortino</th><th>Calmar</th>
+      <th>Categoría / Activo</th><th>Retorno (CAGR)</th><th>Volatilidad</th><th>Max DD</th><th>Sharpe</th><th>Sortino</th><th>Calmar</th>
     </tr></thead><tbody>
-    ${rows.map(r=>`<tr>
-      <td><span class="an-cat-tag ${r.cat}">${r.cat}</span>${r.label}</td>
-      <td class="${r.cagr>=0?'an-val-good':'an-val-bad'}">${(r.cagr*100).toFixed(2)}%</td>
-      <td>±${(r.vol*100).toFixed(1)}%</td>
-      <td class="an-val-bad">−${(r.mdd*100).toFixed(1)}%</td>
-      <td class="${r.sharpe>=1?'an-val-good':r.sharpe>=0.5?'an-val-neutral':'an-val-bad'}">${r.sharpe.toFixed(2)}</td>
-      <td class="${r.sortino>=1.5?'an-val-good':r.sortino>=0.7?'an-val-neutral':'an-val-bad'}">${r.sortino.toFixed(2)}</td>
-      <td class="${r.calmar>=0.5?'an-val-good':r.calmar>=0.2?'an-val-neutral':'an-val-bad'}">${r.calmar.toFixed(2)}</td>
-    </tr>`).join('')}
+    ${rows.map(r=>`
+      <tr class="an-cat-toggle" onclick="(function(el){const rows=document.querySelectorAll('.an-asset-row[data-cat=\'${r.cat}\']');const icon=el.querySelector('.an-toggle-icon');const open=rows[0]&&rows[0].style.display!=='none';rows.forEach(row=>row.style.display=open?'none':'table-row');if(icon)icon.style.transform=open?'':'rotate(90deg)';})(this)">
+        <td><span class="an-cat-tag ${r.cat}">${r.cat}</span>${r.label}<span class="an-toggle-icon">▶</span></td>
+        <td class="${r.cagr>=0?'an-val-good':'an-val-bad'}">${(r.cagr*100).toFixed(2)}%</td>
+        <td>±${(r.vol*100).toFixed(1)}%</td>
+        <td class="an-val-bad">−${(r.mdd*100).toFixed(1)}%</td>
+        <td class="${r.sharpe>=1?'an-val-good':r.sharpe>=0.5?'an-val-neutral':'an-val-bad'}">${r.sharpe.toFixed(2)}</td>
+        <td class="${r.sortino>=1.5?'an-val-good':r.sortino>=0.7?'an-val-neutral':'an-val-bad'}">${r.sortino.toFixed(2)}</td>
+        <td class="${r.calmar>=0.5?'an-val-good':r.calmar>=0.2?'an-val-neutral':'an-val-bad'}">${r.calmar.toFixed(2)}</td>
+      </tr>
+      ${assetRows(r.cat)}`).join('')}
     ${m?`<tr class="total-row">
       <td>CARTERA TOTAL</td>
       <td class="${m.portCagr>=0?'an-val-good':'an-val-bad'}">${(m.portCagr*100).toFixed(2)}%</td>
       <td>±${(m.portVol*100).toFixed(1)}%</td>
       <td class="an-val-bad">−${(m.mddCart*100).toFixed(1)}%</td>
       <td class="${m.sharpe>=1?'an-val-good':m.sharpe>=0.5?'an-val-neutral':'an-val-bad'}">${m.sharpe.toFixed(2)}</td>
-      <td class="${(m.sortino||0)>=1.5?'an-val-good':(m.sortino||0)>=0.7?'an-val-neutral':'an-val-bad'}">${(m.sortino||0).toFixed(2)}</td>
-      <td class="${(m.calmar||0)>=0.5?'an-val-good':(m.calmar||0)>=0.2?'an-val-neutral':'an-val-bad'}">${(m.calmar||0).toFixed(2)}</td>
+      <td class="${portSortinoFixed>=1.5?'an-val-good':portSortinoFixed>=0.7?'an-val-neutral':'an-val-bad'}">${portSortinoFixed.toFixed(2)}</td>
+      <td class="${portCalmarFixed>=0.5?'an-val-good':portCalmarFixed>=0.2?'an-val-neutral':'an-val-bad'}">${portCalmarFixed.toFixed(2)}</td>
     </tr>`:''}
     </tbody></table>
     <div style="font-size:.6rem;color:var(--mut);margin-top:10px;line-height:1.5">
       <strong>Sharpe</strong>: retorno por unidad de riesgo total (Rf=3%). >1 excelente · 0.5-1 aceptable · &lt;0.5 bajo<br>
-      <strong>Sortino</strong>: como Sharpe pero solo penaliza volatilidad a la baja. >1.5 muy bueno<br>
-      <strong>Calmar</strong>: CAGR / Max Drawdown. Mide eficiencia frente a caídas
+      <strong>Sortino</strong>: semivarianza con umbral Rf/252. >1.5 muy bueno · Cartera calculada sobre serie real<br>
+      <strong>Calmar</strong>: CAGR / Max Drawdown precio. Cartera calculada sobre valor absoluto
     </div>`;
   }
 
