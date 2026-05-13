@@ -1464,6 +1464,13 @@ body.privacy #trPosTable{
 
 <script>
 'use strict';
+
+// ── CONFIGURACIÓN GLOBAL ──────────────────────────────────────────────────
+// Tasa libre de riesgo anualizada (Rf) — actualizar según BCE / letras Tesoro
+// Afecta a: Sharpe, Sortino de todos los activos y de la cartera
+const RF_GLOBAL = 0.025; // 2.5% — BCE dic 2024
+// ─────────────────────────────────────────────────────────────────────────
+
 // ══════════════════════════════════════════════════════════
 //  ACTIVOS BASE (se sobrescriben con CSV si se importa)
 //  Todos los fondos "CONJUNTA" separados con su propio id
@@ -2693,7 +2700,7 @@ function calcRealVols(){
     const totalRet=prices[prices.length-1]/prices[0];
     const cagr=Math.pow(totalRet,1/years)-1;
     // Sharpe (Rf=3%) y Sortino y Calmar
-    const Rf=0.03;
+    const Rf=RF_GLOBAL;
     const sharpe=vol>0?(cagr-Rf)/vol:0;
     const sortino=downVol>0?(cagr-Rf)/downVol:0;
     const calmar=maxDD>0?cagr/maxDD:0;
@@ -2754,7 +2761,7 @@ async function loadBenchmarks(){
     const nDays=(new Date(hist[hist.length-1].date)-new Date(hist[0].date))/(1000*60*60*24);
     const years=Math.max(nDays/365.25,0.1);
     const cagr=Math.pow(prices[prices.length-1]/prices[0],1/years)-1;
-    const Rf=0.03;
+    const Rf=RF_GLOBAL;
     S.benchMetrics[key]={vol,maxDD,cagr,sharpe:vol>0?(cagr-Rf)/vol:0,sortino:downVol>0?(cagr-Rf)/downVol:0,calmar:maxDD>0?cagr/maxDD:0,hist};
   }
 }
@@ -2847,9 +2854,11 @@ function renderRisk(){
   const{computed,bycat,tv,tc,tp}=S;if(!computed.length)return;
   function avgVol(cat){const sub=computed.filter(a=>a.cat===cat);return sub.length?sub.reduce((s,a)=>s+(a.vol||0),0)/sub.length:0;}
   const portVol=computed.reduce((s,a)=>s+(a.vol||0)*(a.peso/100),0);
-  const portRet=tc>0?tp/tc:0;
   sk('kVolRF','±'+(avgVol('RF')*100).toFixed(1)+'%');sk('kVolRV','±'+(avgVol('RV')*100).toFixed(1)+'%');sk('kVolCR','±'+(avgVol('CR')*100).toFixed(1)+'%');
-  sk('kSharpe',(portVol>0?(portRet-.03)/portVol:0).toFixed(2));
+  // Sharpe: usa métricas reales de cartera si están disponibles, si no cae al cálculo simple
+  const pm=calcPortfolioMetrics();
+  const sharpeVal=pm?pm.sharpe:(portVol>0?((tc>0?tp/tc:0)-RF_GLOBAL)/portVol:0);
+  sk('kSharpe',sharpeVal.toFixed(2));
   const rvW=computed.filter(a=>a.cat==='RV').reduce((s,a)=>s+a.peso,0)/100;
   const crW=computed.filter(a=>a.cat==='CR').reduce((s,a)=>s+a.peso,0)/100;
   sk('kBeta',(0.3+rvW*.6+crW*1.4).toFixed(2));
@@ -2931,7 +2940,7 @@ function calcPortfolioMetrics(){
   // Volatilidad / CAGR de cartera — calculados sobre la serie diaria real cuando existe
   // (evita el sesgo de sumar volatilidades individuales asumiendo correlación=1)
   let portVol=0,portCagr=0,portSortino=0,portCalmar=0;
-  const Rf=0.03;
+  const Rf=RF_GLOBAL;
 
   if(pnlSeries&&pnlSeries.dates.length>30){
     const vals=pnlSeries.vals,costs=pnlSeries.costs;
@@ -3149,6 +3158,13 @@ function renderAnPerf(){
 // ═════════════════════════════════════════════════════════
 // SUB-PANEL: RIESGO
 // ═════════════════════════════════════════════════════════
+function toggleAnCat(cat,btn){
+  const rows=document.querySelectorAll('.an-asset-row[data-cat="'+cat+'"]');
+  const icon=btn.querySelector('.an-toggle-icon');
+  const open=rows.length&&rows[0].style.display!=='none';
+  rows.forEach(function(row){row.style.display=open?'none':'table-row';});
+  if(icon)icon.style.transform=open?'':'rotate(90deg)';
+}
 function renderAnRisk(){
   const {computed,bycat,tv}=S;
   // Métricas por categoría
@@ -3171,14 +3187,6 @@ function renderAnRisk(){
   const el=document.getElementById('anRiskTable');
   if(el){
     // Filas de activos individuales por categoría
-    // Función global para toggle de categoría
-    window.toggleAnCat=function(cat,btn){
-      const rows=document.querySelectorAll('.an-asset-row[data-cat="'+cat+'"]');
-      const icon=btn.querySelector('.an-toggle-icon');
-      const open=rows.length&&rows[0].style.display!=='none';
-      rows.forEach(function(row){row.style.display=open?'none':'table-row';});
-      if(icon)icon.style.transform=open?'':'rotate(90deg)';
-    };
     function assetRows(cat){
       const sub=computed.filter(a=>a.cat===cat);
       return sub.map(a=>{
@@ -3208,7 +3216,7 @@ function renderAnRisk(){
       }
       if(dailyR.length>10){
         // Sortino: downside deviation con umbral=0 (estándar)
-        const Rf=0.03,RfD=Rf/252;
+        const Rf=RF_GLOBAL,RfD=Rf/252;
         const negR=dailyR.filter(r=>r<RfD);
         const downVol=negR.length>1?Math.sqrt(negR.reduce((s,r)=>s+(r-RfD)*(r-RfD),0)/(negR.length-1)*252):m.portVol*0.7;
         portSortinoFixed=downVol>0?(m.portCagr-Rf)/downVol:0;
