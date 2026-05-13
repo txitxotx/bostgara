@@ -2940,8 +2940,9 @@ function calcPortfolioMetrics(){
       const varD=dailyRetsP.reduce((s,r)=>s+(r-meanD)**2,0)/(dailyRetsP.length-1);
       portVol=Math.sqrt(varD*252);
       const cum=dailyRetsP.reduce((s,r)=>s*(1+r),1);
-      const yrs=dailyRetsP.length/252;
-      portCagr=Math.pow(cum,1/Math.max(yrs,0.1))-1;
+      const nDaysP=(new Date(pnlSeries.dates[pnlSeries.dates.length-1])-new Date(pnlSeries.dates[0]))/(1000*60*60*24);
+      const yrs=Math.max(nDaysP/365.25,0.1);
+      portCagr=Math.pow(cum,1/yrs)-1;
       const negP=dailyRetsP.filter(r=>r<0);
       const downVolP=negP.length>1?Math.sqrt(negP.reduce((s,r)=>s+r*r,0)/(negP.length-1)*252):portVol*0.7;
       portSortino=downVolP>0?(portCagr-Rf)/downVolP:0;
