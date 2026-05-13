@@ -2970,8 +2970,9 @@ function calcPortfolioMetrics(){
     }
     if(dailyRets.length>10){
       const cum=dailyRets.reduce((s,r)=>s*(1+r),1);
-      twrYears=dailyRets.length/252;
-      twr=Math.pow(cum,1/Math.max(twrYears,0.1))-1;
+      const nDays=(new Date(pnlSeries.dates[pnlSeries.dates.length-1])-new Date(pnlSeries.dates[0]))/(1000*60*60*24);
+      twrYears=Math.max(nDays/365.25,0.1);
+      twr=Math.pow(cum,1/twrYears)-1;
     }
     // Max Drawdown de la cartera como % sobre (vals/costs)
     const ratios=vals.map((v,i)=>costs[i]>0?v/costs[i]:1);
