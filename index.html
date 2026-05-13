@@ -3171,6 +3171,14 @@ function renderAnRisk(){
   const el=document.getElementById('anRiskTable');
   if(el){
     // Filas de activos individuales por categoría
+    // Función global para toggle de categoría
+    window.toggleAnCat=function(cat,btn){
+      const rows=document.querySelectorAll('.an-asset-row[data-cat="'+cat+'"]');
+      const icon=btn.querySelector('.an-toggle-icon');
+      const open=rows.length&&rows[0].style.display!=='none';
+      rows.forEach(function(row){row.style.display=open?'none':'table-row';});
+      if(icon)icon.style.transform=open?'':'rotate(90deg)';
+    };
     function assetRows(cat){
       const sub=computed.filter(a=>a.cat===cat);
       return sub.map(a=>{
@@ -3214,7 +3222,7 @@ function renderAnRisk(){
       <th>Categoría / Activo</th><th>Retorno (CAGR)</th><th>Volatilidad</th><th>Max DD</th><th>Sharpe</th><th>Sortino</th><th>Calmar</th>
     </tr></thead><tbody>
     ${rows.map(r=>`
-      <tr class="an-cat-toggle" onclick="(function(el){const rows=document.querySelectorAll('.an-asset-row[data-cat=\'${r.cat}\']');const icon=el.querySelector('.an-toggle-icon');const open=rows[0]&&rows[0].style.display!=='none';rows.forEach(row=>row.style.display=open?'none':'table-row');if(icon)icon.style.transform=open?'':'rotate(90deg)';})(this)">
+      <tr class="an-cat-toggle" onclick="toggleAnCat('${r.cat}',this)">
         <td><span class="an-cat-tag ${r.cat}">${r.cat}</span>${r.label}<span class="an-toggle-icon">▶</span></td>
         <td class="${r.cagr>=0?'an-val-good':'an-val-bad'}">${(r.cagr*100).toFixed(2)}%</td>
         <td>±${(r.vol*100).toFixed(1)}%</td>
