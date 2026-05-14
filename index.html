@@ -2683,19 +2683,7 @@ function calcRealVols(){
     const hist=S.hist[a.id];
     const fVol=VOL_FB[a.cat]??0.10, fDD=DD_FB[a.cat]??0.05;
     if(!hist||hist.length<15){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0,cagr:0,sortino:0,calmar:0,retDaily:0,nDays:0};continue;}
-    const prices=hist.map(h=>h.nav);
-    const rets=[];for(let i=1;i<prices.length;i++){if(prices[i-1]>0&&prices[i]>0)rets.push(Math.log(prices[i]/prices[i-1]));}
-    if(rets.length<10){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0,cagr:0,sortino:0,calmar:0,retDaily:0,nDays:0};continue;}
-    const mean=rets.reduce((s,v)=>s+v,0)/rets.length;
-    const vol=Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/(rets.length-1)*252);
-    // Downside deviation (para Sortino) — solo retornos negativos
-    const neg=rets.filter(r=>r<0);
-    const downVol=neg.length>1?Math.sqrt(neg.reduce((s,v)=>s+v*v,0)/(neg.length-1)*252):vol*0.7;
-    let peak=prices[0],maxDD=0;for(const p of prices){if(p>peak)peak=p;const dd=(peak-p)/peak;if(dd>maxDD)maxDD=dd;}
-    const ytdS=hist.find(h=>h.date>=ytdCut);const ytd=ytdS?(hist[hist.length-1].nav-ytdS.nav)/ytdS.nav:0;
-    const mtdS=hist.find(h=>h.date>=mtdCut);const mtd=mtdS?(hist[hist.length-1].nav-mtdS.nav)/mtdS.nav:0;
-    // CAGR anualizado desde TU primera compra (no desde el inicio del fondo)
-    // Usar precio medio de compra y fecha más antigua de compra en TXS
+    // Determinar fecha de primera compra propia para filtrar el historial
     const myTxs=TXS.filter(t=>t.a===a.id&&t.t==='buy');
     let firstBuyDate=null,avgCostPrice=0;
     if(myTxs.length>0){
@@ -2704,10 +2692,26 @@ function calcRealVols(){
       const totalCost=myTxs.reduce((s,t)=>s+t.q*t.p,0);
       avgCostPrice=totalQty>0?totalCost/totalQty:0;
     }
+    const refDate=firstBuyDate||hist[0].date;
+    // Filtrar historial desde la fecha de tu primera compra
+    const myHist=hist.filter(h=>h.date>=refDate);
+    const histToUse=myHist.length>=15?myHist:hist;
+    const prices=histToUse.map(h=>h.nav);
+    const rets=[];for(let i=1;i<prices.length;i++){if(prices[i-1]>0&&prices[i]>0)rets.push(Math.log(prices[i]/prices[i-1]));}
+    if(rets.length<10){S.volC[a.id]={vol:fVol,maxDD:fDD,ytd:0,mtd:0,cagr:0,sortino:0,calmar:0,retDaily:0,nDays:0};continue;}
+    const mean=rets.reduce((s,v)=>s+v,0)/rets.length;
+    const vol=Math.sqrt(rets.reduce((s,v)=>s+(v-mean)**2,0)/(rets.length-1)*252);
+    // Downside deviation (para Sortino) — solo retornos negativos
+    const neg=rets.filter(r=>r<0);
+    const downVol=neg.length>1?Math.sqrt(neg.reduce((s,v)=>s+v*v,0)/(neg.length-1)*252):vol*0.7;
+    // Max DD y YTD/MTD desde tu fecha de compra
+    let peak=prices[0],maxDD=0;for(const p of prices){if(p>peak)peak=p;const dd=(peak-p)/peak;if(dd>maxDD)maxDD=dd;}
+    const ytdS=histToUse.find(h=>h.date>=ytdCut);const ytd=ytdS?(histToUse[histToUse.length-1].nav-ytdS.nav)/ytdS.nav:0;
+    const mtdS=histToUse.find(h=>h.date>=mtdCut);const mtd=mtdS?(histToUse[histToUse.length-1].nav-mtdS.nav)/mtdS.nav:0;
+    // CAGR desde tu precio medio de compra
     const currentNav=prices[prices.length-1];
     const refNav=avgCostPrice>0?avgCostPrice:prices[0];
-    const refDate=firstBuyDate||hist[0].date;
-    const nDays=(new Date(hist[hist.length-1].date)-new Date(refDate))/(1000*60*60*24);
+    const nDays=(new Date(histToUse[histToUse.length-1].date)-new Date(refDate))/(1000*60*60*24);
     const years=Math.max(nDays/365.25,0.1);
     const totalRet=currentNav/refNav;
     const cagr=Math.pow(totalRet,1/years)-1;
