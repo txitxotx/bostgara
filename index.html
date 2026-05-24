@@ -243,10 +243,9 @@ td{padding:9px 10px;white-space:nowrap}
 @media(max-width:1100px){.kpis[style*="repeat(6"]{grid-template-columns:repeat(3,1fr)!important}.kpis[style*="repeat(5"]{grid-template-columns:repeat(3,1fr)!important}}
 @media(max-width:640px){.kpis[style*="repeat(6"]{grid-template-columns:repeat(2,1fr)!important}.kpis[style*="repeat(5"]{grid-template-columns:repeat(2,1fr)!important}}
 .kpis-6{grid-template-columns:repeat(6,1fr)!important;margin-bottom:10px!important}
-.kpis-7{grid-template-columns:repeat(7,1fr)!important;margin-bottom:10px!important}
 .kpis-5{grid-template-columns:repeat(5,1fr)!important}
-@media(max-width:1100px){.kpis-6{grid-template-columns:repeat(3,1fr)!important}.kpis-7{grid-template-columns:repeat(4,1fr)!important}.kpis-5{grid-template-columns:repeat(3,1fr)!important}}
-@media(max-width:640px){.kpis-6{grid-template-columns:repeat(2,1fr)!important}.kpis-7{grid-template-columns:repeat(2,1fr)!important}.kpis-5{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:1100px){.kpis-6{grid-template-columns:repeat(3,1fr)!important}.kpis-5{grid-template-columns:repeat(3,1fr)!important}}
+@media(max-width:640px){.kpis-6{grid-template-columns:repeat(2,1fr)!important}.kpis-5{grid-template-columns:repeat(2,1fr)!important}}
 
 /* ═══ PANEL ANÁLISIS — sub-tabs profesionales ═══ */
 .an-tabs{display:flex;gap:4px;margin:16px 0 14px;border-bottom:1px solid var(--bd);padding-bottom:0;overflow-x:auto;flex-wrap:wrap}
@@ -376,7 +375,6 @@ body.privacy #trPosTable{
   .h-actions{display:none}
   .tabs{display:none}
   .kpis-6{grid-template-columns:repeat(2,1fr)!important}
-  .kpis-7{grid-template-columns:repeat(2,1fr)!important}
   .kpis-5{grid-template-columns:repeat(2,1fr)!important}
   .kpi{padding:10px 12px}
   .kpi-v{font-size:1.05rem}
@@ -977,11 +975,10 @@ body.privacy #trPosTable{
 <!-- ════ ANÁLISIS ════ -->
 <div class="panel" id="panel-analysis">
   <!-- Cabecera con KPIs globales profesionales -->
-  <div class="kpis kpis-7">
+  <div class="kpis kpis-6">
     <div class="kpi b"><div class="kpi-lbl">Capital Invertido</div><div class="kpi-v" id="aKinv">—</div><div class="kpi-s">Total aportado</div></div>
     <div class="kpi g"><div class="kpi-lbl">Valor Actual</div><div class="kpi-v" id="aKval">—</div><div class="kpi-s" id="aKvalS">—</div></div>
     <div class="kpi g"><div class="kpi-lbl">TWR Anualizado</div><div class="kpi-v" id="aKtwr">—</div><div class="kpi-s" id="aKtwrS">Tiempo ponderado</div></div>
-    <div class="kpi y"><div class="kpi-lbl">TIR Anualizada</div><div class="kpi-v" id="aKirr">—</div><div class="kpi-s" id="aKirrS">Money-weighted</div></div>
     <div class="kpi y"><div class="kpi-lbl">Sharpe Cartera</div><div class="kpi-v" id="aKsharpe">—</div><div class="kpi-s" id="aKsharpeS">Rf = 3%</div></div>
     <div class="kpi p"><div class="kpi-lbl">Volatilidad</div><div class="kpi-v" id="aKvol">—</div><div class="kpi-s">Anualizada real</div></div>
     <div class="kpi r"><div class="kpi-lbl">Max Drawdown</div><div class="kpi-v" id="aKmdd">—</div><div class="kpi-s" id="aKmddS">Cartera histórica</div></div>
@@ -2136,40 +2133,17 @@ function renderHeader(){
   sk('hDate',S.lastUpdate?'Actualizado: '+S.lastUpdate.toLocaleString('es-ES'):'');
 }
 function renderKpis(){
-  const{tv,tp,tpp,bycat,computed,pnlSeries}=S;
+  const{tv,tp,tpp,bycat,computed}=S;
   sk('kTotal',f(tv));sk('kTotSub',(tp>=0?'+':'')+f(tp));
   const pnEl=document.getElementById('kPnl');pnEl.textContent=(tp>=0?'+':'')+f(tp);pnEl.style.color=tp>=0?'var(--acc)':'var(--red)';
   sk('kPnlPct',(tp>=0?'+':'')+tpp.toFixed(2)+'%');document.getElementById('kPnlPct').className='kpi-s '+(tp>=0?'pos':'neg');
-  // Rentabilidad Total = TWR ACUMULADO (neutraliza aportaciones)
-  // Fallback a (tp/tc) si no hay serie histórica suficiente
-  const twrCum=calcTwrCumulative(pnlSeries);
-  const rTot=(twrCum!=null)?twrCum*100:tpp;
-  const ppEl=document.getElementById('kPnlPctVal');
-  if(ppEl){
-    ppEl.textContent=(rTot>=0?'+':'')+rTot.toFixed(2)+'%';
-    ppEl.style.color=rTot>=0?'var(--acc)':'var(--red)';
-  }
-  const subEl=document.getElementById('kPnlPctSub');
-  if(subEl){
-    subEl.textContent=twrCum!=null?'TWR acumulado':'sobre coste actual';
-    subEl.className='kpi-s '+(rTot>=0?'pos':'neg');
-  }
-  // Rentabilidad YTD = TWR del año en curso
-  // Fallback al cálculo viejo si no hay datos suficientes
-  const twrYtd=calcTwrYtd(pnlSeries);
-  let ytdPct;
-  if(twrYtd!=null){
-    ytdPct=twrYtd*100;
-  }else{
-    ytdPct=tv>0?computed.reduce((s,a)=>s+(a.ytdPct||0)*(a.valor/tv),0):0;
-  }
-  const ytdEl=document.getElementById('kYtd');
-  if(ytdEl){ytdEl.textContent=(ytdPct>=0?'+':'')+ytdPct.toFixed(2)+'%';ytdEl.style.color=ytdPct>=0?'var(--acc)':'var(--red)';}
-  const ytdSEl=document.getElementById('kYtdSub');
-  if(ytdSEl){
-    ytdSEl.textContent=twrYtd!=null?'TWR año en curso':'año en curso';
-    ytdSEl.className='kpi-s '+(ytdPct>=0?'pos':'neg');
-  }
+  // P&L % KPI grande
+  const ppEl=document.getElementById('kPnlPctVal');if(ppEl){ppEl.textContent=(tp>=0?'+':'')+tpp.toFixed(2)+'%';ppEl.style.color=tp>=0?'var(--acc)':'var(--red)';}
+  document.getElementById('kPnlPctSub').className='kpi-s '+(tp>=0?'pos':'neg');
+  // YTD ponderado por valor
+  const ytd=tv>0?computed.reduce((s,a)=>s+(a.ytdPct||0)*(a.valor/tv),0):0;
+  const ytdEl=document.getElementById('kYtd');if(ytdEl){ytdEl.textContent=(ytd>=0?'+':'')+ytd.toFixed(2)+'%';ytdEl.style.color=ytd>=0?'var(--acc)':'var(--red)';}
+  const ytdSEl=document.getElementById('kYtdSub');if(ytdSEl)ytdSEl.className='kpi-s '+(ytd>=0?'pos':'neg');
   for(const c of CATS){sk('k'+c,f(bycat[c].valor));const el=document.getElementById('k'+c+'p');if(el){el.textContent=(bycat[c].pnl>=0?'+':'')+f(bycat[c].pnl);el.className='kpi-s '+(bycat[c].pnl>=0?'pos':'neg');}}
   const sorted=[...computed].sort((a,b)=>b.pnlPct-a.pnlPct);const best=sorted[0],worst=sorted[sorted.length-1];
   if(best){sk('kBest','+'+best.pnlPct.toFixed(1)+'%');sk('kBestN',best.name);}
@@ -2975,86 +2949,6 @@ function anTab(id,btn){
 // ─────────────────────────────────────────────────────────
 // MÉTRICAS DE CARTERA GLOBAL
 // ─────────────────────────────────────────────────────────
-
-// ══════════════════════════════════════════════════════════
-//  MÉTRICAS PROFESIONALES — TWR acumulado, TWR YTD, TIR (MWR)
-// ══════════════════════════════════════════════════════════
-
-// Calcula retornos diarios neutralizando aportaciones (Modified Dietz diario)
-function _portfolioDailyReturns(pnlSeries){
-  if(!pnlSeries||!pnlSeries.dates||pnlSeries.dates.length<2)return null;
-  const {dates,vals,costs}=pnlSeries;
-  const rets=[];
-  for(let i=1;i<vals.length;i++){
-    const capIn=costs[i]-costs[i-1];        // aportación neta del día
-    const denom=vals[i-1]+capIn*0.5;        // capital medio del día (Dietz)
-    if(denom>0){
-      const r=(vals[i]-vals[i-1]-capIn)/denom;
-      if(isFinite(r)&&Math.abs(r)<0.5)rets.push({date:dates[i],r});
-    }
-  }
-  return rets;
-}
-
-// TWR ACUMULADO desde el inicio de la serie (no anualizado)
-function calcTwrCumulative(pnlSeries){
-  const rets=_portfolioDailyReturns(pnlSeries);
-  if(!rets||rets.length<2)return null;
-  const cum=rets.reduce((s,x)=>s*(1+x.r),1);
-  return cum-1;
-}
-
-// TWR YTD — encadena retornos diarios desde 1/1 del año en curso
-function calcTwrYtd(pnlSeries){
-  const rets=_portfolioDailyReturns(pnlSeries);
-  if(!rets||rets.length<2)return null;
-  const ytdCut=`${new Date().getFullYear()}-01-01`;
-  const ytdRets=rets.filter(x=>x.date>=ytdCut);
-  if(ytdRets.length<1)return null;
-  const cum=ytdRets.reduce((s,x)=>s*(1+x.r),1);
-  return cum-1;
-}
-
-// TIR (IRR) anualizada — Newton-Raphson sobre flujos de caja
-// Flujos: compras (salidas) en su fecha + valor actual (entrada) hoy
-function calcIrr(){
-  if(!TXS||!TXS.length||!S.tv)return null;
-  const today=new Date();
-  const txS=[...TXS].filter(t=>t.t==='buy').sort((a,b)=>a.d.localeCompare(b.d));
-  if(!txS.length)return null;
-  const t0=new Date(txS[0].d);
-  const flows=txS.map(t=>({
-    days:(new Date(t.d)-t0)/(1000*60*60*24),
-    amt:-(t.q*t.p)
-  }));
-  flows.push({
-    days:(today-t0)/(1000*60*60*24),
-    amt:S.tv
-  });
-  const totalYears=flows[flows.length-1].days/365.25;
-  if(totalYears<0.05)return null;
-  function npv(r){
-    return flows.reduce((s,f)=>s+f.amt/Math.pow(1+r,f.days/365.25),0);
-  }
-  function dnpv(r){
-    return flows.reduce((s,f)=>s-(f.days/365.25)*f.amt/Math.pow(1+r,f.days/365.25+1),0);
-  }
-  let r=0.08;
-  for(let i=0;i<60;i++){
-    const v=npv(r);
-    if(Math.abs(v)<0.01)return r;
-    const dv=dnpv(r);
-    if(Math.abs(dv)<1e-10)break;
-    let rNew=r-v/dv;
-    if(!isFinite(rNew))break;
-    if(rNew<-0.99)rNew=-0.5;
-    else if(rNew>10)rNew=2;
-    if(Math.abs(rNew-r)<1e-7){r=rNew;break;}
-    r=rNew;
-  }
-  return isFinite(r)&&r>-0.99&&r<10?r:null;
-}
-
 function calcPortfolioMetrics(){
   const {computed,tv,tc,tp,tpp,pnlSeries}=S;
   if(!computed.length)return null;
@@ -3157,30 +3051,6 @@ function renderAnalysis(){
       tw.style.color=m.twr>=0?'var(--acc)':'var(--red)';
     }
     sk('aKtwrS',m.twrYears>0?`${m.twrYears.toFixed(1)} años de histórico`:'Carga histórico');
-
-    // TIR (MWR) — qué rentabilidad ha generado TU dinero, dado cuándo lo aportaste
-    const irr=calcIrr();
-    const irrEl=document.getElementById('aKirr');
-    if(irrEl){
-      if(irr!=null){
-        irrEl.textContent=(irr>=0?'+':'')+(irr*100).toFixed(2)+'%';
-        irrEl.style.color=irr>=0?'var(--acc)':'var(--red)';
-      }else{
-        irrEl.textContent='—';
-        irrEl.style.color='var(--mut)';
-      }
-    }
-    const irrSEl=document.getElementById('aKirrS');
-    if(irrSEl){
-      if(irr!=null&&m.twr!=null&&m.twrYears>0){
-        const diff=(irr-m.twr)*100;
-        if(Math.abs(diff)<0.5)irrSEl.textContent='Timing neutral vs cartera';
-        else if(diff>0)irrSEl.textContent=`Timing favorable (+${diff.toFixed(1)}pts)`;
-        else irrSEl.textContent=`Timing adverso (${diff.toFixed(1)}pts)`;
-      }else{
-        irrSEl.textContent='Money-weighted';
-      }
-    }
 
     const sh=document.getElementById('aKsharpe');
     if(sh){sh.textContent=m.sharpe.toFixed(2);sh.style.color=m.sharpe>=1?'var(--acc)':m.sharpe>=0.5?'var(--yel)':'var(--red)';}
