@@ -24,6 +24,7 @@ const FUNDS = {
   'LU0625737910': { pid: '0P0000TOUY', sfx: 'FOLUX$$ALL' },
   'IE00BYX5MX67': { pid: '0P0001CLDM', sfx: 'FOIRL$$ALL' },
   'IE00BYX5NX33': { pid: '0P0001CLDK', sfx: 'FOIRL$$ALL' },
+  'IE000QAZP7L2': { pid: '0P0001XF3Z', sfx: 'FOIRL$$ALL' }, // iShares EM Index S Acc EUR
   'ES0119199018': { pid: 'F000016A7V', sfx: 'FOESP$$ALL' },
   '0P0001L8Z8':   { pid: '0P0001L8Z8', sfxs: ['FOESP$$ALL', 'FEESP$$ALL', 'FPESP$$ALL', 'XIESP$$ALL'] },
   '0P0001L8YS':   { pid: '0P0001L8YS', sfxs: ['FOESP$$ALL', 'FEESP$$ALL', 'FPESP$$ALL', 'XIESP$$ALL'] },
