@@ -1495,6 +1495,7 @@ const ASSETS_BASE = [
   {id:'p300',       name:'300 Places Worldwide',        isin:'ES0157638000', cat:'RV', titles:384.677,      costPrice:13.26,  costeReal:5100.00,   src:'ms'},
   {id:'fsp500',     name:'Fidelity S&P 500 Index',      isin:'IE00BYX5MX67', cat:'RV', titles:88.391,       costPrice:13.58,  costeReal:1199.98,   src:'ms'},
   {id:'fworld',     name:'Fidelity MSCI World',         isin:'IE00BYX5NX33', cat:'RV', titles:102.127,      costPrice:11.75,  costeReal:1200.00,   src:'ms'},
+  {id:'ishem',      name:'iShares EM Index S Acc EUR',  isin:'IE000QAZP7L2', cat:'RV', titles:0,            costPrice:0,      costeReal:0,         src:'ms'},
   {id:'cobas',      name:'Cobas Internacional FI Clase D', isin:'ES0119199018', cat:'RV', titles:0.353680,     costPrice:282.7417,costeReal:100.00,    src:'ms'},
   // CRIPTOMONEDAS
   {id:'xrp',        name:'XRP',                         isin:'XRP',   cat:'CR', titles:40.816,       costPrice:2.12,    costeReal:86.44,     src:'cg', cgId:'ripple'},
@@ -1551,6 +1552,9 @@ const REGMIX = {
   // Fidelity MSCI World Index Fund: MSCI World real (dic 2024)
   // USA 73.9% · JPN 5.4% · UK 3.4% · CAN 3.0% · FRA 2.6% · resto DM ~11.7%
   fworld:   {usa:.74, eur:.135, can:.03, jpn:.055, apac:.04},
+  // iShares Emerging Markets Index (IE) S: replica MSCI EM NR EUR
+  // China ~27% · Taiwán ~20% · India ~19% · Corea ~11% · Brasil ~5% · resto EM ~18%
+  ishem:    {chn:.27, emerg:.65, apac:.05, glb:.03},
   // Cobas Internacional FI Clase D: value europeo/iberoamericano concentrado
   cobas:    {esp:.35, eur:.45, usa:.10, emerg:.05, glb:.05},
 
@@ -1809,6 +1813,7 @@ const CSV_NAME_MAP = [
   ['fidelity s&p 500 index fund eur',          'fsp500'],
   ['fidelity s&p 500 index fund',              'fsp500'],
   ['fidelity msci world index fund',           'fworld'],
+  ['ishares emergmkts idx',                    'ishem'],
   ['cobas internacional fi clase d',            'cobas'],
   ['cobas internacional',                       'cobas'],
   // ── CR ──────────────────────────────────────────────────────────────────
