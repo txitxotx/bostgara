@@ -1112,6 +1112,8 @@ body.privacy #trPosTable{
     <div class="ch">
       <span class="ct">📊 Posiciones Abiertas</span>
       <button class="mbtn apply" onclick="openTradeModal()" style="font-size:.68rem;padding:5px 12px">➕ Nueva operación</button>
+      <button class="mbtn cancel" onclick="trSaveToServer()" style="font-size:.68rem;padding:5px 12px" title="Sube las operaciones a GitHub para verlas desde el móvil u otro equipo">⬆ Guardar en GitHub</button>
+      <span id="trSyncState" style="font-size:.63rem;color:var(--mut);align-self:center"></span>
     </div>
     <div id="trPositions"></div>
   </div>
@@ -1478,7 +1480,7 @@ body.privacy #trPosTable{
 //  diag() y el banner de error siguen estando disponibles.
 //  En la consola:  diag()
 // ══════════════════════════════════════════════════════════
-const BUILD_ID = '2026-10-31-nanfix-3';
+const BUILD_ID = '2026-11-01-trades-2';
 console.log('%c[BUILD] ' + BUILD_ID, 'background:#00e5a0;color:#000;padding:2px 7px;border-radius:3px;font-weight:bold');
 
 // Banner visible ante cualquier error fatal: nunca mas una pagina muerta en silencio.
@@ -1527,6 +1529,8 @@ window.diag = function(){
   const sin = rows.filter(function(r){ return !r.precioOK; });
   if (sin.length) console.log('Sin precio de API (usan costPrice): ' + sin.map(function(r){return r.id;}).join(', '));
   console.log('TOTALES  tv=', S.tv, ' tc=', S.tc, ' tp=', S.tp, ' tpp=', S.tpp);
+  console.log('Operaciones de acciones en este navegador: ' + (typeof TR_TRADES!=='undefined'?TR_TRADES.length:'n/d')
+            + '  -> para saber si estan en GitHub ejecuta: diagTrades()');
   console.log('ASSETS=' + ASSETS.length + '  AC=' + ASSETS.filter(function(a){return a.cat==='AC';}).length
             + '  TR_TRADES=' + (typeof TR_TRADES !== 'undefined' ? TR_TRADES.length : 'n/d'));
   return bad;
@@ -5464,13 +5468,18 @@ async function trLoadFromServer(){
     } else if (TR_TRADES.length){
       // Primer arranque con el formato v2: subimos a GitHub lo que hubiera
       // guardado solo en localStorage, para no perderlo al cambiar de equipo.
-      console.log('[trades] migrando ' + TR_TRADES.length + ' operaciones de localStorage a GitHub');
-      sfSave({ trades: TR_TRADES }).catch(e => console.warn('[trades] migracion fallida:', e.message));
+      // Con espera y aviso visible: antes era "dispara y olvida" y un fallo
+      // solo se veia en la consola, asi que parecia haber funcionado.
+      console.log('[trades] migrando ' + TR_TRADES.length + ' operaciones de localStorage a GitHub...');
+      await trSaveToServer();
     }
     trSyncToAssets();
     return true;
   }catch(e){
-    console.warn('[trades] no pude cargar de GitHub, uso localStorage:', e.message);
+    console.error('[trades] no pude leer GitHub, uso localStorage:', e.message);
+    const state = document.getElementById('trSyncState');
+    if (state){ state.textContent = '✗ sin sincronizar con GitHub (' + e.message + ')'; state.style.color = 'var(--red)'; }
+    trSyncToAssets();
     return false;
   }
 }
@@ -5478,17 +5487,53 @@ async function trLoadFromServer(){
 // Persiste TR_TRADES en GitHub (y en localStorage) con aviso visual.
 async function trSaveToServer(){
   trSave_storage();
-  const ind = document.getElementById('stocksSaveIndicator');
+  const ind   = document.getElementById('stocksSaveIndicator');
+  const state = document.getElementById('trSyncState');
   const show = (cls, html, ms) => { if(!ind) return; ind.className='save-indicator show '+cls; ind.innerHTML=html; if(ms) setTimeout(()=>ind.classList.remove('show'), ms); };
-  show('si-saving','⏳ Guardando operaciones...');
+  const lbl = (txt, col) => { if(state){ state.textContent = txt; state.style.color = col; } };
+  show('si-saving','⏳ Guardando operaciones...'); lbl('subiendo…','var(--mut)');
   try{
     await sfSave({ trades: TR_TRADES });
     show('si-saved','✓ Operaciones guardadas en GitHub', 3000);
+    lbl('✓ ' + TR_TRADES.length + ' operaciones en GitHub', 'var(--acc)');
+    console.log('[trades] ' + TR_TRADES.length + ' operaciones guardadas en GitHub');
+    return true;
   }catch(e){
-    console.warn('[trades] error guardando:', e.message);
-    show('si-error','✗ Error guardando: ' + e.message, 5000);
+    console.error('[trades] ERROR guardando en GitHub:', e.message);
+    show('si-error','✗ Error guardando: ' + e.message, 8000);
+    lbl('✗ no guardado: ' + e.message, 'var(--red)');
+    return false;
   }
 }
+
+// Comprueba el circuito completo de guardado y dice exactamente donde falla.
+// En la consola:  diagTrades()
+window.diagTrades = async function(){
+  console.log('%c[BUILD] ' + BUILD_ID, 'background:#00e5a0;color:#000;padding:2px 7px;border-radius:3px;font-weight:bold');
+  console.log('Operaciones en este navegador (localStorage):', TR_TRADES.length, TR_TRADES);
+  let r;
+  try{
+    r = await fetch('/api/get-stocks', { cache:'no-store' });
+    const txt = await r.text();
+    console.log('GET /api/get-stocks ->', r.status);
+    if (r.ok){
+      const d = sfParse(txt);
+      console.log('   analisis guardados:', d.analisis.length, '| operaciones guardadas:', d.trades.length);
+      console.log(d.trades.length ? '   %cLas operaciones SI estan en GitHub' : '   %cLas operaciones NO estan en GitHub todavia',
+                  d.trades.length ? 'color:#00e5a0;font-weight:bold' : 'color:#ff4757;font-weight:bold');
+    } else {
+      console.log('   respuesta:', txt.slice(0,200));
+    }
+  }catch(e){ console.error('GET /api/get-stocks fallo:', e.message); }
+  try{
+    const rr = await fetch('/api/save-stocks', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ content: JSON.stringify({ version:2, analisis: STOCKS_DB||[], trades: TR_TRADES||[] }, null, 2) }) });
+    const body = await rr.text();
+    console.log('POST /api/save-stocks ->', rr.status, body.slice(0,200));
+    if (rr.status === 401) console.log('%c   401: sesion caducada. Recarga y vuelve a introducir la contrasena.', 'color:#ff4757;font-weight:bold');
+    if (rr.ok) console.log('%c   Guardado correcto: ya deberias verlas en el movil.', 'color:#00e5a0;font-weight:bold');
+  }catch(e){ console.error('POST /api/save-stocks fallo:', e.message); }
+};
 
 // ── SAVE to GitHub ────────────────────────────────────────────
 async function saveStocksToServer() {
