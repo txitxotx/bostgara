@@ -1283,7 +1283,8 @@ body.privacy #trPosTable{
 <div class="panel" id="panel-gestion">
   <div class="mg-tip">
     <strong>Panel de Gestión</strong> — Añade, edita o elimina activos sin tocar el código. Los cambios persisten entre sesiones.<br>
-    Para fondos: <strong>ISIN</strong> + <strong>Performance ID</strong> de Morningstar. Para acciones: <strong>Ticker Yahoo Finance</strong> (p.ej. AAPL, MC.PA). Para criptos: <strong>ID CoinGecko</strong>.
+    Para fondos: <strong>ISIN</strong> + <strong>Performance ID</strong> de Morningstar. Para criptos: <strong>ID CoinGecko</strong>.<br>
+    <strong style="color:#ff6b35">Las acciones no se añaden aquí</strong> — se registran como operaciones en la pestaña <strong>Acciones → Trading</strong>, que lleva fechas, comisiones y P&amp;L realizado, y se guardan en GitHub.
   </div>
 
   <div class="mg-form" id="mgForm">
@@ -1302,7 +1303,6 @@ body.privacy #trPosTable{
       <div class="mg-field"><label>Fuente *</label>
         <select id="mgSrc" onchange="mgSrcChange(this.value)">
           <option value="ms">Morningstar (fondos)</option>
-          <option value="yf">Yahoo Finance (acciones)</option>
           <option value="cg">CoinGecko (cripto)</option>
           <option value="manual">Manual</option>
         </select>
@@ -1635,6 +1635,34 @@ const REGMIX = {
   // Baskepensiones Bolsa Euro: Eurozona, España ~25%, resto EUR ~75%
   bskbl:    {esp:.25, eur:.75},
 };
+
+// ── Region por sufijo de mercado del ticker ────────────────────────────────
+// Para acciones sin entrada propia en REGMIX. Clasifica por MERCADO DE
+// COTIZACION, no por origen de los ingresos: si quieres el reparto real de una
+// accion, anade su entrada explicita en REGMIX arriba (p.ej. mel_mc:{esp:.5,...}).
+const MKT_REGION = {
+  '.MC':{esp:1},
+  '.PA':{eur:1}, '.DE':{eur:1}, '.F':{eur:1}, '.AS':{eur:1}, '.BR':{eur:1},
+  '.MI':{eur:1}, '.LS':{eur:1}, '.VI':{eur:1}, '.HE':{eur:1}, '.ST':{eur:1},
+  '.CO':{eur:1}, '.OL':{eur:1}, '.SW':{eur:1}, '.L':{eur:1},  '.IR':{eur:1},
+  '.TO':{can:1}, '.V':{can:1},
+  '.T':{jpn:1},
+  '.HK':{chn:1}, '.SS':{chn:1}, '.SZ':{chn:1},
+  '.AX':{apac:1}, '.NZ':{apac:1}, '.SI':{apac:1}, '.KS':{apac:1},
+  '.SA':{emerg:1}, '.MX':{emerg:1}, '.NS':{emerg:1}, '.BO':{emerg:1}, '.IS':{emerg:1},
+};
+
+function regmixFor(a){
+  if (REGMIX[a.id]) return REGMIX[a.id];
+  const tk  = String(a.ticker || a.isin || '');
+  const dot = tk.lastIndexOf('.');
+  if (dot > 0){
+    const sfx = tk.slice(dot).toUpperCase();
+    if (MKT_REGION[sfx]) return MKT_REGION[sfx];
+  }
+  if (a.cat === 'AC' && tk && dot < 0) return { usa:1 };   // sin sufijo = bolsa de EE.UU.
+  return { glb:1 };
+}
 
 // ── TXS — para el histórico P&L ─────────────────────────────────────────────
 // Para fondos con CONJUNTA, el historico usa el mismo ISIN. La diferencia es coste/cantidad.
@@ -2595,7 +2623,7 @@ const GEO_REGIONS=[
 function buildGeoMap(){
   if(!S.computed.length)return;
   const tv=S.tv,rv={};
-  for(const a of S.computed){const mix=REGMIX[a.id]||{glb:1};for(const[reg,pct]of Object.entries(mix))rv[reg]=(rv[reg]||0)+a.valor*pct;}
+  for(const a of S.computed){const mix=regmixFor(a);for(const[reg,pct]of Object.entries(mix))rv[reg]=(rv[reg]||0)+a.valor*pct;}
   const regions=GEO_REGIONS.map(r=>({...r,pct:tv>0?((rv[r.id]||0)/tv)*100:0,val:rv[r.id]||0}));
   function rCol(rid){
     const r=regions.find(x=>x.id===rid);
@@ -2783,8 +2811,15 @@ function calcRealVols(){
     const downVol=neg.length>1?Math.sqrt(neg.reduce((s,v)=>s+v*v,0)/(neg.length-1)*252):vol*0.7;
     // Max DD y YTD/MTD desde tu fecha de compra
     let peak=prices[0],maxDD=0;for(const p of prices){if(p>peak)peak=p;const dd=(peak-p)/peak;if(dd>maxDD)maxDD=dd;}
-    const ytdS=histToUse.find(h=>h.date>=ytdCut);const ytd=ytdS?(histToUse[histToUse.length-1].nav-ytdS.nav)/ytdS.nav:0;
-    const mtdS=histToUse.find(h=>h.date>=mtdCut);const mtd=mtdS?(histToUse[histToUse.length-1].nav-mtdS.nav)/mtdS.nav:0;
+    // YTD y MTD se miden sobre el historico COMPLETO del activo, no sobre el
+    // recortado desde tu primera compra: si compraste este ano, histToUse
+    // arrancaba despues del 1 de enero y la columna YTD medía en realidad
+    // "desde la compra", no el ano natural.
+    const lastNav = hist[hist.length-1].nav;
+    const ytdS = hist.find(h=>h.date>=ytdCut);
+    const ytd  = (ytdS && ytdS.nav>0) ? (lastNav-ytdS.nav)/ytdS.nav : 0;
+    const mtdS = hist.find(h=>h.date>=mtdCut);
+    const mtd  = (mtdS && mtdS.nav>0) ? (lastNav-mtdS.nav)/mtdS.nav : 0;
     // CAGR desde tu precio medio de compra
     const currentNav=prices[prices.length-1];
     const refNav=avgCostPrice>0?avgCostPrice:prices[0];
@@ -3993,14 +4028,33 @@ function trEditPos(ticker){
 function trDeleteTrade(idx){
   if(!confirm('¿Eliminar esta operación?')) return;
   TR_TRADES.splice(idx,1);
-  trSave_storage();
   // Actualizar ASSETS: recalcular posiciones y sincronizar
   trSyncToAssets();
+  trMergeIntoTxs();
+  trSaveToServer();            // localStorage + GitHub
   renderTrading();
   computeAndRender();
+  if (S.histLoaded) { calcRealVols(); buildPnlSeries(); renderPnl(); renderContrib(); renderMonthly(); }
 }
 
 // Sincronizar posiciones de trading con ASSETS (para que aparezcan en el resto de pestañas)
+// Mete las operaciones de acciones (panel Trading) dentro de TXS, que es de
+// donde salen la curva historica de P&L y el grafico de aportaciones.
+// Idempotente: limpia las entradas 'ac_' antes de reinsertarlas.
+function trMergeIntoTxs(){
+  if (typeof TXS === 'undefined') return;
+  for (let i = TXS.length - 1; i >= 0; i--)
+    if (String(TXS[i].a).startsWith('ac_')) TXS.splice(i, 1);
+  for (const t of TR_TRADES){
+    const q = Number(t.qty), pr = Number(t.price);
+    const d = String(t.date || '').slice(0, 10);
+    if (!d || !Number.isFinite(q) || q <= 0 || !Number.isFinite(pr) || pr <= 0) continue;
+    TXS.push({ d: d, a: 'ac_' + String(t.ticker).toLowerCase(),
+               t: t.type === 'sell' ? 'sell' : 'buy', q: q, p: pr });
+  }
+  TXS.sort((a, b) => a.d.localeCompare(b.d));
+}
+
 // Coste medio por accion, con red de seguridad: nunca devuelve undefined/NaN
 function trAvg(p){
   if (Number.isFinite(p.avgCost) && p.avgCost > 0) return p.avgCost;
@@ -4061,11 +4115,13 @@ function saveTrade(){
   if(errs.length){errEl.textContent=errs.join(' · ');errEl.style.display='block';return;}
 
   TR_TRADES.push({type, date, ticker, company, qty, price, comm, notes});
-  trSave_storage();
   trSyncToAssets();
+  trMergeIntoTxs();
+  trSaveToServer();            // localStorage + GitHub
   closeTradeModal();
   renderTrading();
   computeAndRender();
+  if (S.histLoaded) { calcRealVols(); buildPnlSeries(); renderPnl(); renderContrib(); renderMonthly(); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -4077,6 +4133,17 @@ function mgSave_storage(){try{localStorage.setItem('mg_ca',JSON.stringify(MG.cus
 function mgLoad_storage(){try{const ca=localStorage.getItem('mg_ca');const di=localStorage.getItem('mg_di');const lg=localStorage.getItem('mg_log');if(ca)MG.customAssets=JSON.parse(ca);if(di)MG.deletedIds=new Set(JSON.parse(di));if(lg)MG.log=JSON.parse(lg);}catch(e){}}
 
 function mgApplyToAssets(){
+  // Las acciones son competencia exclusiva del panel de Trading (TR_TRADES).
+  // Si quedan activos 'yf' creados antes desde Gestion, se descartan aqui para
+  // que la misma empresa no se cuente dos veces con dos ids distintos
+  // ('ac_aapl' desde Trading y 'ac_aapl_m3k2x1' desde Gestion).
+  const huerfanos = MG.customAssets.filter(c => c.src === 'yf');
+  if (huerfanos.length){
+    console.warn('[gestion] descartadas ' + huerfanos.length + ' acciones creadas desde Gestion ('
+      + huerfanos.map(c => c.id).join(', ') + '). Registralas en el panel de Trading.');
+    MG.customAssets = MG.customAssets.filter(c => c.src !== 'yf');
+    mgSave_storage();
+  }
   const base=ASSETS_BASE.filter(a=>!MG.deletedIds.has(a.id)).map(a=>({...a}));
   for(const c of MG.customAssets){const i=base.findIndex(a=>a.id===c.id);if(i>=0)base[i]={...base[i],...c};else if(!MG.deletedIds.has(c.id))base.push({...c});}
   // Mantener acciones de trading (AC generadas por trSyncToAssets)
@@ -4189,7 +4256,7 @@ function mgSave(){
   if(isNaN(costeReal)||costeReal<0)errs.push('Capital inválido');
   let isin='',pid='',sfx='FOESP$$ALL',cgId='',ticker='',exchange='';
   if(src==='ms'){isin=document.getElementById('mgIsin').value.trim().toUpperCase();pid=document.getElementById('mgPid').value.trim();sfx=document.getElementById('mgSfx').value.trim()||'FOESP$$ALL';if(!isin)errs.push('ISIN requerido');if(!pid)errs.push('Performance ID requerido');}
-  else if(src==='yf'){ticker=document.getElementById('mgTicker').value.trim().toUpperCase();exchange=document.getElementById('mgExchange').value.trim();isin=ticker;if(!ticker)errs.push('Ticker requerido');}
+  else if(src==='yf'){errs.push('Las acciones se registran en el panel de Trading, no aqui');}
   else if(src==='cg'){isin=document.getElementById('mgIsinCg').value.trim().toUpperCase();cgId=document.getElementById('mgCgId').value.trim().toLowerCase();if(!isin)errs.push('Ticker requerido');if(!cgId)errs.push('CoinGecko ID requerido');}
   else{isin=name.replace(/\s+/g,'_').toUpperCase().slice(0,12);}
   if(errs.length){errEl.textContent=errs.join(' · ');errEl.style.display='block';return;}
@@ -5294,8 +5361,12 @@ loadSavedTxn();  // limpia localStorage antiguo
 for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:Number.isFinite(a.costPrice)?a.costPrice:0,d1:0,ok:false};}
 updateTxnBtnState();
 setStatus('ld','Obteniendo datos...');
-// Primero cargar CSV y TXS desde GitHub, luego UN SOLO loadAll que renderiza
-Promise.all([loadCsvFromServer(), loadTxnFromServer()]).then(() => {
+// Primero cargar CSV, TXS y operaciones de acciones desde GitHub,
+// luego UN SOLO loadAll que renderiza.
+// trMergeIntoTxs va DESPUES de loadTxnFromServer a proposito: esa funcion
+// hace TXS.length=0 y borraria las acciones si las metieramos antes.
+Promise.all([loadCsvFromServer(), loadTxnFromServer(), trLoadFromServer()]).then(() => {
+  trMergeIntoTxs();
   for(const a of ASSETS){if(!S.prices[a.id])S.prices[a.id]={nav:Number.isFinite(a.costPrice)?a.costPrice:0,d1:0,ok:false};}
   loadAll();
 });
@@ -5321,20 +5392,101 @@ let STOCKS_DB = [];   // Array de análisis guardados
 let stocksFilter = 'all';
 
 // ── LOAD from GitHub ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  stocks-history.json — archivo compartido en GitHub
+//    v1 (antiguo):  [ ...analisis ]
+//    v2 (actual) :  { version:2, analisis:[...], trades:[...] }
+//  Guardamos aqui tambien las operaciones de acciones porque el plan Hobby
+//  de Vercel topa en 12 funciones serverless y no cabe un endpoint nuevo.
+//  transacciones.json NO se usa: es un export de Portfolio Performance que
+//  se reimporta y borraria lo que escribieramos dentro.
+// ══════════════════════════════════════════════════════════
+function sfParse(text){
+  let d;
+  try{ d = JSON.parse(text); }catch(e){ return { analisis:[], trades:[] }; }
+  if (Array.isArray(d)) return { analisis:d, trades:[] };           // formato v1
+  return { analisis: Array.isArray(d.analisis) ? d.analisis : [],
+           trades:   Array.isArray(d.trades)   ? d.trades   : [] };
+}
+
+async function sfFetch(){
+  const r = await fetch('/api/get-stocks', { cache:'no-store' });
+  if (r.status === 404) return { analisis:[], trades:[] };
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return sfParse(await r.text());
+}
+
+// Relee del servidor y fusiona antes de escribir: guardar una mitad
+// (analisis o trades) no puede pisar nunca la otra.
+async function sfSave(patch){
+  let base;
+  try{
+    base = await sfFetch();
+  }catch(e){
+    console.warn('[stocks-file] no pude releer, fusiono con lo local:', e.message);
+    base = { analisis: STOCKS_DB || [], trades: TR_TRADES || [] };
+  }
+  const out = {
+    version: 2,
+    analisis: patch.analisis !== undefined ? patch.analisis : base.analisis,
+    trades:   patch.trades   !== undefined ? patch.trades   : base.trades,
+  };
+  const r = await fetch('/api/save-stocks', {
+    method:'POST', headers:{ 'Content-Type':'application/json' },
+    body: JSON.stringify({ content: JSON.stringify(out, null, 2) }),
+  });
+  const d = await r.json().catch(()=>({}));
+  if (!r.ok) throw new Error(d.error || ('HTTP ' + r.status));
+  return out;
+}
+
 async function loadStocksFromServer() {
   try {
-    const r = await fetch('/api/get-stocks', { cache: 'no-store' });
-    if (!r.ok) {
-      if (r.status === 404) { STOCKS_DB = []; renderStocksGrid(); return; }
-      throw new Error(`HTTP ${r.status}`);
-    }
-    const text = await r.text();
-    STOCKS_DB = JSON.parse(text);
+    const d = await sfFetch();
+    STOCKS_DB = d.analisis;
     renderStocksGrid();
   } catch(e) {
     console.warn('[stocks] load error, using empty:', e.message);
     STOCKS_DB = [];
     renderStocksGrid();
+  }
+}
+
+// Carga las operaciones de acciones desde GitHub. Si falla, se queda con la
+// copia de localStorage, que seguimos manteniendo como cache local.
+async function trLoadFromServer(){
+  try{
+    const d = await sfFetch();
+    if (d.trades.length){
+      TR_TRADES = d.trades;
+      trSave_storage();
+      console.log('[trades] ' + TR_TRADES.length + ' operaciones de acciones desde GitHub');
+    } else if (TR_TRADES.length){
+      // Primer arranque con el formato v2: subimos a GitHub lo que hubiera
+      // guardado solo en localStorage, para no perderlo al cambiar de equipo.
+      console.log('[trades] migrando ' + TR_TRADES.length + ' operaciones de localStorage a GitHub');
+      sfSave({ trades: TR_TRADES }).catch(e => console.warn('[trades] migracion fallida:', e.message));
+    }
+    trSyncToAssets();
+    return true;
+  }catch(e){
+    console.warn('[trades] no pude cargar de GitHub, uso localStorage:', e.message);
+    return false;
+  }
+}
+
+// Persiste TR_TRADES en GitHub (y en localStorage) con aviso visual.
+async function trSaveToServer(){
+  trSave_storage();
+  const ind = document.getElementById('stocksSaveIndicator');
+  const show = (cls, html, ms) => { if(!ind) return; ind.className='save-indicator show '+cls; ind.innerHTML=html; if(ms) setTimeout(()=>ind.classList.remove('show'), ms); };
+  show('si-saving','⏳ Guardando operaciones...');
+  try{
+    await sfSave({ trades: TR_TRADES });
+    show('si-saved','✓ Operaciones guardadas en GitHub', 3000);
+  }catch(e){
+    console.warn('[trades] error guardando:', e.message);
+    show('si-error','✗ Error guardando: ' + e.message, 5000);
   }
 }
 
@@ -5345,13 +5497,7 @@ async function saveStocksToServer() {
   ind.innerHTML = '⏳ Guardando en GitHub...';
 
   try {
-    const r = await fetch('/api/save-stocks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: JSON.stringify(STOCKS_DB, null, 2) })
-    });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error || 'Error guardando');
+    await sfSave({ analisis: STOCKS_DB });   // fusiona: conserva trades
     ind.className = 'save-indicator show si-saved';
     ind.innerHTML = '✓ Guardado en GitHub';
     setTimeout(() => ind.classList.remove('show'), 3000);
