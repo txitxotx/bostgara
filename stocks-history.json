@@ -261,6 +261,16 @@
       "price": 0.986,
       "comm": 0,
       "notes": ""
+    },
+    {
+      "type": "buy",
+      "date": "2026-11-02",
+      "ticker": "GOOGL",
+      "company": "Alphabet",
+      "qty": 9.8,
+      "price": 284.03,
+      "comm": 0,
+      "notes": ""
     }
   ]
 }
