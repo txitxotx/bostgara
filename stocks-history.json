@@ -271,6 +271,16 @@
       "price": 284.03,
       "comm": 0,
       "notes": ""
+    },
+    {
+      "type": "buy",
+      "date": "2026-11-24",
+      "ticker": "SLR.MC",
+      "company": "Solaria",
+      "qty": 185,
+      "price": 13.416,
+      "comm": 0,
+      "notes": ""
     }
   ]
 }
